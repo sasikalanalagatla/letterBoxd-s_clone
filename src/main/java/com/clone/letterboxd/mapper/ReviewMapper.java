@@ -2,36 +2,65 @@ package com.clone.letterboxd.mapper;
 
 import com.clone.letterboxd.dto.ReviewDisplayDto;
 import com.clone.letterboxd.dto.ReviewFormDto;
+import com.clone.letterboxd.enums.Visibility;
 import com.clone.letterboxd.model.Review;
-import org.mapstruct.*;
+import com.clone.letterboxd.model.User;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+@Component
+public class ReviewMapper {
 
-@Mapper(
-        componentModel = "spring",
-        uses = {UserMapper.class},
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
-public interface ReviewMapper {
+    public static ReviewDisplayDto toDisplayDto(Review review) {
+        if (review == null) return null;
 
-    @Mapping(target = "bodyExcerpt", expression = "java(createExcerpt(review.getBody()))")
-    @Mapping(target = "movieTitle", ignore = true)
-    @Mapping(target = "moviePosterPath", ignore = true)
-    ReviewDisplayDto toDisplayDto(Review review);
+        ReviewDisplayDto dto = new ReviewDisplayDto();
+        dto.setId(review.getId());
+        dto.setMovieId(review.getMovieId());
+        dto.setTitle(review.getTitle());
+        dto.setBody(review.getBody());
+        dto.setContainsSpoilers(review.getContainsSpoilers() != null ? review.getContainsSpoilers() : false);
+        dto.setVisibility(review.getVisibility());
+        dto.setPublishedAt(review.getPublishedAt());
 
-    List<ReviewDisplayDto> toDisplayDtos(List<Review> reviews);
+        // Excerpt - simple truncation
+        if (review.getBody() != null) {
+            String body = review.getBody();
+            dto.setBodyExcerpt(body.length() > 200 ? body.substring(0, 197) + "..." : body);
+        }
 
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "publishedAt", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    Review toEntity(ReviewFormDto dto);
+        // Usually enriched later:
+        // dto.setMovieTitle(...)
+        // dto.setMoviePosterPath(...)
+        // dto.setAuthor(...)
+        // dto.setLikeCount(...)
+        // dto.setCommentCount(...)
+        // dto.setCurrentUserLiked(...)
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateFromDto(ReviewFormDto dto, @MappingTarget Review entity);
+        return dto;
+    }
 
-    default String createExcerpt(String body) {
-        if (body == null) return "";
-        int max = 220;
-        return body.length() > max ? body.substring(0, max) + "..." : body;
+    public static Review toEntity(ReviewFormDto dto, User user) {
+        if (dto == null) return null;
+
+        Review review = new Review();
+        review.setUser(user);
+        review.setMovieId(dto.getMovieId());
+        review.setTitle(dto.getTitle());
+        review.setBody(dto.getBody());
+        review.setContainsSpoilers(dto.getContainsSpoilers() != null ? dto.getContainsSpoilers() : false);
+        review.setIsDraft(dto.getIsDraft() != null ? dto.getIsDraft() : true);
+        review.setVisibility(dto.getVisibility() != null ? Visibility.valueOf(dto.getVisibility()) : Visibility.PUBLIC);
+
+        return review;
+    }
+
+    public static void updateFromDto(Review review, ReviewFormDto dto) {
+        if (dto == null || review == null) return;
+
+        if (dto.getTitle() != null) review.setTitle(dto.getTitle());
+        if (dto.getBody() != null) review.setBody(dto.getBody());
+        if (dto.getContainsSpoilers() != null) review.setContainsSpoilers(dto.getContainsSpoilers());
+        if (dto.getIsDraft() != null) review.setIsDraft(dto.getIsDraft());
+        if (dto.getVisibility() != null) review.setVisibility(Visibility.valueOf(dto.getVisibility()));
     }
 }

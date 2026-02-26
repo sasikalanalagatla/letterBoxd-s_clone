@@ -2,39 +2,69 @@ package com.clone.letterboxd.mapper;
 
 import com.clone.letterboxd.dto.DiaryEntryDisplayDto;
 import com.clone.letterboxd.dto.DiaryEntryFormDto;
+import com.clone.letterboxd.enums.Visibility;
 import com.clone.letterboxd.model.DiaryEntry;
-import org.mapstruct.*;
+import com.clone.letterboxd.model.User;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
-@Mapper(
-        componentModel = "spring",
-        uses = {UserMapper.class, MovieMapper.class},
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
-public interface DiaryMapper {
+@Component
+public class DiaryMapper {
 
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    DiaryEntry toEntity(DiaryEntryFormDto dto);
+    public static DiaryEntryDisplayDto toDisplayDto(DiaryEntry entity, User user) {
+        if (entity == null) return null;
 
-    @Mapping(target = "ratingDisplay", expression = "java(formatRating(entry.getRating()))")
-    @Mapping(target = "movieTitle", ignore = true)        // set from TMDB
-    @Mapping(target = "moviePosterPath", ignore = true)   // set from TMDB
-    @Mapping(target = "movieYear", ignore = true)         // set from TMDB
-    DiaryEntryDisplayDto toDisplayDto(DiaryEntry entry);
+        DiaryEntryDisplayDto dto = new DiaryEntryDisplayDto();
+        dto.setId(entity.getId());
+        dto.setMovieId(entity.getMovieId());
+        dto.setWatchDate(entity.getWatchDate());
+        dto.setRating(entity.getRating());
+        dto.setReviewText(entity.getReviewText());
+        dto.setLiked(entity.getLiked());
+        dto.setVisibility(entity.getVisibility());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
 
-    List<DiaryEntryDisplayDto> toDisplayDtos(List<DiaryEntry> entries);
+        // These are usually enriched later in service
+        // dto.setMovieTitle(...);
+        // dto.setMoviePosterPath(...);
+        // dto.setMovieYear(...);
+        // dto.setRatingDisplay(...);
+        // dto.setUser(...);
+        // dto.setLikeCount(...);
+        // dto.setCommentCount(...);
+        // dto.setCurrentUserLiked(...);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntityFromForm(DiaryEntryFormDto dto, @MappingTarget DiaryEntry entity);
+        return dto;
+    }
 
-    // Helpers
-    default String formatRating(Double rating) {
-        if (rating == null || rating <= 0) return "";
-        int full = rating.intValue();
-        boolean half = rating - full >= 0.5;
-        return "★".repeat(full) + (half ? "½" : "");
+    public static DiaryEntry toEntity(DiaryEntryFormDto dto, User user) {
+        if (dto == null) return null;
+
+        DiaryEntry entity = new DiaryEntry();
+        entity.setUser(user);
+        entity.setMovieId(dto.getMovieId());
+        entity.setWatchDate(dto.getWatchDate());
+        entity.setRating(dto.getRating());
+        entity.setReviewText(dto.getReviewText());
+        entity.setLiked(dto.getLiked() != null ? dto.getLiked() : false);
+        entity.setVisibility(dto.getVisibility() != null ? dto.getVisibility() : Visibility.PUBLIC);
+
+        // createdAt / updatedAt are set by default in entity
+        return entity;
+    }
+
+    public static void updateEntity(DiaryEntry entity, DiaryEntryFormDto dto) {
+        if (dto == null || entity == null) return;
+
+        if (dto.getMovieId() != null) entity.setMovieId(dto.getMovieId());
+        if (dto.getWatchDate() != null) entity.setWatchDate(dto.getWatchDate());
+        if (dto.getRating() != null) entity.setRating(dto.getRating());
+        if (dto.getReviewText() != null) entity.setReviewText(dto.getReviewText());
+        if (dto.getLiked() != null) entity.setLiked(dto.getLiked());
+        if (dto.getVisibility() != null) entity.setVisibility(dto.getVisibility());
+
+        entity.setUpdatedAt(LocalDateTime.now());
     }
 }

@@ -5,27 +5,68 @@ import com.clone.letterboxd.dto.UserRegistrationDto;
 import com.clone.letterboxd.dto.UserSummaryDto;
 import com.clone.letterboxd.dto.UserUpdateDto;
 import com.clone.letterboxd.model.User;
-import org.mapstruct.*;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+@Component
+public class UserMapper {
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface UserMapper {
+    public static UserSummaryDto toSummaryDto(User user) {
+        if (user == null) return null;
 
-    @Mapping(target = "password", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "following", ignore = true)
-    @Mapping(target = "followers", ignore = true)
-    User toEntity(UserRegistrationDto dto);
+        UserSummaryDto dto = new UserSummaryDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setDisplayName(user.getDisplayName());
+        dto.setAvatarUrl(user.getAvatarUrl());
 
-    UserSummaryDto toSummaryDto(User user);
+        // bioExcerpt
+        if (user.getBio() != null) {
+            String bio = user.getBio();
+            dto.setBioExcerpt(bio.length() > 120 ? bio.substring(0, 117) + "..." : bio);
+        }
 
-    List<UserSummaryDto> toSummaryDtoList(List<User> users);
+        // filmsWatchedCount usually comes from service/query
 
-    @Mapping(target = "email", conditionExpression = "java(isOwnProfile ? user.getEmail() : null)")
-    UserProfileDto toProfileDto(User user, @Context boolean isOwnProfile);
+        return dto;
+    }
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateFromDto(UserUpdateDto dto, @MappingTarget User entity);
+    public static UserProfileDto toProfileDto(User user) {
+        if (user == null) return null;
+
+        UserProfileDto dto = new UserProfileDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setDisplayName(user.getDisplayName());
+        dto.setBio(user.getBio());
+        dto.setAvatarUrl(user.getAvatarUrl());
+        dto.setJoinedAt(user.getCreatedAt());
+
+        // Stats usually filled in service
+        // dto.setFilmsWatchedCount(...)
+        // dto.setAverageRating(...)
+        // etc.
+
+        return dto;
+    }
+
+    public static User toEntity(UserRegistrationDto dto) {
+        if (dto == null) return null;
+
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword()); // ← remember to hash before saving!
+        user.setDisplayName(dto.getDisplayName());
+        user.setBio(dto.getBio());
+
+        return user;
+    }
+
+    public static void updateFromDto(User user, UserUpdateDto dto) {
+        if (dto == null || user == null) return;
+
+        if (dto.getDisplayName() != null) user.setDisplayName(dto.getDisplayName());
+        if (dto.getBio() != null) user.setBio(dto.getBio());
+        if (dto.getAvatarUrl() != null) user.setAvatarUrl(dto.getAvatarUrl());
+    }
 }
