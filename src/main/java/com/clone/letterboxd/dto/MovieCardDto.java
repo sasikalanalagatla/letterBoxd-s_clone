@@ -15,7 +15,6 @@ public class MovieCardDto {
     private Integer year;
     private Double voteAverage;
     private Integer voteCount;
-
     private Double userRating;
     private Boolean inDiary;
     private Boolean inWatchlist;

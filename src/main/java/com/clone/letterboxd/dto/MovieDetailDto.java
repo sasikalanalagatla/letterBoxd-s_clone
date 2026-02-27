@@ -19,16 +19,13 @@ public class MovieDetailDto {
     private List<String> genres;
     private Double voteAverage;
     private Integer voteCount;
-
     private List<String> directors;
     private List<String> mainCast;
-
     private Double userRating;
     private Boolean watched;
     private Boolean inWatchlist;
     private String watchDate;
     private Long diaryEntryId;
-
     private Long diaryCount;
     private Long reviewCount;
     private Double averageLetterboxdRating;

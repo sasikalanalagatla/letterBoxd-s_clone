@@ -25,7 +25,7 @@ public class DiaryEntry {
     private LocalDate watchDate;
 
     @Column(nullable = false)
-    private Double rating;  // 0.5 to 5.0
+    private Double rating;
 
     @Column(columnDefinition = "TEXT")
     private String reviewText;

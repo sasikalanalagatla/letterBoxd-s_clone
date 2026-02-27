@@ -67,7 +67,6 @@ public class ProfileController {
         User user = userOptional.get();
         Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
         
-        // Check if viewing own profile
         boolean isOwnProfile = loggedInUserId != null && loggedInUserId.equals(user.getId());
         
         UserProfileDto profile = userMapper.toProfileDto(user);
@@ -126,7 +125,6 @@ public class ProfileController {
         try {
             User user = userOptional.get();
             
-            // Use mapper to update user from DTO
             userMapper.updateFromDto(user, userUpdate);
             
             userRepository.save(user);

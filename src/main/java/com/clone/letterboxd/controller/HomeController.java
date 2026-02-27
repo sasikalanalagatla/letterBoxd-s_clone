@@ -65,7 +65,6 @@ public class HomeController {
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load movies: " + e.getMessage());
-            // log the real error
             e.printStackTrace();
         }
 

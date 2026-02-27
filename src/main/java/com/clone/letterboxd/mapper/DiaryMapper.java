@@ -26,16 +26,6 @@ public class DiaryMapper {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
-        // These are usually enriched later in service
-        // dto.setMovieTitle(...);
-        // dto.setMoviePosterPath(...);
-        // dto.setMovieYear(...);
-        // dto.setRatingDisplay(...);
-        // dto.setUser(...);
-        // dto.setLikeCount(...);
-        // dto.setCommentCount(...);
-        // dto.setCurrentUserLiked(...);
-
         return dto;
     }
 
@@ -51,7 +41,6 @@ public class DiaryMapper {
         entity.setLiked(dto.getLiked() != null ? dto.getLiked() : false);
         entity.setVisibility(dto.getVisibility() != null ? dto.getVisibility() : Visibility.PUBLIC);
 
-        // createdAt / updatedAt are set by default in entity
         return entity;
     }
 

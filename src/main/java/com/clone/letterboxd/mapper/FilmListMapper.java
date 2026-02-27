@@ -27,7 +27,6 @@ public class FilmListMapper {
         dto.setIsWatchlist(list.getIsWatchlist());
         dto.setVisibility(list.getVisibility());
 
-        // Map entries — always set a list, never null
         if (list.getEntries() != null) {
             List<FilmListEntryDto> entryDtos = list.getEntries().stream()
                     .map(FilmListMapper::toEntryDto)
@@ -37,7 +36,6 @@ public class FilmListMapper {
             dto.setEntries(List.of());
         }
 
-        // Set owner
         if (list.getUser() != null) {
             UserSummaryDto owner = new UserSummaryDto();
             owner.setUsername(list.getUser().getUsername());
@@ -45,7 +43,6 @@ public class FilmListMapper {
             dto.setOwner(owner);
         }
 
-        // likeCount, commentCount, currentUserLiked → set in service if needed
         dto.setLikeCount(0);
         dto.setCommentCount(0);
         dto.setCurrentUserLiked(false);
@@ -60,7 +57,7 @@ public class FilmListMapper {
         dto.setMovieId(entry.getMovieId());
         dto.setRank(entry.getRank());
         dto.setNote(entry.getNote());
-        // movieTitle and posterPath require a Movie lookup — set in service if needed
+
         return dto;
     }
 
@@ -80,8 +77,6 @@ public class FilmListMapper {
         }
 
         dto.setEntryCount(list.getEntries() != null ? list.getEntries().size() : 0);
-
-        // previewPosterPaths, likeCount, commentCount, currentUserLiked → service layer
 
         return dto;
     }

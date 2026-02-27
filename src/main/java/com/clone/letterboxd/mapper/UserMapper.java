@@ -19,13 +19,10 @@ public class UserMapper {
         dto.setDisplayName(user.getDisplayName());
         dto.setAvatarUrl(user.getAvatarUrl());
 
-        // bioExcerpt
         if (user.getBio() != null) {
             String bio = user.getBio();
             dto.setBioExcerpt(bio.length() > 120 ? bio.substring(0, 117) + "..." : bio);
         }
-
-        // filmsWatchedCount usually comes from service/query
 
         return dto;
     }
@@ -41,11 +38,6 @@ public class UserMapper {
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setJoinedAt(user.getCreatedAt());
 
-        // Stats usually filled in service
-        // dto.setFilmsWatchedCount(...)
-        // dto.setAverageRating(...)
-        // etc.
-
         return dto;
     }
 
@@ -55,7 +47,7 @@ public class UserMapper {
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword()); // ← remember to hash before saving!
+        user.setPassword(dto.getPassword());
         user.setDisplayName(dto.getDisplayName());
         user.setBio(dto.getBio());
 

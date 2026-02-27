@@ -41,14 +41,12 @@ public class AuthController {
             RedirectAttributes redirectAttributes,
             Model model) {
         try {
-            // Validate inputs
-            if (username == null || username.trim().isEmpty() || 
+            if (username == null || username.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
                 model.addAttribute("error", "Username and password are required");
                 return "login";
             }
 
-            // Check if user exists in database
             Optional<User> userOptional = userRepository.findByUsername(username);
             
             if (userOptional.isEmpty()) {
@@ -58,17 +56,14 @@ public class AuthController {
 
             User user = userOptional.get();
             
-            // Verify password
             if (!passwordEncoder.matches(password, user.getPassword())) {
                 model.addAttribute("error", "Invalid username or password");
                 return "login";
             }
             
-            // Store user in session
             session.setAttribute("loggedInUser", user);
             session.setAttribute("loggedInUserId", user.getId());
             
-            // Redirect to home page after successful login
             return "redirect:/";
             
         } catch (Exception e) {
@@ -89,7 +84,6 @@ public class AuthController {
             RedirectAttributes redirectAttributes,
             Model model) {
         try {
-            // Validate inputs
             if (userRegistration.getUsername() == null || userRegistration.getUsername().trim().isEmpty() ||
                 userRegistration.getEmail() == null || userRegistration.getEmail().trim().isEmpty() ||
                 userRegistration.getPassword() == null || userRegistration.getPassword().trim().isEmpty()) {
@@ -98,42 +92,36 @@ public class AuthController {
                 return "register";
             }
 
-            // Check if passwords match
             if (!userRegistration.getPassword().equals(userRegistration.getConfirmPassword())) {
                 model.addAttribute("error", "Passwords do not match");
                 model.addAttribute("userRegistration", userRegistration);
                 return "register";
             }
 
-            // Check if username already exists
             if (userRepository.findByUsername(userRegistration.getUsername()).isPresent()) {
                 model.addAttribute("error", "Username already exists");
                 model.addAttribute("userRegistration", userRegistration);
                 return "register";
             }
 
-            // Check if email already exists
             if (userRepository.findByEmail(userRegistration.getEmail()).isPresent()) {
                 model.addAttribute("error", "Email already exists");
                 model.addAttribute("userRegistration", userRegistration);
                 return "register";
             }
 
-            // Create new user
             User newUser = new User();
             newUser.setUsername(userRegistration.getUsername());
             newUser.setEmail(userRegistration.getEmail());
             newUser.setDisplayName(userRegistration.getDisplayName());
             newUser.setBio(userRegistration.getBio());
             
-            // Hash password and save
             newUser.setPassword(passwordEncoder.encode(userRegistration.getPassword()));
             newUser.setCreatedAt(LocalDateTime.now());
             newUser.setUpdatedAt(LocalDateTime.now());
             
             userRepository.save(newUser);
             
-            // Redirect to login with success message
             redirectAttributes.addAttribute("success", true);
             return "redirect:/auth/login";
             
@@ -146,7 +134,6 @@ public class AuthController {
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
-        // Clear user session
         session.invalidate();
         return "redirect:/";
     }

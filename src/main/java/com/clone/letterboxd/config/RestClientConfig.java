@@ -13,8 +13,8 @@ public class RestClientConfig {
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
-                .connectTimeout(Duration.ofSeconds(10))     // ← no "set" prefix
-                .readTimeout(Duration.ofSeconds(30))        // ← same here
+                .connectTimeout(Duration.ofSeconds(10))
+                .readTimeout(Duration.ofSeconds(30))
                 .build();
     }
 }

@@ -22,19 +22,10 @@ public class ReviewMapper {
         dto.setVisibility(review.getVisibility());
         dto.setPublishedAt(review.getPublishedAt());
 
-        // Excerpt - simple truncation
         if (review.getBody() != null) {
             String body = review.getBody();
             dto.setBodyExcerpt(body.length() > 200 ? body.substring(0, 197) + "..." : body);
         }
-
-        // Usually enriched later:
-        // dto.setMovieTitle(...)
-        // dto.setMoviePosterPath(...)
-        // dto.setAuthor(...)
-        // dto.setLikeCount(...)
-        // dto.setCommentCount(...)
-        // dto.setCurrentUserLiked(...)
 
         return dto;
     }

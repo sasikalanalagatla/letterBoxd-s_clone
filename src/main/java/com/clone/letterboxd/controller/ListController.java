@@ -25,7 +25,6 @@ public class ListController {
     private final UserRepository userRepository;
     private final FilmListMapper filmListMapper;
     private final TmdbService tmdbService;
-    // Session keys
     private static final String SESSION_MOVIE_IDS      = "pendingMovieIds";
     private static final String SESSION_SEARCH_RESULTS = "movieSearchResults";
     private static final String SESSION_DRAFT          = "listDraft";
@@ -40,9 +39,6 @@ public class ListController {
         this.tmdbService        = tmdbService;
     }
 
-    // ─────────────────────────────────────────────
-    // Browse all public lists
-    // ─────────────────────────────────────────────
     @GetMapping
     public String browseLists(Model model) {
         List<FilmList> curatedLists = filmListRepository
@@ -55,9 +51,6 @@ public class ListController {
         return "lists";
     }
 
-    // ─────────────────────────────────────────────
-    // View a specific list
-    // ─────────────────────────────────────────────
     @GetMapping("/{listId}")
     public String viewList(@PathVariable Long listId, Model model) {
         Optional<FilmList> listOptional = filmListRepository.findById(listId);
@@ -71,18 +64,13 @@ public class ListController {
         return "list-detail";
     }
 
-    // ─────────────────────────────────────────────
-    // Create list page
-    // ─────────────────────────────────────────────
     @GetMapping("/create")
     public String createListPage(HttpSession session, Model model) {
         if (session.getAttribute("loggedInUserId") == null) return "redirect:/auth/login";
 
-        // Load whatever is already in session
         List<Map<String, Object>> pendingMovies = getPendingMovies(session);
         List<Map<String, Object>> searchResults = getSearchResults(session);
 
-        // Restore draft so name/description survive search round-trips
         FilmListFormDto draft = (FilmListFormDto) session.getAttribute(SESSION_DRAFT);
         if (draft == null) draft = new FilmListFormDto();
 
@@ -92,10 +80,6 @@ public class ListController {
         return "list-create";
     }
 
-    // ─────────────────────────────────────────────
-    // Search movies — pure Java, no JS fetch
-    // POST so the list form fields are not lost
-    // ─────────────────────────────────────────────
     @PostMapping("/search-movie")
     public String searchMovie(
             @RequestParam String query,
@@ -107,7 +91,6 @@ public class ListController {
 
         if (session.getAttribute("loggedInUserId") == null) return "redirect:/auth/login";
 
-        // Save draft to session so name/description survive the redirect
         FilmListFormDto draft = new FilmListFormDto();
         draft.setName(name);
         draft.setDescription(description);
@@ -117,7 +100,6 @@ public class ListController {
                 : com.clone.letterboxd.enums.Visibility.PUBLIC);
         session.setAttribute(SESSION_DRAFT, draft);
 
-        // Call TMDB and store results in session
         if (query != null && query.trim().length() >= 2) {
             Map<String, Object> response = tmdbService.searchMovies(query.trim(), 1);
             List<Map<String, Object>> results =
@@ -128,16 +110,12 @@ public class ListController {
         return "redirect:/lists/create";
     }
 
-    // ─────────────────────────────────────────────
-    // Add a movie from search results → session list
-    // ─────────────────────────────────────────────
     @PostMapping("/add-movie")
     public String addMovie(
             @RequestParam Long movieId,
             @RequestParam String movieTitle,
             @RequestParam(required = false) String posterPath,
             @RequestParam(required = false) String releaseYear,
-            // Preserve draft fields
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) Boolean ranked,
@@ -148,7 +126,6 @@ public class ListController {
 
         List<Map<String, Object>> pending = getPendingMovies(session);
 
-        // Avoid duplicates
         boolean alreadyAdded = pending.stream()
                 .anyMatch(m -> movieId.equals(m.get("id")));
 
@@ -162,13 +139,9 @@ public class ListController {
             session.setAttribute(SESSION_MOVIE_IDS, pending);
         }
 
-        // Redirect back to create page — draft fields passed as query params
         return buildRedirectToCreate(name, description, ranked, visibility);
     }
 
-    // ─────────────────────────────────────────────
-    // Remove a movie from session list
-    // ─────────────────────────────────────────────
     @PostMapping("/remove-movie")
     public String removeMovie(
             @RequestParam Long movieId,
@@ -187,18 +160,12 @@ public class ListController {
         return buildRedirectToCreate(name, description, ranked, visibility);
     }
 
-    // ─────────────────────────────────────────────
-    // Clear search results from session
-    // ─────────────────────────────────────────────
     @PostMapping("/clear-search")
     public String clearSearch(HttpSession session) {
         session.removeAttribute(SESSION_SEARCH_RESULTS);
         return "redirect:/lists/create";
     }
 
-    // ─────────────────────────────────────────────
-    // Save the new list (uses session movieIds)
-    // ─────────────────────────────────────────────
     @PostMapping
     public String createList(
             HttpSession session,
@@ -222,7 +189,6 @@ public class ListController {
 
             FilmList savedList = filmListRepository.save(newList);
 
-            // Clean up session
             session.removeAttribute(SESSION_MOVIE_IDS);
             session.removeAttribute(SESSION_SEARCH_RESULTS);
 
@@ -237,9 +203,6 @@ public class ListController {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Edit list page
-    // ─────────────────────────────────────────────
     @GetMapping("/{listId}/edit")
     public String editListPage(@PathVariable Long listId, HttpSession session, Model model) {
         Long userId = (Long) session.getAttribute("loggedInUserId");
@@ -262,9 +225,6 @@ public class ListController {
         return "list-edit";
     }
 
-    // ─────────────────────────────────────────────
-    // Update list
-    // ─────────────────────────────────────────────
     @PostMapping("/{listId}/edit")
     public String updateList(@PathVariable Long listId, HttpSession session,
                              FilmListFormDto listFormDto, Model model) {
@@ -294,9 +254,6 @@ public class ListController {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Delete list
-    // ─────────────────────────────────────────────
     @PostMapping("/{listId}/delete")
     public String deleteList(@PathVariable Long listId, HttpSession session) {
         Long userId = (Long) session.getAttribute("loggedInUserId");
@@ -309,9 +266,6 @@ public class ListController {
         return "redirect:/lists";
     }
 
-    // ─────────────────────────────────────────────
-    // User's lists
-    // ─────────────────────────────────────────────
     @GetMapping("/user/{username}")
     public String userLists(@PathVariable String username, Model model) {
         Optional<User> userOptional = userRepository.findByUsername(username);
@@ -322,9 +276,6 @@ public class ListController {
         return "user-lists";
     }
 
-    // ─────────────────────────────────────────────
-    // Curated lists
-    // ─────────────────────────────────────────────
     @GetMapping("/curated/top-500")
     public String top500List(Model model) {
         model.addAttribute("title",       "Top 500 Narrative Feature Films");
@@ -352,9 +303,6 @@ public class ListController {
         return "curated-list";
     }
 
-    // ─────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> getPendingMovies(HttpSession session) {
         List<Map<String, Object>> pending =
@@ -375,10 +323,6 @@ public class ListController {
 
     private String buildRedirectToCreate(String name, String description,
                                          Boolean ranked, String visibility) {
-        // After add/remove we go back to GET /lists/create.
-        // Draft fields are re-populated from session model in createListPage(),
-        // but since GET can't carry POST body we store draft in flash or
-        // simply re-render via a redirect (user re-enters or we use session for draft too).
         return "redirect:/lists/create";
     }
 }

@@ -14,9 +14,7 @@ import java.util.Optional;
 @Repository
 public interface FilmListRepository extends JpaRepository<FilmList, Long> {
     List<FilmList> findByUser(User user);
-    Optional<FilmList> findByIdAndUser(Long id, User user);
-    Page<FilmList> findByVisibility(String visibility, Pageable pageable);
-    
+
     @Query("SELECT fl FROM FilmList fl ORDER BY SIZE(fl.entries) DESC")
     Page<FilmList> findMostPopularLists(Pageable pageable);
     

@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 public class MovieMapper {
 
     public static MovieDetailDto toMovieDetailDto(
-            Object tmdbMovie,           // replace with your actual TMDB DTO/record/class
-            DiaryEntry usersDiaryEntry, // null if not watched
+            Object tmdbMovie,
+            DiaryEntry usersDiaryEntry,
             boolean inWatchlist,
             Long diaryCount,
             Long reviewCount,
@@ -67,7 +67,6 @@ public class MovieMapper {
         dto.setVoteAverage(getDouble(tmdbMovie, "vote_average"));
         dto.setVoteCount(getInteger(tmdbMovie, "vote_count"));
 
-        // User-specific fields – usually set later in service
         dto.setUserRating(null);
         dto.setInDiary(false);
         dto.setInWatchlist(false);

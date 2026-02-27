@@ -8,9 +8,7 @@ public class UserSummaryDto {
     private Long id;
     private String username;
     private String displayName;
-
     private String avatarUrl;
-
     private String bioExcerpt;
     private Integer filmsWatchedCount;
 
