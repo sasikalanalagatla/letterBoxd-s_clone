@@ -195,11 +195,16 @@
 
         </form>
 
-        <!-- ② MOVIE SEARCH FORM — POST to Java, results rendered below -->
-        <form method="post" th:action="@{/lists/search-movie}">
+        <!-- ② MOVIE SEARCH FORM — also carries draft fields so Java can save them to session -->
+        <form method="post" th:action="@{/lists/search-movie}" id="search-form">
             <div class="search-bar">
                 <input class="film-search-input" type="text" name="query"
                        th:value="${searchQuery}" placeholder="Search for a film to add..." autocomplete="off">
+                <!-- Hidden draft fields — kept in sync with the save form by the browser -->
+                <input type="hidden" name="name"        id="h-name">
+                <input type="hidden" name="description" id="h-description">
+                <input type="hidden" name="visibility"  id="h-visibility">
+                <input type="hidden" name="ranked"      id="h-ranked" value="false">
                 <button type="submit" class="btn-green">Search</button>
             </div>
         </form>
@@ -286,5 +291,15 @@
     </div>
 </footer>
 
+<script>
+    // Before submitting the search form, copy the live values from the save form
+    // into the hidden fields so Java can persist the draft in session.
+    document.getElementById('search-form').addEventListener('submit', function () {
+      document.getElementById('h-name').value        = document.querySelector('[name="name"]').value;
+      document.getElementById('h-description').value = document.querySelector('[name="description"]').value;
+      document.getElementById('h-visibility').value  = document.querySelector('[name="visibility"]').value;
+      document.getElementById('h-ranked').value      = document.querySelector('[name="ranked"]').checked ? 'true' : 'false';
+    });
+</script>
 </body>
 </html>

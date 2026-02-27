@@ -1,12 +1,17 @@
 package com.clone.letterboxd.mapper;
 
 import com.clone.letterboxd.dto.FilmListDetailDto;
+import com.clone.letterboxd.dto.FilmListEntryDto;
 import com.clone.letterboxd.dto.FilmListFormDto;
 import com.clone.letterboxd.dto.FilmListSummaryDto;
+import com.clone.letterboxd.dto.UserSummaryDto;
 import com.clone.letterboxd.enums.Visibility;
 import com.clone.letterboxd.model.FilmList;
+import com.clone.letterboxd.model.FilmListEntry;
 import com.clone.letterboxd.model.User;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class FilmListMapper {
@@ -22,8 +27,40 @@ public class FilmListMapper {
         dto.setIsWatchlist(list.getIsWatchlist());
         dto.setVisibility(list.getVisibility());
 
-        // entries, likeCount, commentCount, currentUserLiked → usually set in service
+        // Map entries — always set a list, never null
+        if (list.getEntries() != null) {
+            List<FilmListEntryDto> entryDtos = list.getEntries().stream()
+                    .map(FilmListMapper::toEntryDto)
+                    .toList();
+            dto.setEntries(entryDtos);
+        } else {
+            dto.setEntries(List.of());
+        }
 
+        // Set owner
+        if (list.getUser() != null) {
+            UserSummaryDto owner = new UserSummaryDto();
+            owner.setUsername(list.getUser().getUsername());
+            owner.setDisplayName(list.getUser().getDisplayName());
+            dto.setOwner(owner);
+        }
+
+        // likeCount, commentCount, currentUserLiked → set in service if needed
+        dto.setLikeCount(0);
+        dto.setCommentCount(0);
+        dto.setCurrentUserLiked(false);
+
+        return dto;
+    }
+
+    private static FilmListEntryDto toEntryDto(FilmListEntry entry) {
+        if (entry == null) return null;
+
+        FilmListEntryDto dto = new FilmListEntryDto();
+        dto.setMovieId(entry.getMovieId());
+        dto.setRank(entry.getRank());
+        dto.setNote(entry.getNote());
+        // movieTitle and posterPath require a Movie lookup — set in service if needed
         return dto;
     }
 

@@ -153,7 +153,7 @@
             <div class="list-meta">
               <span th:text="'Ranked: ' + ${list.ranked ? 'Yes' : 'No'}"></span>
               <span
-                th:text="' • ' + ${#lists.size(list.entries)} + ' Films'"
+                      th:text="' • ' + ${list.entries != null ? list.entries.size() : 0} + ' Films'"
               ></span>
               <span
                 th:if="${list.visibility != null}"
@@ -169,14 +169,14 @@
           <div class="col-md-4 text-end">
             <div class="action-buttons">
               <a
-                th:if="${session.loggedInUser == list.user.username}"
+                th:if="${session.loggedInUser == list.owner.username}"
                 th:href="@{/lists/{id}/edit(id=${list.id})}"
                 class="btn btn-primary-custom"
               >
                 Edit List
               </a>
               <form
-                th:if="${session.loggedInUser == list.user.username}"
+                th:if="${session.loggedInUser == list.owner.username}"
                 th:action="@{/lists/{id}/delete(id=${list.id})}"
                 method="post"
                 style="display: inline"
@@ -192,7 +192,7 @@
       </div>
 
       <!-- Films in List -->
-      <div th:if="${!list.entries.isEmpty()}">
+      <div th:if="${list.entries != null and !list.entries.isEmpty()}">
         <h3 style="margin-bottom: 2rem">Films</h3>
         <div th:each="entry : ${list.entries}">
           <div class="film-entry">
@@ -225,7 +225,7 @@
                 th:text="${entry.notes}"
               ></div>
               <form
-                th:if="${session.loggedInUser == list.user.username}"
+                th:if="${session.loggedInUser == list.owner.username}"
                 th:action="@{/api/lists/{listId}/entries/{entryId}(listId=${list.id}, entryId=${entry.id})}"
                 method="post"
                 style="display: inline; margin-top: 1rem"
@@ -240,11 +240,11 @@
       </div>
 
       <!-- Empty State -->
-      <div class="empty-state" th:if="${list.entries.isEmpty()}">
+      <div class="empty-state" th:if="${list.entries == null or list.entries.isEmpty()}">
         <div class="empty-state-icon">🎬</div>
         <p>No films in this list yet.</p>
         <a
-          th:if="${session.loggedInUser == list.user.username}"
+          th:if="${session.loggedInUser == list.owner.username}"
           th:href="@{/lists/{id}/edit(id=${list.id})}"
           class="btn btn-primary-custom"
         >
