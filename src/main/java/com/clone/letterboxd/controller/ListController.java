@@ -7,6 +7,7 @@ import com.clone.letterboxd.model.FilmList;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.FilmListRepository;
 import com.clone.letterboxd.repository.UserRepository;
+import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -24,13 +26,16 @@ public class ListController {
     private final FilmListRepository filmListRepository;
     private final UserRepository userRepository;
     private final FilmListMapper filmListMapper;
+    private final TmdbService tmdbService;
 
     public ListController(FilmListRepository filmListRepository, 
                         UserRepository userRepository,
-                        FilmListMapper filmListMapper) {
+                        FilmListMapper filmListMapper,
+                        TmdbService tmdbService) {
         this.filmListRepository = filmListRepository;
         this.userRepository = userRepository;
         this.filmListMapper = filmListMapper;
+        this.tmdbService = tmdbService;
     }
 
     // Browse all public lists
@@ -77,6 +82,13 @@ public class ListController {
 
         model.addAttribute("list", new FilmListFormDto());
         return "list-create";
+    }
+
+    // Search movies for list creation
+    @GetMapping("/search-movie")
+    @ResponseBody
+    public Map<String, Object> searchMovies(@RequestParam String query) {
+        return tmdbService.searchMovies(query, 1);
     }
 
     // Create new list

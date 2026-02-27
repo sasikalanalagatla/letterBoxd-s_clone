@@ -601,6 +601,33 @@
     }
 
     .footer-links a:hover { color:#fff; }
+    
+    /* Search results dropdown */
+    .search-results {
+        position: absolute;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        width: 100%;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 10;
+    }
+    .search-result-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        cursor: pointer;
+    }
+    .search-result-item:hover {
+        background: var(--bg-mid);
+    }
+    .search-result-poster {
+        width: 40px;
+        height: 60px;
+        object-fit: cover;
+        margin-right: 0.5rem;
+    }
 
     @media (max-width: 700px) {
       .form-top { grid-template-columns: 1fr; }
@@ -637,7 +664,7 @@
   <span class="nav-lightning" th:if="${session.loggedInUser != null}">⚡</span>
 
   <ul class="nav-links">
-    <li><a th:href="@{/movie/}">Films</a></li>
+    <li><a th:href="@{/}">Films</a></li>
     <li><a th:href="@{/lists}" class="active">Lists</a></li>
     <li><a th:href="@{/members}">Members</a></li>
     <li><a th:href="@{/journal}">Journal</a></li>
@@ -723,9 +750,12 @@
 
       <!-- ADD FILM BAR -->
       <div class="add-film-bar">
-        <button type="button" class="btn-add-film" onclick="addFilm()">Add a Film</button>
-        <input class="film-search-input" type="text" id="film-search"
-               placeholder="Enter name of film..." autocomplete="off">
+        <button type="button" class="btn-add-film" onclick="searchFilm()">Add a Film</button>
+        <div style="position: relative; flex: 1;">
+            <input class="film-search-input" type="text" id="film-search"
+                   placeholder="Enter name of film..." autocomplete="off">
+            <div id="search-results-container" class="search-results" style="display: none;"></div>
+        </div>
         <span class="or-text">or</span>
         <button type="button" class="btn-import">Import</button>
 
@@ -741,11 +771,6 @@
       </div>
 
       <!-- ENTRIES LIST -->
-      <!--
-        entries = List<ListEntry> if editing an existing list
-        ListEntry fields: id, movie (Movie { title, releaseYear, posterUrl })
-        For a new list this will be empty.
-      -->
       <div class="entries-list" id="entries-container">
 
         <!-- Existing entries from DB (when editing) -->
@@ -796,22 +821,62 @@
 </footer>
 
 <script>
-  // Simple client-side film add (replace with real search API when ready)
-  function addFilm() {
+  function searchFilm() {
     const input = document.getElementById('film-search');
-    const title = input.value.trim();
-    if (!title) return;
+    const query = input.value.trim();
+    if (query.length < 2) {
+        alert('Please enter at least 2 characters to search.');
+        return;
+    }
 
+    fetch(`/lists/search-movie?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            const resultsContainer = document.getElementById('search-results-container');
+            resultsContainer.innerHTML = '';
+            if (data.results && data.results.length > 0) {
+                data.results.forEach(movie => {
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.onclick = () => addFilmToList(movie);
+                    
+                    const poster = movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '';
+                    
+                    item.innerHTML = `
+                        <img src="${poster}" class="search-result-poster" alt="">
+                        <div>
+                            <div>${escapeHtml(movie.title)}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">${movie.release_date ? movie.release_date.substring(0, 4) : ''}</div>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(item);
+                });
+                resultsContainer.style.display = 'block';
+            } else {
+                alert('This movie does not exist.');
+                resultsContainer.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error searching for film:', error);
+            alert('An error occurred while searching. Please try again.');
+        });
+  }
+
+  function addFilmToList(movie) {
     const container = document.getElementById('entries-container');
+    const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '';
+    const releaseYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
 
     const row = document.createElement('div');
     row.className = 'entry-row';
     row.innerHTML = `
-      <div class="entry-poster-placeholder">🎬</div>
+      <img src="${posterUrl}" class="entry-poster" alt="">
       <div class="entry-info">
-        <span class="entry-title">${escapeHtml(title)}</span>
+        <span class="entry-title">${escapeHtml(movie.title)}</span>
+        <span class="entry-year">${releaseYear}</span>
         <button type="button" class="entry-note-btn">Add Note</button>
-        <input type="hidden" name="movieTitles" value="${escapeHtml(title)}">
+        <input type="hidden" name="movieIds" value="${movie.id}">
       </div>
       <div class="entry-actions">
         <button type="button" class="entry-delete" onclick="this.closest('.entry-row').remove()" title="Remove">🗑</button>
@@ -819,13 +884,15 @@
       </div>`;
 
     container.appendChild(row);
-    input.value = '';
-    input.focus();
+    document.getElementById('film-search').value = '';
+    document.getElementById('search-results-container').style.display = 'none';
   }
-
-  // Allow Enter key to add film
+  
   document.getElementById('film-search').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); addFilm(); }
+    if (e.key === 'Enter') { 
+        e.preventDefault(); 
+        searchFilm(); 
+    }
   });
 
   function escapeHtml(str) {
