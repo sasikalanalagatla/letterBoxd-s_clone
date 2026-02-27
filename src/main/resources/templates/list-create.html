@@ -1,911 +1,290 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>New List - LetterBoxd's</title>
-  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --green: #00c030;
-      --green-dark: #009924;
-      --bg-dark: #14181c;
-      --bg-mid: #1c2228;
-      --bg-card: #2c3440;
-      --bg-input: #2c3440;
-      --border: rgba(255,255,255,0.08);
-      --border-input: rgba(255,255,255,0.15);
-      --text-muted: #678;
-      --text-dim: #9ab;
-      --text: #ccc;
-    }
-
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Titillium Web', sans-serif;
-      background: var(--bg-dark);
-      color: var(--text);
-      min-height: 100vh;
-    }
-    a { text-decoration:none; color:inherit; }
-
-    /* ── HEADER ── */
-    .header {
-      position: fixed;
-      top:0; left:0; right:0;
-      z-index: 100;
-      background: rgba(20,24,28,0.97);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      height: 56px;
-      display: flex;
-      align-items: center;
-      padding: 0 2rem;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-shrink: 0;
-      margin-right: 2.5rem;
-    }
-
-    .logo-dots { display:flex; gap:4px; }
-    .logo-dots span { width:13px; height:13px; border-radius:50%; display:block; }
-    .dot-o { background:#f97316; }
-    .dot-g { background:#22c55e; }
-    .dot-b { background:#3b82f6; }
-    .logo-name { font-size:1.15rem; font-weight:700; color:#fff; }
-
-    .nav-user {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-right: 1rem;
-      cursor: pointer;
-    }
-
-    .user-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: var(--bg-card);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #fff;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .user-avatar img { width:100%; height:100%; object-fit:cover; }
-
-    .user-name {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #ddd;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .user-chevron { color: var(--text-dim); font-size: 0.65rem; }
-
-    .nav-lightning {
-      color: var(--green);
-      font-size: 1rem;
-      margin-right: 1rem;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      list-style: none;
-      gap: 0.1rem;
-    }
-
-    .nav-links li a {
-      color: var(--text-dim);
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.45rem 0.8rem;
-      border-radius: 3px;
-      transition: color 0.2s, background 0.2s;
-      display: block;
-    }
-
-    .nav-links li a:hover { color:#fff; background:rgba(255,255,255,0.05); }
-    .nav-links li a.active { color:#fff; }
-
-    .search-wrap {
-      margin-left: auto;
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .search-wrap input {
-      height: 32px;
-      width: 175px;
-      padding: 0 2.2rem 0 0.85rem;
-      background: rgba(255,255,255,0.09);
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 16px;
-      font-size: 0.82rem;
-      font-family: inherit;
-      color: #fff;
-    }
-
-    .search-wrap input::placeholder { color:rgba(255,255,255,0.35); }
-    .search-wrap input:focus { outline:none; }
-
-    .search-icon-btn {
-      position: absolute;
-      right: 0.65rem;
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.5);
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    /* ── MAIN ── */
-    .main {
-      padding-top: 56px;
-      min-height: 100vh;
-    }
-
-    .page-content {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2.5rem 2rem 4rem;
-    }
-
-    .page-title {
-      font-size: 1.6rem;
-      font-weight: 300;
-      color: #fff;
-      margin-bottom: 2rem;
-    }
-
-    /* ── FORM LAYOUT ── */
-    .form-top {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .form-left { display: flex; flex-direction: column; gap: 1rem; }
-    .form-right { display: flex; flex-direction: column; }
-
-    /* ── FIELD LABELS ── */
-    .field-label {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 0.4rem;
-      letter-spacing: 0.03em;
-    }
-
-    .field-label .dot-required {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      flex-shrink: 0;
-    }
-
-    .field-label .label-hint {
-      margin-left: auto;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      font-weight: 400;
-    }
-
-    /* ── INPUTS ── */
-    .field-input {
-      width: 100%;
-      height: 38px;
-      padding: 0 0.75rem;
-      background: var(--bg-input);
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      font-size: 0.88rem;
-      font-family: inherit;
-      color: #fff;
-      transition: border-color 0.2s;
-    }
-
-    .field-input:focus {
-      outline: none;
-      border-color: rgba(255,255,255,0.35);
-    }
-
-    .field-input::placeholder { color: rgba(255,255,255,0.2); }
-
-    .field-textarea {
-      width: 100%;
-      flex: 1;
-      padding: 0.65rem 0.75rem;
-      background: var(--bg-input);
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      font-size: 0.88rem;
-      font-family: inherit;
-      color: #fff;
-      resize: none;
-      min-height: 200px;
-      transition: border-color 0.2s;
-    }
-
-    .field-textarea:focus {
-      outline: none;
-      border-color: rgba(255,255,255,0.35);
-    }
-
-    /* Tags hint */
-    .tags-hint {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-left: auto;
-    }
-
-    /* Who can view */
-    .field-select {
-      width: 100%;
-      height: 38px;
-      padding: 0 2rem 0 0.75rem;
-      background: var(--bg-input);
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      font-size: 0.88rem;
-      font-family: inherit;
-      color: #fff;
-      appearance: none;
-      cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ab' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.75rem center;
-    }
-
-    .field-select:focus { outline:none; border-color:rgba(255,255,255,0.35); }
-    .field-select option { background: #2c3440; }
-
-    /* Who can view row */
-    .view-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .view-row .help-icon {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 1px solid var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      flex-shrink: 0;
-      cursor: help;
-    }
-
-    /* Ranked checkbox */
-    .ranked-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-top: 0.25rem;
-    }
-
-    .ranked-checkbox {
-      width: 18px;
-      height: 18px;
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      background: var(--bg-input);
-      appearance: none;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .ranked-checkbox:checked {
-      background: var(--green);
-      border-color: var(--green);
-    }
-
-    .ranked-label {
-      font-size: 0.82rem;
-      color: var(--text-dim);
-      cursor: pointer;
-    }
-
-    .ranked-hint {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      margin-left: auto;
-    }
-
-    /* ── ADD FILM BAR ── */
-    .add-film-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0;
-      padding: 0.75rem 1rem;
-      background: var(--bg-mid);
-      border: 1px solid var(--border);
-      border-bottom: none;
-      border-radius: 4px 4px 0 0;
-    }
-
-    .btn-add-film {
-      padding: 0.4rem 0.9rem;
-      background: var(--green);
-      color: #fff;
-      border: none;
-      border-radius: 3px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      font-family: inherit;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
-    .btn-add-film:hover { background: var(--green-dark); }
-
-    .film-search-input {
-      flex: 1;
-      height: 34px;
-      padding: 0 0.75rem;
-      background: var(--bg-input);
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      font-size: 0.85rem;
-      font-family: inherit;
-      color: #fff;
-    }
-
-    .film-search-input:focus { outline:none; border-color:rgba(255,255,255,0.3); }
-    .film-search-input::placeholder { color: rgba(255,255,255,0.25); }
-
-    .or-text { font-size:0.75rem; color:var(--text-muted); white-space:nowrap; }
-
-    .btn-import {
-      padding: 0.4rem 0.9rem;
-      background: var(--bg-card);
-      color: var(--text-dim);
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      font-family: inherit;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-
-    .btn-import:hover { border-color: rgba(255,255,255,0.3); color:#fff; }
-
-    .sort-by {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      margin-left: auto;
-    }
-
-    .view-toggle {
-      display: flex;
-      gap: 0.25rem;
-    }
-
-    .view-btn {
-      width: 30px;
-      height: 30px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-dim);
-      font-size: 0.75rem;
-      transition: all 0.2s;
-    }
-
-    .view-btn.active, .view-btn:hover { background: #3a4550; color:#fff; }
-
-    .btn-cancel {
-      padding: 0.4rem 1rem;
-      background: var(--bg-card);
-      color: var(--text-dim);
-      border: 1px solid var(--border-input);
-      border-radius: 3px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      font-family: inherit;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-cancel:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
-
-    .btn-save {
-      padding: 0.4rem 1.25rem;
-      background: var(--green);
-      color: #fff;
-      border: none;
-      border-radius: 3px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      font-family: inherit;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-save:hover { background: var(--green-dark); }
-
-    /* ── ENTRIES LIST ── */
-    .entries-list {
-      border: 1px solid var(--border);
-      border-radius: 0 0 4px 4px;
-    }
-
-    .entry-row {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
-    }
-
-    .entry-row:last-child { border-bottom: none; }
-    .entry-row:hover { background: rgba(255,255,255,0.03); }
-
-    .entry-poster {
-      width: 36px;
-      min-width: 36px;
-      aspect-ratio: 2/3;
-      object-fit: cover;
-      border-radius: 2px;
-      background: var(--bg-card);
-    }
-
-    .entry-poster-placeholder {
-      width: 36px;
-      min-width: 36px;
-      aspect-ratio: 2/3;
-      background: var(--bg-card);
-      border-radius: 2px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-    }
-
-    .entry-info { flex: 1; min-width: 0; }
-
-    .entry-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      display: inline;
-    }
-
-    .entry-year {
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-left: 0.4rem;
-      font-weight: 400;
-    }
-
-    .entry-note-btn {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 2px;
-      color: var(--text-muted);
-      font-size: 0.65rem;
-      font-family: inherit;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0.15rem 0.4rem;
-      cursor: pointer;
-      display: block;
-      margin-top: 0.35rem;
-      transition: all 0.2s;
-    }
-
-    .entry-note-btn:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
-
-    .entry-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .entry-delete {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      cursor: pointer;
-      padding: 0.25rem;
-      transition: color 0.2s;
-    }
-
-    .entry-delete:hover { color: #fc8181; }
-
-    .entry-drag {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      cursor: grab;
-      padding: 0.25rem;
-    }
-
-    /* ── ERROR ── */
-    .alert-error {
-      background: rgba(197,48,48,0.15);
-      border: 1px solid rgba(197,48,48,0.3);
-      color: #fc8181;
-      padding: 0.65rem 0.85rem;
-      border-radius: 4px;
-      font-size: 0.82rem;
-      margin-bottom: 1.25rem;
-    }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 1.5rem 2rem;
-      text-align: center;
-    }
-
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 0.5rem;
-    }
-
-    .footer-links a {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-    }
-
-    .footer-links a:hover { color:#fff; }
-    
-    /* Search results dropdown */
-    .search-results {
-        position: absolute;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        width: 100%;
-        max-height: 300px;
-        overflow-y: auto;
-        z-index: 10;
-    }
-    .search-result-item {
-        display: flex;
-        align-items: center;
-        padding: 0.5rem;
-        cursor: pointer;
-    }
-    .search-result-item:hover {
-        background: var(--bg-mid);
-    }
-    .search-result-poster {
-        width: 40px;
-        height: 60px;
-        object-fit: cover;
-        margin-right: 0.5rem;
-    }
-
-    @media (max-width: 700px) {
-      .form-top { grid-template-columns: 1fr; }
-      .nav-links { display: none; }
-    }
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>New List - Letterboxd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+          --green: #00c030; --green-dark: #009924;
+          --bg-dark: #14181c; --bg-mid: #1c2228; --bg-card: #2c3440; --bg-input: #2c3440;
+          --border: rgba(255,255,255,0.08); --border-input: rgba(255,255,255,0.15);
+          --text-muted: #678; --text-dim: #9ab; --text: #ccc;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Titillium Web',sans-serif; background:var(--bg-dark); color:var(--text); min-height:100vh; }
+        a { text-decoration:none; color:inherit; }
+
+        /* HEADER */
+        .header {
+          position:fixed; top:0; left:0; right:0; z-index:100;
+          background:rgba(20,24,28,0.97); backdrop-filter:blur(10px);
+          border-bottom:1px solid var(--border);
+          height:56px; display:flex; align-items:center; padding:0 2rem; gap:0.5rem;
+        }
+        .logo { display:flex; align-items:center; gap:0.5rem; flex-shrink:0; margin-right:2rem; }
+        .logo-dots { display:flex; gap:4px; }
+        .logo-dots span { width:13px; height:13px; border-radius:50%; display:block; }
+        .dot-o{background:#f97316;} .dot-g{background:#22c55e;} .dot-b{background:#3b82f6;}
+        .logo-name { font-size:1.15rem; font-weight:700; color:#fff; }
+        .nav-user { display:flex; align-items:center; gap:0.5rem; margin-right:1rem; }
+        .user-avatar { width:28px; height:28px; border-radius:50%; background:var(--bg-card); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; color:#fff; overflow:hidden; flex-shrink:0; }
+        .user-avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-name { font-size:0.78rem; font-weight:700; color:#ddd; letter-spacing:0.05em; text-transform:uppercase; }
+        .nav-lightning { color:var(--green); font-size:1rem; margin-right:1rem; }
+        .nav-links { display:flex; align-items:center; list-style:none; gap:0.1rem; }
+        .nav-links li a { color:var(--text-dim); font-size:0.75rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; padding:0.45rem 0.8rem; border-radius:3px; transition:color 0.2s,background 0.2s; display:block; }
+        .nav-links li a:hover { color:#fff; background:rgba(255,255,255,0.05); }
+        .nav-links li a.active { color:#fff; }
+        .search-wrap { margin-left:auto; position:relative; display:flex; align-items:center; }
+        .search-wrap input { height:32px; width:175px; padding:0 2.2rem 0 0.85rem; background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.14); border-radius:16px; font-size:0.82rem; font-family:inherit; color:#fff; }
+        .search-wrap input::placeholder { color:rgba(255,255,255,0.35); }
+        .search-wrap input:focus { outline:none; }
+        .search-icon-btn { position:absolute; right:0.65rem; background:none; border:none; color:rgba(255,255,255,0.5); font-size:0.85rem; cursor:pointer; }
+
+        /* MAIN */
+        .main { padding-top:72px; min-height:100vh; }
+        .page-content { max-width:900px; margin:0 auto; padding:2rem 2rem 4rem; }
+        .page-title { font-size:1.6rem; font-weight:300; color:#fff; margin-bottom:1.5rem; }
+
+        /* FORM TOP */
+        .form-top { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+        .form-left { display:flex; flex-direction:column; gap:1rem; }
+        .form-right { display:flex; flex-direction:column; }
+        .field-label { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; font-weight:600; color:#fff; margin-bottom:0.4rem; letter-spacing:0.03em; }
+        .dot-required { width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0; }
+        .field-input { width:100%; height:38px; padding:0 0.75rem; background:var(--bg-input); border:1px solid var(--border-input); border-radius:3px; font-size:0.88rem; font-family:inherit; color:#fff; transition:border-color 0.2s; }
+        .field-input:focus { outline:none; border-color:rgba(255,255,255,0.35); }
+        .field-input::placeholder { color:rgba(255,255,255,0.2); }
+        .field-textarea { width:100%; flex:1; padding:0.65rem 0.75rem; background:var(--bg-input); border:1px solid var(--border-input); border-radius:3px; font-size:0.88rem; font-family:inherit; color:#fff; resize:none; min-height:200px; transition:border-color 0.2s; }
+        .field-textarea:focus { outline:none; border-color:rgba(255,255,255,0.35); }
+        .field-select { width:100%; height:38px; padding:0 2rem 0 0.75rem; background:var(--bg-input); border:1px solid var(--border-input); border-radius:3px; font-size:0.88rem; font-family:inherit; color:#fff; appearance:none; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ab' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 0.75rem center; }
+        .field-select:focus { outline:none; border-color:rgba(255,255,255,0.35); }
+        .field-select option { background:#2c3440; }
+        .help-icon { width:18px; height:18px; border-radius:50%; border:1px solid var(--text-muted); display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:var(--text-muted); flex-shrink:0; cursor:help; }
+        .ranked-row { display:flex; align-items:center; gap:0.75rem; }
+        .ranked-checkbox { width:18px; height:18px; border:1px solid var(--border-input); border-radius:3px; background:var(--bg-input); appearance:none; cursor:pointer; flex-shrink:0; transition:background 0.2s,border-color 0.2s; }
+        .ranked-checkbox:checked { background:var(--green); border-color:var(--green); }
+        .ranked-label { font-size:0.82rem; color:var(--text-dim); cursor:pointer; }
+        .ranked-hint { font-size:0.72rem; color:var(--text-muted); margin-left:auto; }
+
+        /* BUTTONS */
+        .btn-green { padding:0.4rem 0.9rem; background:var(--green); color:#fff; border:none; border-radius:3px; font-size:0.75rem; font-weight:700; font-family:inherit; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; white-space:nowrap; transition:background 0.2s; }
+        .btn-green:hover { background:var(--green-dark); }
+        .btn-muted { padding:0.4rem 1rem; background:var(--bg-card); color:var(--text-dim); border:1px solid var(--border-input); border-radius:3px; font-size:0.75rem; font-weight:700; font-family:inherit; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; transition:all 0.2s; text-decoration:none; display:inline-block; }
+        .btn-muted:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+        .btn-icon { padding:0.25rem 0.5rem; background:none; color:var(--text-muted); border:none; font-size:0.85rem; cursor:pointer; transition:color 0.2s; }
+        .btn-icon:hover { color:#fc8181; }
+
+        /* SAVE BAR */
+        .save-bar { display:flex; align-items:center; justify-content:flex-end; gap:0.75rem; padding:1rem 0 1.5rem; }
+
+        /* SEARCH BAR */
+        .search-bar { display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1rem; background:var(--bg-mid); border:1px solid var(--border); border-radius:4px; margin-bottom:1rem; }
+        .film-search-input { flex:1; height:34px; padding:0 0.75rem; background:var(--bg-input); border:1px solid var(--border-input); border-radius:3px; font-size:0.85rem; font-family:inherit; color:#fff; }
+        .film-search-input:focus { outline:none; border-color:rgba(255,255,255,0.3); }
+        .film-search-input::placeholder { color:rgba(255,255,255,0.25); }
+
+        /* PANEL (search results & pending entries) */
+        .panel { border:1px solid var(--border); border-radius:4px; margin-bottom:1.5rem; overflow:hidden; }
+        .panel-header { display:flex; align-items:center; justify-content:space-between; padding:0.6rem 1rem; background:var(--bg-mid); border-bottom:1px solid var(--border); font-size:0.78rem; color:var(--text-dim); font-weight:600; letter-spacing:0.05em; text-transform:uppercase; }
+        .badge { background:var(--green); color:#fff; border-radius:10px; padding:0.1rem 0.5rem; font-size:0.7rem; }
+
+        .movie-row { display:flex; align-items:center; gap:1rem; padding:0.65rem 1rem; border-bottom:1px solid var(--border); transition:background 0.15s; }
+        .movie-row:last-child { border-bottom:none; }
+        .movie-row:hover { background:rgba(255,255,255,0.03); }
+        .movie-poster { width:36px; min-width:36px; height:54px; object-fit:cover; border-radius:2px; background:var(--bg-card); }
+        .movie-info { flex:1; min-width:0; }
+        .movie-title { font-size:0.92rem; font-weight:700; color:#fff; }
+        .movie-year { font-size:0.8rem; color:var(--text-dim); margin-left:0.35rem; }
+
+        .empty-state { padding:2rem; text-align:center; color:var(--text-muted); font-size:0.85rem; }
+
+        /* ERROR */
+        .alert-error { background:rgba(197,48,48,0.15); border:1px solid rgba(197,48,48,0.3); color:#fc8181; padding:0.65rem 0.85rem; border-radius:4px; font-size:0.82rem; margin-bottom:1.25rem; }
+
+        /* FOOTER */
+        footer { border-top:1px solid var(--border); padding:1.5rem 2rem; text-align:center; }
+        .footer-links { display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap; }
+        .footer-links a { font-size:0.72rem; color:var(--text-muted); }
+        .footer-links a:hover { color:#fff; }
+
+        @media (max-width:700px) { .form-top { grid-template-columns:1fr; } .nav-links { display:none; } }
+    </style>
 </head>
 <body>
 
-<!-- ── HEADER ── -->
+<!-- HEADER -->
 <header class="header">
-  <a class="logo" th:href="@{/}">
-    <div class="logo-dots">
-      <span class="dot-o"></span>
-      <span class="dot-g"></span>
-      <span class="dot-b"></span>
+    <a class="logo" th:href="@{/}">
+        <div class="logo-dots"><span class="dot-o"></span><span class="dot-g"></span><span class="dot-b"></span></div>
+        <span class="logo-name">Letterboxd</span>
+    </a>
+    <div class="nav-user" th:if="${session.loggedInUser != null}">
+        <div class="user-avatar">
+            <img th:if="${session.loggedInUser.avatarUrl != null}" th:src="${session.loggedInUser.avatarUrl}" th:alt="${session.loggedInUser.username}">
+            <span th:unless="${session.loggedInUser.avatarUrl != null}" th:text="${session.loggedInUser.username.substring(0,1).toUpperCase()}"></span>
+        </div>
+        <span class="user-name" th:text="${session.loggedInUser.username}">USERNAME</span>
     </div>
-    <span class="logo-name">Letterboxd's</span>
-  </a>
-
-  <!-- Logged-in user pill -->
-  <div class="nav-user" th:if="${session.loggedInUser != null}">
-    <div class="user-avatar">
-      <img th:if="${session.loggedInUser.avatarUrl != null}"
-           th:src="${session.loggedInUser.avatarUrl}"
-           th:alt="${session.loggedInUser.username}">
-      <span th:unless="${session.loggedInUser.avatarUrl != null}"
-            th:text="${session.loggedInUser.username.substring(0,1).toUpperCase()}"></span>
-    </div>
-    <span class="user-name" th:text="${session.loggedInUser.username}">USERNAME</span>
-    <span class="user-chevron">▾</span>
-  </div>
-
-  <span class="nav-lightning" th:if="${session.loggedInUser != null}">⚡</span>
-
-  <ul class="nav-links">
-    <li><a th:href="@{/}">Films</a></li>
-    <li><a th:href="@{/lists}" class="active">Lists</a></li>
-    <li><a th:href="@{/members}">Members</a></li>
-    <li><a th:href="@{/journal}">Journal</a></li>
-  </ul>
-
-  <form class="search-wrap" th:action="@{/search}" method="get">
-    <input type="text" name="q" placeholder="Films, people, lists...">
-    <button class="search-icon-btn" type="submit">🔍</button>
-  </form>
+    <span class="nav-lightning" th:if="${session.loggedInUser != null}">⚡</span>
+    <ul class="nav-links">
+        <li><a th:href="@{/}">Films</a></li>
+        <li><a th:href="@{/lists}" class="active">Lists</a></li>
+        <li><a th:href="@{/members}">Members</a></li>
+        <li><a th:href="@{/journal}">Journal</a></li>
+    </ul>
+    <form class="search-wrap" th:action="@{/search}" method="get">
+        <input type="text" name="q" placeholder="Films, people, lists...">
+        <button class="search-icon-btn" type="submit">🔍</button>
+    </form>
 </header>
 
-<!-- ── MAIN ── -->
+<!-- MAIN -->
 <main class="main">
-  <div class="page-content">
+    <div class="page-content">
 
-    <h1 class="page-title">New List</h1>
+        <h1 class="page-title">New List</h1>
+        <div class="alert-error" th:if="${error}" th:text="${error}"></div>
 
-    <!-- Error -->
-    <div class="alert-error" th:if="${error}" th:text="${error}"></div>
+        <!-- ① LIST METADATA FORM -->
+        <form method="post" th:action="@{/lists}">
 
-    <form method="post" th:action="@{/lists}" id="list-form">
+            <div class="form-top">
+                <div class="form-left">
 
-      <!-- TOP: Name+Tags+Visibility (left) | Description (right) -->
-      <div class="form-top">
+                    <div>
+                        <div class="field-label"><span class="dot-required"></span> Name</div>
+                        <input class="field-input" type="text" name="name"
+                               th:value="${list.name}" maxlength="100" required autocomplete="off">
+                    </div>
 
-        <!-- LEFT COLUMN -->
-        <div class="form-left">
+                    <div>
+                        <div class="field-label">
+                            Who can view
+                            <span class="help-icon" title="Control who can see your list">?</span>
+                        </div>
+                        <select class="field-select" name="visibility" required>
+                            <option value="PUBLIC"  th:selected="${list.visibility?.name() == 'PUBLIC'}">Anyone — Public</option>
+                            <option value="FRIENDS" th:selected="${list.visibility?.name() == 'FRIENDS'}">Friends only</option>
+                            <option value="PRIVATE" th:selected="${list.visibility?.name() == 'PRIVATE'}">Only me — Private</option>
+                        </select>
+                    </div>
 
-          <!-- Name -->
-          <div>
-            <div class="field-label">
-              <span class="dot-required"></span>
-              Name
+                    <div class="ranked-row">
+                        <input class="ranked-checkbox" type="checkbox" id="ranked"
+                               name="ranked" value="true" th:checked="${list.ranked}">
+                        <label class="ranked-label" for="ranked">Ranked list</label>
+                        <span class="ranked-hint">Show position for each film.</span>
+                    </div>
+
+                </div>
+
+                <div class="form-right">
+                    <div class="field-label">Description</div>
+                    <textarea class="field-textarea" name="description"
+                              maxlength="2000" th:text="${list.description}"></textarea>
+                </div>
             </div>
-            <input class="field-input" type="text" name="name" id="name"
-                   maxlength="100" required autocomplete="off">
-          </div>
 
-          <!-- Tags -->
-          <div>
-            <div class="field-label">
-              Tags
-              <span class="tags-hint">Press Tab to complete, Enter to create</span>
+            <div class="save-bar">
+                <a th:href="@{/lists}" class="btn-muted">Cancel</a>
+                <button type="submit" class="btn-green">Save List</button>
             </div>
-            <input class="field-input" type="text" name="tags" id="tags"
-                   placeholder="eg. top 10" autocomplete="off">
-          </div>
 
-          <!-- Who can view -->
-          <div>
-            <div class="field-label">
-              <span class="view-row">
-                Who can view
-                <span class="help-icon" title="Control who can see your list">?</span>
-              </span>
+        </form>
+
+        <!-- ② MOVIE SEARCH FORM — POST to Java, results rendered below -->
+        <form method="post" th:action="@{/lists/search-movie}">
+            <div class="search-bar">
+                <input class="film-search-input" type="text" name="query"
+                       th:value="${searchQuery}" placeholder="Search for a film to add..." autocomplete="off">
+                <button type="submit" class="btn-green">Search</button>
             </div>
-            <select class="field-select" name="visibility" id="visibility" required>
-              <option value="PUBLIC">Anyone — Public list</option>
-              <option value="FRIENDS">Friends only</option>
-              <option value="PRIVATE">Only me — Private list</option>
-            </select>
-          </div>
+        </form>
 
-          <!-- Ranked -->
-          <div class="ranked-row">
-            <input class="ranked-checkbox" type="checkbox" id="ranked" name="ranked" value="true">
-            <label class="ranked-label" for="ranked">Ranked list</label>
-            <span class="ranked-hint">Show position for each film.</span>
-          </div>
+        <!-- ③ SEARCH RESULTS — rendered by Thymeleaf from model -->
+        <div class="panel" th:if="${searchResults != null and !searchResults.isEmpty()}">
+            <div class="panel-header">
+                Search Results
+                <form method="post" th:action="@{/lists/clear-search}" style="margin:0;">
+                    <button type="submit" class="btn-icon" title="Clear">✕ Clear</button>
+                </form>
+            </div>
 
+            <div th:each="movie : ${searchResults}" class="movie-row">
+                <img class="movie-poster"
+                     th:src="${movie.poster_path != null
+               ? 'https://image.tmdb.org/t/p/w200' + movie.poster_path
+               : 'https://via.placeholder.com/36x54?text=?'}"
+                     th:alt="${movie.title}"
+                     onerror="this.src='https://via.placeholder.com/36x54?text=?'">
+
+                <div class="movie-info">
+                    <span class="movie-title" th:text="${movie.title}"></span>
+                    <span class="movie-year"
+                          th:if="${movie.release_date != null and !movie.release_date.isEmpty()}"
+                          th:text="${movie.release_date.substring(0,4)}"></span>
+                </div>
+
+                <!-- One small form per result row to add it -->
+                <form method="post" th:action="@{/lists/add-movie}" style="margin:0;">
+                    <input type="hidden" name="movieId"     th:value="${movie.id}">
+                    <input type="hidden" name="movieTitle"  th:value="${movie.title}">
+                    <input type="hidden" name="posterPath"  th:value="${movie.poster_path}">
+                    <input type="hidden" name="releaseYear"
+                           th:value="${movie.release_date != null and !movie.release_date.isEmpty()
+                   ? movie.release_date.substring(0,4) : ''}">
+                    <button type="submit" class="btn-green">+ Add</button>
+                </form>
+            </div>
         </div>
 
-        <!-- RIGHT COLUMN: Description -->
-        <div class="form-right">
-          <div class="field-label">
-            Description
-            <span class="label-hint">Show supported HTML</span>
-          </div>
-          <textarea class="field-textarea" name="description" id="description"
-                    maxlength="10000"></textarea>
-        </div>
-      </div>
+        <!-- ④ PENDING MOVIES (stored in session by Java) -->
+        <div class="panel">
+            <div class="panel-header">
+                Films in this list
+                <span class="badge" th:text="${pendingMovies != null ? pendingMovies.size() : 0}">0</span>
+            </div>
 
-      <!-- ADD FILM BAR -->
-      <div class="add-film-bar">
-        <button type="button" class="btn-add-film" onclick="searchFilm()">Add a Film</button>
-        <div style="position: relative; flex: 1;">
-            <input class="film-search-input" type="text" id="film-search"
-                   placeholder="Enter name of film..." autocomplete="off">
-            <div id="search-results-container" class="search-results" style="display: none;"></div>
-        </div>
-        <span class="or-text">or</span>
-        <button type="button" class="btn-import">Import</button>
+            <div class="empty-state"
+                 th:if="${pendingMovies == null or pendingMovies.isEmpty()}">
+                No films added yet — search above to add films.
+            </div>
 
-        <span class="sort-by">Sort by ▾</span>
+            <div th:each="movie : ${pendingMovies}" class="movie-row">
+                <img class="movie-poster"
+                     th:src="${movie.posterPath != null
+               ? 'https://image.tmdb.org/t/p/w200' + movie.posterPath
+               : 'https://via.placeholder.com/36x54?text=?'}"
+                     th:alt="${movie.title}"
+                     onerror="this.src='https://via.placeholder.com/36x54?text=?'">
 
-        <div class="view-toggle">
-          <div class="view-btn active" title="List view">☰</div>
-          <div class="view-btn" title="Grid view">⊞</div>
-        </div>
+                <div class="movie-info">
+                    <span class="movie-title" th:text="${movie.title}"></span>
+                    <span class="movie-year" th:if="${movie.releaseYear != null}"
+                          th:text="${movie.releaseYear}"></span>
+                </div>
 
-        <button type="button" class="btn-cancel" onclick="location.href='/lists'">Cancel</button>
-        <button type="submit" class="btn-save">Save</button>
-      </div>
-
-      <!-- ENTRIES LIST -->
-      <div class="entries-list" id="entries-container">
-
-        <!-- Existing entries from DB (when editing) -->
-        <div th:each="entry : ${entries}" class="entry-row">
-          <img th:if="${entry.movie.posterUrl != null}"
-               class="entry-poster"
-               th:src="${entry.movie.posterUrl}"
-               th:alt="${entry.movie.title}"
-               loading="lazy">
-          <div th:unless="${entry.movie.posterUrl != null}" class="entry-poster-placeholder">🎬</div>
-
-          <div class="entry-info">
-            <span class="entry-title"  th:text="${entry.movie.title}">Title</span>
-            <span class="entry-year"   th:if="${entry.movie.releaseYear != null}"
-                  th:text="${entry.movie.releaseYear}">2024</span>
-            <button type="button" class="entry-note-btn">Add Note</button>
-            <!-- Hidden input so movie ids are submitted -->
-            <input type="hidden" name="movieIds" th:value="${entry.movie.id}">
-          </div>
-
-          <div class="entry-actions">
-            <button type="button" class="entry-delete" onclick="this.closest('.entry-row').remove()" title="Remove">🗑</button>
-            <button type="button" class="entry-drag" title="Drag to reorder">⠿</button>
-          </div>
+                <!-- Remove from session -->
+                <form method="post" th:action="@{/lists/remove-movie}" style="margin:0;">
+                    <input type="hidden" name="movieId" th:value="${movie.id}">
+                    <button type="submit" class="btn-icon" title="Remove">🗑</button>
+                </form>
+            </div>
         </div>
 
-        <!-- JS-added entries will appear here -->
-      </div>
-
-    </form>
-  </div>
+    </div>
 </main>
 
-<!-- ── FOOTER ── -->
+<!-- FOOTER -->
 <footer>
-  <div class="footer-links">
-    <a href="#">About</a>
-    <a href="#">Pro</a>
-    <a href="#">News</a>
-    <a href="#">Apps</a>
-    <a href="#">Year in Review</a>
-    <a href="#">Gifts</a>
-    <a href="#">Help</a>
-    <a href="#">Terms</a>
-    <a href="#">API</a>
-    <a href="#">Contact</a>
-  </div>
+    <div class="footer-links">
+        <a href="#">About</a><a href="#">Pro</a><a href="#">News</a>
+        <a href="#">Help</a><a href="#">Terms</a><a href="#">Contact</a>
+    </div>
 </footer>
 
-<script>
-  function searchFilm() {
-    const input = document.getElementById('film-search');
-    const query = input.value.trim();
-    if (query.length < 2) {
-        alert('Please enter at least 2 characters to search.');
-        return;
-    }
-
-    fetch(`/lists/search-movie?query=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            const resultsContainer = document.getElementById('search-results-container');
-            resultsContainer.innerHTML = '';
-            if (data.results && data.results.length > 0) {
-                data.results.forEach(movie => {
-                    const item = document.createElement('div');
-                    item.className = 'search-result-item';
-                    item.onclick = () => addFilmToList(movie);
-                    
-                    const poster = movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '';
-                    
-                    item.innerHTML = `
-                        <img src="${poster}" class="search-result-poster" alt="">
-                        <div>
-                            <div>${escapeHtml(movie.title)}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">${movie.release_date ? movie.release_date.substring(0, 4) : ''}</div>
-                        </div>
-                    `;
-                    resultsContainer.appendChild(item);
-                });
-                resultsContainer.style.display = 'block';
-            } else {
-                alert('This movie does not exist.');
-                resultsContainer.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            console.error('Error searching for film:', error);
-            alert('An error occurred while searching. Please try again.');
-        });
-  }
-
-  function addFilmToList(movie) {
-    const container = document.getElementById('entries-container');
-    const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '';
-    const releaseYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
-
-    const row = document.createElement('div');
-    row.className = 'entry-row';
-    row.innerHTML = `
-      <img src="${posterUrl}" class="entry-poster" alt="">
-      <div class="entry-info">
-        <span class="entry-title">${escapeHtml(movie.title)}</span>
-        <span class="entry-year">${releaseYear}</span>
-        <button type="button" class="entry-note-btn">Add Note</button>
-        <input type="hidden" name="movieIds" value="${movie.id}">
-      </div>
-      <div class="entry-actions">
-        <button type="button" class="entry-delete" onclick="this.closest('.entry-row').remove()" title="Remove">🗑</button>
-        <button type="button" class="entry-drag" title="Drag to reorder">⠿</button>
-      </div>`;
-
-    container.appendChild(row);
-    document.getElementById('film-search').value = '';
-    document.getElementById('search-results-container').style.display = 'none';
-  }
-  
-  document.getElementById('film-search').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { 
-        e.preventDefault(); 
-        searchFilm(); 
-    }
-  });
-
-  function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // View toggle
-  document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-</script>
 </body>
 </html>
