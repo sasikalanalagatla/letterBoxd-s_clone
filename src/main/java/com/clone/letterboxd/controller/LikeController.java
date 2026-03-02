@@ -7,6 +7,7 @@ import com.clone.letterboxd.repository.LikeRepository;
 import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,7 @@ public class LikeController {
     }
 
     @PostMapping("/movies/{movieId}/like")
+    @Transactional
     public String toggleMovieLike(@PathVariable Long movieId, HttpSession session) {
         Long userId = (Long) session.getAttribute("loggedInUserId");
         if (userId == null) {
@@ -47,6 +49,7 @@ public class LikeController {
     }
 
     @PostMapping("/reviews/{reviewId}/like")
+    @Transactional
     public String toggleReviewLike(@PathVariable Long reviewId, HttpSession session) {
         Long userId = (Long) session.getAttribute("loggedInUserId");
         if (userId == null) {

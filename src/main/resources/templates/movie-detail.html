@@ -60,7 +60,7 @@
             <div th:if="${session.loggedInUser != null}">
                 <h4>Write a review</h4>
 
-                <form th:object="${reviewForm}"
+                <form id="review-form" th:object="${reviewForm}"
                       method="post"
                       th:action="@{/movies/{id}/reviews(id=${movie.id})}">
                     <!-- display validation errors if any (must be inside form) -->
@@ -85,9 +85,62 @@
     <div class="row mt-4">
         <div class="col-12">
             <!-- reviews are rendered via separate fragment -->
-            <div th:insert="~{fragments/movie-reviews :: reviewList}"></div>
+            <div id="reviews-container" th:insert="~{fragments/movie-reviews :: reviewList}"></div>
         </div>
     </div>
 </div>
+
+<script>
+// script placed at end of body so DOM is already available; no need to wait for DOMContentLoaded
+(function() {
+    function loadReviews() {
+        const movieId = window.location.pathname.split('/').pop();
+        return fetch('/movies/' + movieId + '/reviews').then(r => r.text());
+    }
+
+    // Handle review form submission
+    const reviewForm = document.getElementById('review-form');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch(this.action, { method: 'POST', body: formData })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location = response.url; // e.g. sent to login
+                        throw new Error('redirected');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log('review fragment response:', html);
+                    const container = document.getElementById('reviews-container');
+                    if (container) {
+                        container.innerHTML = html;
+                    }
+                    reviewForm.reset();
+                })
+                .catch(err => console.error('Error saving review:', err));
+        });
+    }
+
+    // Handle like and delete forms via event delegation (attached once only)
+    const container = document.getElementById('reviews-container');
+    if (container) {
+        container.addEventListener('submit', function(e) {
+            const form = e.target;
+            const action = form.getAttribute('action') || '';
+            if (action.includes('/like') || action.includes('/delete')) {
+                e.preventDefault();
+                fetch(action, { method: 'POST' })
+                    .then(() => loadReviews().then(html => {
+                        document.getElementById('reviews-container').innerHTML = html;
+                    }))
+                    .catch(err => console.error('Error:', err));
+            }
+        });
+    }
+})();
+</script>
 </body>
 </html>

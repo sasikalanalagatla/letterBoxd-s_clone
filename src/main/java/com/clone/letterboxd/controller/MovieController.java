@@ -102,6 +102,10 @@ public class MovieController {
         log.debug("Fetching movie review fragment for movie {}", id);
         User viewer = (User) session.getAttribute("loggedInUser");
         model.addAttribute("reviews", reviewService.getDisplayDtosForMovie(id, viewer));
+        // Add a minimal movie object with just the ID for the template
+        java.util.Map<String, Object> movie = new java.util.HashMap<>();
+        movie.put("id", id);
+        model.addAttribute("movie", movie);
         return "fragments/movie-reviews :: reviewList";
     }
 
@@ -110,7 +114,8 @@ public class MovieController {
                                @Valid ReviewFormDto reviewForm,
                                org.springframework.validation.BindingResult bindingResult,
                                Model model,
-                               HttpSession session) {
+                               HttpSession session,
+                               jakarta.servlet.http.HttpServletRequest request) {
         log.info("Saving new review for movie {}", id);
         User current = (User) session.getAttribute("loggedInUser");
         if (current == null) {
@@ -120,20 +125,31 @@ public class MovieController {
         // ensure movieId is set correctly from path
         reviewForm.setMovieId(id);
 
+        boolean ajax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+
         if (bindingResult.hasErrors()) {
-            // rebuild page state so the errors can be displayed
-            return details(id, model, session);
+            if (!ajax) {
+                // full-page fallback: just reload movie detail so validation errors can be shown there
+                return "redirect:/movies/" + id;
+            }
+            model.addAttribute("reviews", reviewService.getDisplayDtosForMovie(id, current));
+            return "fragments/movie-reviews :: reviewList";
         }
 
         try {
             reviewService.createReview(reviewForm, current, id);
+            if (!ajax) {
+                return "redirect:/movies/" + id;
+            }
+            model.addAttribute("reviews", reviewService.getDisplayDtosForMovie(id, current));
+            return "fragments/movie-reviews :: reviewList";
         } catch (Exception e) {
             log.error("Failed to create review for movie {}", id, e);
-            model.addAttribute("error", "Could not save review: " + e.getMessage());
-            return details(id, model, session);
+            if (!ajax) {
+                return "redirect:/movies/" + id;
+            }
+            model.addAttribute("reviews", reviewService.getDisplayDtosForMovie(id, current));
+            return "fragments/movie-reviews :: reviewList";
         }
-
-        // redirect to avoid form resubmission; refreshed details will show the new review
-        return "redirect:/movies/" + id;
     }
 }

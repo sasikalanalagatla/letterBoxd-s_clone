@@ -86,7 +86,6 @@ public class ListController {
         FilmList filmList = listOptional.get();
         FilmListDetailDto listDetail = filmListMapper.toDetailDto(filmList);
 
-        // enrich each entry with movie metadata from TMDB
         if (listDetail.getEntries() != null) {
             for (FilmListEntryDto entry : listDetail.getEntries()) {
                 try {
@@ -160,7 +159,6 @@ public class ListController {
             } catch (Exception e) {
                 log.warn("TMDB search failed for query={}", query, e);
             }
-            // attach review/like counts to each result map
             for (Map<String, Object> movie : results) {
                 Object idObj = movie.get("id");
                 if (idObj instanceof Number) {
@@ -214,7 +212,6 @@ public class ListController {
                     filmListRepository.save(list);
                 }
             }
-            // clear any old search results so page reloads cleanly
             session.removeAttribute(SESSION_SEARCH_RESULTS);
             return "redirect:/lists/" + listId + "/edit";
         }
@@ -285,7 +282,6 @@ public class ListController {
             newList.setVisibility(listFormDto.getVisibility());
             newList.setCreatedAt(LocalDateTime.now());
 
-            // attach any movies the user added during the draft phase
             List<Map<String, Object>> pending = getPendingMovies(session);
             int rankCounter = 1;
             for (Map<String, Object> movie : pending) {
@@ -293,13 +289,11 @@ public class ListController {
                 entry.setList(newList);
                 entry.setMovieId((Long) movie.get("id"));
                 entry.setRank(rankCounter++);
-                // note and other fields could be added later
                 newList.getEntries().add(entry);
             }
 
             FilmList savedList = filmListRepository.save(newList);
 
-            // clear session state now that the list is persisted
             session.removeAttribute(SESSION_MOVIE_IDS);
             session.removeAttribute(SESSION_SEARCH_RESULTS);
 
@@ -332,13 +326,11 @@ public class ListController {
         formDto.setRanked(filmList.getRanked());
         formDto.setVisibility(filmList.getVisibility());
 
-        // convert existing entries so the template can render them and allow removal
         if (filmList.getEntries() != null) {
             List<FilmListEntryDto> entryDtos = filmList.getEntries().stream()
                     .map(FilmListMapper::toEntryDto)
                     .toList();
 
-            // enrich entries with basic metadata from TMDB
             for (FilmListEntryDto entry : entryDtos) {
                 try {
                     Map<String, Object> movieData = tmdbService.getMovieDetails(entry.getMovieId());
@@ -360,9 +352,6 @@ public class ListController {
         model.addAttribute("list",   formDto);
         model.addAttribute("listId", listId);
 
-        // forward any search results back to the page so the user can
-        // perform additional lookups without losing the list they are
-        // editing.  reuses the same session key as the create flow.
         model.addAttribute("searchResults", getSearchResults(session));
 
         return "list-edit";
