@@ -16,7 +16,6 @@ public class UserProfileDto {
     private String location;
     private LocalDateTime joinedAt;
     private Long filmsWatchedCount;
-    private Double averageRating;
     private Integer reviewCount;
     private Integer listCount;
     private Integer followingCount;

@@ -42,6 +42,30 @@
                     <span th:text="${movie.averageLetterboxdRating}">N/A</span> avg rating
                 </small>
             </div>
+
+            <div class="mb-2" th:if="${session.loggedInUser != null}">
+                <form th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post" class="d-flex align-items-center gap-2">
+                    <label class="mb-0">Your rating:</label>
+                    <div class="btn-group" role="group" aria-label="rating">
+                        <button type="submit" name="rating" value="1" class="btn btn-link p-0" title="1 star">
+                            <i class="bi" th:classappend="${movie.userRating != null and movie.userRating >= 1} ? ' bi-star-fill' : ' bi-star'"></i>
+                        </button>
+                        <button type="submit" name="rating" value="2" class="btn btn-link p-0" title="2 stars">
+                            <i class="bi" th:classappend="${movie.userRating != null and movie.userRating >= 2} ? ' bi-star-fill' : ' bi-star'"></i>
+                        </button>
+                        <button type="submit" name="rating" value="3" class="btn btn-link p-0" title="3 stars">
+                            <i class="bi" th:classappend="${movie.userRating != null and movie.userRating >= 3} ? ' bi-star-fill' : ' bi-star'"></i>
+                        </button>
+                        <button type="submit" name="rating" value="4" class="btn btn-link p-0" title="4 stars">
+                            <i class="bi" th:classappend="${movie.userRating != null and movie.userRating >= 4} ? ' bi-star-fill' : ' bi-star'"></i>
+                        </button>
+                        <button type="submit" name="rating" value="5" class="btn btn-link p-0" title="5 stars">
+                            <i class="bi" th:classappend="${movie.userRating != null and movie.userRating >= 5} ? ' bi-star-fill' : ' bi-star'"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
             <div class="mb-3" th:if="${session.loggedInUser != null}">
                 <form th:action="@{/movies/{id}/like(id=${movie.id})}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-outline-danger">

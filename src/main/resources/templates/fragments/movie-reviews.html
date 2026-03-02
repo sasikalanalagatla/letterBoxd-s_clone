@@ -1,4 +1,4 @@
-<div th:fragment="reviewList">
+<div th:fragment="reviewList" xmlns:th="http://www.w3.org/1999/xhtml">
     <h4 th:if="${reviews != null and reviews.size() > 0}">Reviews</h4>
     <p th:if="${reviews == null or reviews.size() == 0}" class="text-muted">No reviews yet</p>
 

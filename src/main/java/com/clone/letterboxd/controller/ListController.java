@@ -126,6 +126,7 @@ public class ListController {
         model.addAttribute("list",          draft);
         model.addAttribute("pendingMovies", pendingMovies);
         model.addAttribute("searchResults", searchResults);
+        model.addAttribute("searchQuery", ""); // ensure input is cleared
         return "list-create";
     }
 
@@ -156,6 +157,10 @@ public class ListController {
             try {
                 Map<String, Object> response = tmdbService.searchMovies(query.trim(), 1);
                 results = (List<Map<String, Object>>) response.getOrDefault("results", List.of());
+                // only keep the first 10 entries to avoid overwhelming the user
+                if (results.size() > 10) {
+                    results = results.subList(0, 10);
+                }
             } catch (Exception e) {
                 log.warn("TMDB search failed for query={}", query, e);
             }
@@ -230,6 +235,7 @@ public class ListController {
             pending.add(movie);
             session.setAttribute(SESSION_MOVIE_IDS, pending);
         }
+        session.removeAttribute(SESSION_SEARCH_RESULTS);
 
         return buildRedirectToCreate(name, description, ranked, visibility);
     }
@@ -353,6 +359,7 @@ public class ListController {
         model.addAttribute("listId", listId);
 
         model.addAttribute("searchResults", getSearchResults(session));
+        model.addAttribute("searchQuery", "");
 
         return "list-edit";
     }
