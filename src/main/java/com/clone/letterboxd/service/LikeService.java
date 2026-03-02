@@ -4,6 +4,7 @@ import com.clone.letterboxd.repository.LikeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LikeService {
@@ -43,5 +44,11 @@ public class LikeService {
     public void deleteByMovieAndUser(Long movieId, Long userId) {
         log.info("Deleting movie-like entry for user {} movie {}", userId, movieId);
         likeRepository.deleteByMovieIdAndUserId(movieId, userId);
+    }
+
+    @Transactional
+    public void deleteByReviewId(Long reviewId) {
+        log.info("Removing all likes for review {}", reviewId);
+        likeRepository.deleteByReviewId(reviewId);
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class ReviewController {
@@ -92,7 +93,9 @@ public class ReviewController {
     }
 
     @PostMapping("/reviews/{id}/delete")
-    public String deleteReview(@PathVariable Long id, HttpSession session) {
+    public String deleteReview(@PathVariable Long id,
+                               @RequestParam(required = false) Long movieId,
+                               HttpSession session) {
         log.info("Deleting review {}", id);
         User current = (User) session.getAttribute("loggedInUser");
         if (current == null) {
@@ -109,8 +112,12 @@ public class ReviewController {
             log.warn("User {} unauthorized to delete review {}", current.getId(), id);
             return "redirect:/";
         }
-        String owner = review.getUser().getUsername();
         reviewService.deleteReview(review);
+        // if called from a movie page, return to that movie; otherwise go to review owner's profile
+        if (movieId != null) {
+            return "redirect:/movies/" + movieId;
+        }
+        String owner = review.getUser().getUsername();
         return "redirect:/profile/" + owner;
     }
 }

@@ -32,4 +32,7 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     // find review like by user and review
     java.util.Optional<Like> findByReviewIdAndUserId(Long reviewId, Long userId);
+
+    // delete all likes associated with a review (used when review is removed)
+    void deleteByReviewId(Long reviewId);
 }

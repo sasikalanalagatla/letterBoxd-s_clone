@@ -7,10 +7,10 @@ import com.clone.letterboxd.mapper.UserMapper;
 import com.clone.letterboxd.model.Review;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.ReviewRepository;
-import com.clone.letterboxd.service.LikeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,8 +72,6 @@ public class ReviewService {
 
     public List<Review> getReviewsByUserId(Long userId) {
         log.trace("Getting reviews for user {}", userId);
-        // repository accepts a User entity; caller is responsible for resolving it
-        // in most usages this method isn't called, but it is here for completeness
         User lookup = new User();
         lookup.setId(userId);
         return reviewRepository.findByUser(lookup);
@@ -85,8 +83,10 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
+    @Transactional
     public void deleteReview(Review review) {
         log.info("Deleting review {}", review.getId());
+        likeService.deleteByReviewId(review.getId());
         reviewRepository.delete(review);
     }
 

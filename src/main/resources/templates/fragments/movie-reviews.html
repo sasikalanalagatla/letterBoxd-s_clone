@@ -27,7 +27,7 @@
                    th:if="${session.loggedInUser != null and session.loggedInUser.id == review.author.id}"
                    th:href="@{/reviews/{id}/edit(id=${review.id})}">Edit</a>
                 <form th:if="${session.loggedInUser != null and (session.loggedInUser.id == review.author.id or session.loggedInUser.isAdmin)}"
-                      th:action="@{/reviews/{id}/delete(id=${review.id})}"
+                      th:action="@{/reviews/{id}/delete(id=${review.id}, movieId=${movie.id})}"
                       method="post" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                 </form>
