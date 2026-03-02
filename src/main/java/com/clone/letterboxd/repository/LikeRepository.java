@@ -2,6 +2,7 @@ package com.clone.letterboxd.repository;
 
 import com.clone.letterboxd.model.Like;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,4 +36,16 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     // delete all likes associated with a review (used when review is removed)
     void deleteByReviewId(Long reviewId);
+
+    // film list likes
+    long countByFilmListId(Long filmListId);
+    boolean existsByFilmListIdAndUserId(Long filmListId, Long userId);
+    void deleteByFilmListIdAndUserId(Long filmListId, Long userId);
+
+    // featured list likes are tracked by slug rather than a film_list_id reference
+    long countByFeaturedListSlug(String featuredListSlug);
+    boolean existsByFeaturedListSlugAndUserId(String featuredListSlug, Long userId);
+    void deleteByFeaturedListSlugAndUserId(String featuredListSlug, Long userId);
+    // insertion can be handled via save(new Like(...)) so no custom query is required
+
 }

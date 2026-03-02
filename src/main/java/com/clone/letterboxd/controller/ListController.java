@@ -3,6 +3,7 @@ package com.clone.letterboxd.controller;
 import com.clone.letterboxd.dto.FilmListEntryDto;
 import com.clone.letterboxd.dto.FilmListFormDto;
 import com.clone.letterboxd.dto.FilmListDetailDto;
+import com.clone.letterboxd.dto.FilmListSummaryDto;
 import com.clone.letterboxd.mapper.FilmListMapper;
 import com.clone.letterboxd.model.FilmList;
 import com.clone.letterboxd.model.User;
@@ -10,6 +11,8 @@ import com.clone.letterboxd.repository.FilmListRepository;
 import com.clone.letterboxd.repository.UserRepository;
 import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.repository.LikeRepository;
+import com.clone.letterboxd.service.FeaturedListService;
+import com.clone.letterboxd.service.ReviewService;
 import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -35,6 +38,8 @@ public class ListController {
     private final LikeRepository likeRepository;
     private final FilmListMapper filmListMapper;
     private final TmdbService tmdbService;
+    private final ReviewService reviewService;
+    private final FeaturedListService featuredListService;
     private static final String SESSION_MOVIE_IDS      = "pendingMovieIds";
     private static final String SESSION_SEARCH_RESULTS = "movieSearchResults";
     private static final String SESSION_DRAFT          = "listDraft";
@@ -44,22 +49,56 @@ public class ListController {
                           ReviewRepository reviewRepository,
                           LikeRepository likeRepository,
                           FilmListMapper filmListMapper,
-                          TmdbService tmdbService) {
+                          TmdbService tmdbService,
+                          ReviewService reviewService,
+                          FeaturedListService featuredListService) {
         this.filmListRepository = filmListRepository;
         this.userRepository     = userRepository;
         this.reviewRepository   = reviewRepository;
         this.likeRepository     = likeRepository;
         this.filmListMapper     = filmListMapper;
         this.tmdbService        = tmdbService;
+        this.reviewService      = reviewService;
+        this.featuredListService = featuredListService;
     }
 
     @GetMapping
-    public String browseLists(HttpSession session, Model model) {
+    public String browseLists(
+            @RequestParam(value = "allFeatured", required = false, defaultValue = "false") boolean allFeatured,
+            HttpSession session,
+            Model model) {
+        // featured lists. show a preview by default, or all if requested
+        List<FeaturedListService.FeaturedListItem> allFeaturedItems =
+            featuredListService.getAllFeaturedLists();
+        boolean showAllLink = !allFeatured && allFeaturedItems.size() > 6;
+        List<FeaturedListService.FeaturedListItem> featuredSource = allFeatured
+                ? allFeaturedItems
+                : allFeaturedItems.stream().limit(6).toList();
+        List<FilmListSummaryDto> featuredLists = featuredSource.stream()
+            .map(item -> {
+                FilmListSummaryDto dto = featuredListService.toSummaryDto(item);
+                // Fetch and add movie posters
+                enrichWithMoviePosters(dto, item);
+                return dto;
+            })
+            .toList();
+        
+        model.addAttribute("featuredLists", featuredLists);
+        model.addAttribute("totalFeaturedCount", allFeaturedItems.size());
+        model.addAttribute("showAllLink", showAllLink);
+        
+        // popular this week (reuse existing repository method)
+        List<FilmList> popular = filmListRepository
+                .findMostPopularLists(PageRequest.of(0, 6)).getContent();
+        model.addAttribute("popularThisWeek", buildSummaryList(popular));
+        
+        // TODO: recently liked section - for now mirror popular lists
+        model.addAttribute("recentlyLiked", buildSummaryList(popular));
+
         // fetch raw entities from repository
         List<FilmList> curated = filmListRepository
                 .findByNameContainingIgnoreCase("Top 500");
-        List<FilmList> popular = filmListRepository
-                .findMostPopularLists(PageRequest.of(0, 6)).getContent();
+        // reuse same 'popular' list for the normal popularLists section
 
         // convert to view-friendly DTOs and enrich with TMDB metadata
         model.addAttribute("curatedLists", buildSummaryList(curated));
@@ -432,6 +471,68 @@ public class ListController {
         return "user-lists";
     }
 
+    @GetMapping("/featured")
+    public String redirectFeatured() {
+        // consolidated view lives on /lists; preserve query param semantics
+        return "redirect:/lists?allFeatured=true";
+    }
+
+    // removed; full featured view now handled by browseLists with allFeatured flag
+
+    @GetMapping("/featured/{slug}")
+    public String viewFeaturedList(@PathVariable String slug, HttpSession session, Model model) {
+        FeaturedListService.FeaturedListItem item = 
+                featuredListService.getAllFeaturedLists().stream()
+                    .filter(i -> i.getSlug().equals(slug))
+                    .findFirst()
+                    .orElse(null);
+        if (item == null) {
+            return "redirect:/lists?allFeatured=true";
+        }
+        FilmListSummaryDto dto = featuredListService.toSummaryDto(item);
+        enrichWithMoviePosters(dto, item);
+
+        // load reviews for each movie in the list
+        com.clone.letterboxd.model.User currentUser = null;
+        Long userId = (Long) session.getAttribute("loggedInUserId");
+        if (userId != null) {
+            currentUser = userRepository.findById(userId).orElse(null);
+        }
+        Map<Long, List<com.clone.letterboxd.dto.ReviewDisplayDto>> reviewsByMovie = new LinkedHashMap<>();
+        Map<Long, String> movieTitles = new LinkedHashMap<>();
+        for (Long mid : item.getMovieIds()) {
+            List<com.clone.letterboxd.dto.ReviewDisplayDto> reviews =
+                    reviewService.getDisplayDtosForMovie(mid, currentUser);
+            // only add to map if there are reviews
+            if (reviews != null && !reviews.isEmpty()) {
+                reviewsByMovie.put(mid, reviews);
+            }
+            // also fetch title for display
+            try {
+                Map<String,Object> md = tmdbService.getMovieDetails(mid);
+                if (md != null) {
+                    movieTitles.put(mid, (String)md.get("title"));
+                }
+            } catch (Exception e) {
+                log.warn("failed to fetch title for movie {}", mid, e);
+            }
+        }
+
+        // Get featured list likes by slug
+        long listLikeCount = likeRepository.countByFeaturedListSlug(slug);
+        boolean currentUserLikedList = userId != null && likeRepository.existsByFeaturedListSlugAndUserId(slug, userId);
+
+        model.addAttribute("list", dto);
+        model.addAttribute("reviewsByMovie", reviewsByMovie);
+        model.addAttribute("movieTitles", movieTitles);
+        model.addAttribute("featuredSlug", slug);
+        model.addAttribute("listLikeCount", listLikeCount);
+        model.addAttribute("currentUserLikedList", currentUserLikedList);
+        // indicate login state for template logic
+        model.addAttribute("loggedIn", userId != null);
+        return "featured-list-detail";
+    }
+
     @GetMapping("/curated/top-500")
     public String top500List(Model model) {
         model.addAttribute("title",       "Top 500 Narrative Feature Films");
@@ -473,6 +574,32 @@ public class ListController {
     private List<com.clone.letterboxd.dto.FilmListSummaryDto> buildSummaryList(List<FilmList> lists) {
         if (lists == null) return List.of();
         return lists.stream().map(this::toSummaryDto).toList();
+    }
+
+    private void enrichWithMoviePosters(FilmListSummaryDto dto, FeaturedListService.FeaturedListItem item) {
+        if (item.getMovieIds() == null || item.getMovieIds().isEmpty()) {
+            return;
+        }
+        
+        List<String> posters = new ArrayList<>();
+        List<Long> ids = new ArrayList<>();
+        for (Long movieId : item.getMovieIds()) {
+            if (posters.size() >= 5) break; // Limit to 5 posters for collage
+            try {
+                Map<String, Object> movieData = tmdbService.getMovieDetails(movieId);
+                if (movieData != null) {
+                    String poster = (String) movieData.get("poster_path");
+                    if (poster != null) {
+                        posters.add(poster);
+                        ids.add(movieId);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch TMDB details for featured movie {}", movieId, e);
+            }
+        }
+        dto.setPreviewPosterPaths(posters);
+        dto.setPreviewMovieIds(ids);
     }
 
     private com.clone.letterboxd.dto.FilmListSummaryDto toSummaryDto(FilmList list) {

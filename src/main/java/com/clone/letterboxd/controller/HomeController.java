@@ -85,6 +85,11 @@ public class HomeController {
 
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load movies: " + e.getMessage());
+            // make sure template has required pagination attributes even on error
+            model.addAttribute("movies", java.util.Collections.emptyList());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", 1);
+            model.addAttribute("currentUser", currentUser);
             e.printStackTrace();
         }
 

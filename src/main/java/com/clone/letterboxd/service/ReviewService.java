@@ -61,6 +61,8 @@ public class ReviewService {
                     rd.setAuthor(UserMapper.toSummaryDto(r.getUser()));
                     rd.setLikeCount((int) likeService.countByReviewId(r.getId()));
                     rd.setCommentCount(0);
+                    // always initialize flag to avoid nulls in templates
+                    rd.setCurrentUserLiked(false);
                     if (currentUser != null) {
                         rd.setCurrentUserLiked(
                                 likeService.existsByReviewAndUser(r.getId(), currentUser.getId()));

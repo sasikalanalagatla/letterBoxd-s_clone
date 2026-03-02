@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Featured Lists - LetterBoxd's</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Merriweather:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --green: #00c030;
+        --green-dark: #009924;
+        --bg-dark: #14181c;
+        --bg-mid: #1c2228;
+        --bg-card: #2c3440;
+        --border: rgba(255, 255, 255, 0.08);
+        --text-muted: #678;
+        --text-dim: #9ab;
+        --text: #ccc;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Titillium Web", sans-serif;
+        background: var(--bg-dark);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      /* ── HEADER ── */
+      .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: rgba(20, 24, 28, 0.97);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+        height: 56px;
+        display: flex;
+        align-items: center;
+        padding: 0 2rem;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        margin-right: 2.5rem;
+      }
+
+      .logo-dots {
+        display: flex;
+        gap: 4px;
+      }
+
+      .logo-dots span {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        display: block;
+      }
+
+      .dot-o {
+        background: #f97316;
+      }
+
+      .dot-g {
+        background: #22c55e;
+      }
+
+      .dot-b {
+        background: #3b82f6;
+      }
+
+      .logo-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        list-style: none;
+        gap: 0.1rem;
+        flex: 1;
+      }
+
+      .nav-links li a {
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.45rem 0.8rem;
+        border-radius: 3px;
+        transition: color 0.2s, background 0.2s;
+        display: block;
+      }
+
+      .nav-links li a:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .nav-links li a.active {
+        color: #fff;
+      }
+
+      .search-wrap {
+        margin-left: auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .search-wrap input {
+        height: 32px;
+        width: 175px;
+        padding: 0 2.2rem 0 0.85rem;
+        background: rgba(255, 255, 255, 0.09);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
+        font-size: 0.82rem;
+        font-family: inherit;
+        color: #fff;
+        transition: all 0.25s;
+      }
+
+      .search-wrap input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* ── MAIN CONTENT ── */
+      main {
+        margin-top: 56px;
+        padding: 2rem 0;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #fff;
+      }
+
+      .subtitle {
+        color: var(--text-dim);
+        font-size: 0.95rem;
+        margin-bottom: 2.5rem;
+      }
+
+      /* ── CATEGORY SECTION ── */
+      .category-section {
+        margin-bottom: 3rem;
+      }
+
+      .category-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(0, 192, 48, 0.3);
+      }
+
+      /* ── FEATURED GRID ── */
+      .featured-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .view-all-link {
+        display:inline-block;
+        margin-top:0.5rem;
+        font-size:0.875rem;
+        color:var(--green);
+      }
+      .featured-meta {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:0.25rem 0;
+      }
+      .featured-likes {
+        font-size:0.85rem;
+        color:var(--text-dim);
+      }
+      .section-title {
+        margin-top:2rem;
+        font-size:1.25rem;
+        color:#fff;
+      }
+
+      .featured-card {
+        display: block;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .featured-card:hover {
+        transform: translateY(-4px);
+      }
+
+      .featured-collage {
+        display: flex;
+        height: 130px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 0.7rem;
+        gap: 2px;
+        background: var(--bg-card);
+      }
+
+      .featured-collage .col-img:first-child {
+        flex: 1.4;
+      }
+
+      .featured-collage .col-img {
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .featured-collage .col-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s;
+      }
+
+      .featured-card:hover .featured-collage .col-img img {
+        transform: scale(1.04);
+      }
+
+      .featured-collage-placeholder {
+        height: 130px;
+        border-radius: 4px;
+        background: var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 0.7rem;
+        color: var(--text-muted);
+      }
+
+      .featured-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.45rem;
+        line-height: 1.3;
+      }
+
+      .featured-creator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .creator-avatar {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+        font-size: 0.7rem;
+        font-weight: 700;
+      }
+
+      .creator-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .creator-label {
+        display: none;
+      }
+
+      .creator-name {
+        color: var(--text-dim);
+      }
+
+      /* ── BACK LINK ── */
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        transition: color 0.2s;
+      }
+
+      .back-link:hover {
+        color: #fff;
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 768px) {
+        .featured-grid {
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 1rem;
+        }
+
+        h1 {
+          font-size: 1.5rem;
+        }
+
+        .category-title {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── HEADER ── -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-dots">
+          <span class="dot-o"></span>
+          <span class="dot-g"></span>
+          <span class="dot-b"></span>
+        </div>
+        <span class="logo-name">LetterBoxd's</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/movies" class="">Search</a></li>
+        <li><a href="/lists" class="active">Lists</a></li>
+        <li><a href="/profile">Profile</a></li>
+      </ul>
+      <div class="search-wrap">
+        <input type="text" placeholder="Search..." />
+      </div>
+    </header>
+
+    <!-- ── MAIN ── -->
+    <main>
+      <div class="container">
+        <a href="/lists" class="back-link">← Back to Lists</a>
+
+        <h1>Featured Lists</h1>
+        <p class="subtitle">
+          Explore <span th:text="${totalLists}">22</span> curated collections selected by our team
+        </p>
+        <div th:if="${showAllLink}">
+          <a href="/lists/featured/all" class="view-all-link">Show all featured lists →</a>
+        </div>
+
+        <!-- ── CATEGORY SECTIONS ── -->
+        <!-- popular this week section -->
+        <div th:if="${popularThisWeek != null}">
+          <h2 class="section-title">Popular This Week</h2>
+          <div class="featured-grid">
+            <a
+              class="featured-card"
+              th:each="lst : ${popularThisWeek}"
+              th:href="@{/lists/{id}(id=${lst.id})}"
+            >
+              <div class="featured-collage-placeholder">📋</div>
+              <div class="featured-title" th:text="${lst.name}">List Name</div>
+            </a>
+          </div>
+        </div>
+
+        <!-- ── CATEGORY SECTIONS ── -->
+        <div th:each="category, iterStat : ${categorizedLists}" class="category-section">
+          <h2 class="category-title" th:text="${category.key}">Category Name</h2>
+
+          <div class="featured-grid">
+            <a
+              class="featured-card"
+              th:each="list : ${category.value}"
+              th:href="@{/lists/featured/{slug}(slug=${list.slug})}"
+            >
+              <!-- Poster collage: up to 5 images -->
+              <div
+                class="featured-collage"
+                th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
+              >
+                <div
+                  class="col-img"
+                  th:each="path, i : ${list.previewPosterPaths}"
+                  th:if="${i.index < 5}"
+                >
+                  <img
+                    th:src="${path}"
+                    loading="lazy"
+                    th:alt="${list.name}"
+                  />
+                </div>
+              </div>
+              <div
+                class="featured-collage-placeholder"
+                th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
+              >
+                📋
+              </div>
+
+              <div class="featured-title" th:text="${list.name}">List Name</div>
+                  <div class="featured-meta">
+                <div class="featured-creator">
+                  <div class="creator-avatar">
+                    <img
+                      th:if="${list.owner?.avatarUrl != null}"
+                      th:src="${list.owner.avatarUrl}"
+                      th:alt="${list.owner.username}"
+                    />
+                    <span
+                      th:unless="${list.owner?.avatarUrl != null}"
+                      th:text="${list.owner?.username?.substring(0,1)?.toUpperCase()?: '○'}"
+                    ></span>
+                  </div>
+                  <span class="creator-name" th:text="${list.owner?.username ?: 'Official Lists'}"
+                    >username</span
+                  >
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

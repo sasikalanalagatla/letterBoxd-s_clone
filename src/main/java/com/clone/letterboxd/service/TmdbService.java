@@ -42,6 +42,7 @@ public class TmdbService {
         return executeGetRequest(url);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "movieDetails", key = "#movieId")
     public Map<String, Object> getMovieDetails(Long movieId) {
         String url = baseUrl + "/movie/" + movieId +
             "?api_key=" + apiKey +
@@ -94,10 +95,11 @@ public class TmdbService {
         } catch (HttpClientErrorException e) {
             log.warn("TMDB API error: status={}, body={}",
                     e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("TMDB request failed: " + e.getMessage(), e);
+            return null;
         } catch (Exception e) {
             log.error("Unexpected error calling TMDB", e);
-            throw new RuntimeException("Failed to communicate with TMDB", e);
+            // return null so callers can gracefully handle absence of data
+            return null;
         }
     }
 }

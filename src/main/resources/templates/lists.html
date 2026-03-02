@@ -532,15 +532,13 @@
         <!-- ── FEATURED LISTS ── -->
         <div class="section-header">
           <span class="section-label">Featured Lists</span>
-          <a class="section-all" th:href="@{/lists/featured}">All</a>
+          <a
+            class="section-all"
+            th:if="${showAllLink}"
+            th:href="@{/lists(allFeatured=true)}"
+          >All <span th:text="${totalFeaturedCount}">22</span> lists</a>
         </div>
 
-        <!--
-      featuredLists = List<FilmListSummaryDto> provided by the controller.
-      Summary DTO contains id/name/owner/entryCount and a small
-      previewPosterPaths list; the template uses the latter instead of
-      iterating over the full entries collection.
-    -->
         <div
           class="featured-grid"
           th:if="${featuredLists != null and !featuredLists.isEmpty()}"
@@ -548,8 +546,9 @@
           <a
             class="featured-card"
             th:each="list : ${featuredLists}"
-            th:href="@{/lists/{id}(id=${list.id})}"
+            th:href="@{/lists/featured/{slug}(slug=${list.slug})}"
           >
+            <div class="featured-likes">❤️ <span th:text="${list.likeCount}">0</span></div>
             <!-- Poster collage: up to 5 images -->
             <div
               class="featured-collage"
@@ -577,17 +576,17 @@
             <div class="featured-creator">
               <div class="creator-avatar">
                 <img
-                  th:if="${list.user.avatarUrl != null}"
-                  th:src="${list.user.avatarUrl}"
-                  th:alt="${list.user.username}"
+                  th:if="${list.owner?.avatarUrl != null}"
+                  th:src="${list.owner.avatarUrl}"
+                  th:alt="${list.owner.username}"
                 />
                 <span
-                  th:unless="${list.user.avatarUrl != null}"
-                  th:text="${list.user.username.substring(0,1).toUpperCase()}"
+                  th:unless="${list.owner?.avatarUrl != null}"
+                  th:text="${list.owner?.username?.substring(0,1)?.toUpperCase()?: '○'}"
                 ></span>
               </div>
               <span class="creator-label">Created by</span>
-              <span class="creator-name" th:text="${list.user.username}"
+              <span class="creator-name" th:text="${list.owner?.username ?: 'Official Lists'}"
                 >username</span
               >
             </div>
@@ -676,6 +675,46 @@
         </div>
 
         <hr class="section-divider" />
+        <!-- ── RECENTLY LIKED ── -->
+        <div class="section-header">
+          <span class="section-label">Recently Liked Lists</span>
+          <a class="section-all" href="#">More</a>
+        </div>
+        <div class="popular-grid" th:if="${recentlyLiked != null}">
+          <a
+            class="popular-card"
+            th:each="list : ${recentlyLiked}"
+            th:href="@{/lists/{id}(id=${list.id})}"
+          >
+            <div
+              class="popular-strip"
+              th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
+            >
+              <div
+                class="strip-img"
+                th:each="path : ${list.previewPosterPaths}"
+              >
+                <img
+                  th:src="${path}"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div
+              class="popular-strip-placeholder"
+              th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
+            >
+              📋
+            </div>
+
+            <div class="popular-title" th:text="${list.name}">List Name</div>
+            <div class="popular-meta">
+              <span th:text="${list.entryCount + ' films'}">0 films</span>
+              <span>·</span>
+              <span th:text="${list.owner.username}">username</span>
+            </div>
+          </a>
+        </div>
 
         <!-- ── POPULAR THIS WEEK ── -->
         <div class="section-header">
@@ -683,7 +722,7 @@
           <a class="section-all" th:href="@{/lists/popular}">More</a>
         </div>
 
-        <!--
+        <!-- recently liked section inserted by next patch -->
       popularLists = List<FilmListSummaryDto> (same structure as other sections)
     -->
         <div class="popular-grid" th:if="${!popularLists.isEmpty()}">

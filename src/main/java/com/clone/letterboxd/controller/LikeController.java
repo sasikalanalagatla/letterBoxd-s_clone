@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
 
@@ -50,7 +51,8 @@ public class LikeController {
 
     @PostMapping("/reviews/{reviewId}/like")
     @Transactional
-    public String toggleReviewLike(@PathVariable Long reviewId, HttpSession session) {
+    public String toggleReviewLike(@PathVariable Long reviewId, HttpSession session,
+                                   @RequestParam(required = false) String redirectTo) {
         Long userId = (Long) session.getAttribute("loggedInUserId");
         if (userId == null) {
             return "redirect:/auth/login";
@@ -74,6 +76,36 @@ public class LikeController {
             like.setReview(review);
             likeRepository.save(like);
         }
+        
+        // Redirect to specified location or default to movie page
+        if (redirectTo != null && !redirectTo.isEmpty()) {
+            return "redirect:" + redirectTo;
+        }
         return "redirect:/movies/" + review.getMovieId();
+    }
+
+    @PostMapping("/featured/{slug}/like")
+    @Transactional
+    public String toggleFeaturedListLike(@PathVariable String slug, HttpSession session) {
+        Long userId = (Long) session.getAttribute("loggedInUserId");
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+        
+        // use slug field instead of fake numeric id
+        if (likeRepository.existsByFeaturedListSlugAndUserId(slug, userId)) {
+            likeRepository.deleteByFeaturedListSlugAndUserId(slug, userId);
+        } else {
+            Like like = new Like();
+            like.setUser(user);
+            like.setFeaturedListSlug(slug);
+            likeRepository.save(like);
+        }
+        
+        return "redirect:/lists/featured/" + slug;
     }
 }

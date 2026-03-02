@@ -20,6 +20,24 @@ public class FilmListSummaryDto {
     private Integer commentCount;
     private Boolean currentUserLiked;
     private List<String> previewPosterPaths;
+    private List<Long> previewMovieIds;
+    private String slug;
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public List<Long> getPreviewMovieIds() {
+        return previewMovieIds != null ? previewMovieIds : List.of();
+    }
+
+    public void setPreviewMovieIds(List<Long> previewMovieIds) {
+        this.previewMovieIds = previewMovieIds;
+    }
 
     public String getDescriptionExcerpt() {
         if (descriptionExcerpt == null) return "";

@@ -29,6 +29,10 @@ public class Like {
     @JoinColumn(name = "film_list_id")
     private FilmList filmList;
 
+    // slug for featured lists (not stored in film_lists table; helps avoid FK violations)
+    @Column(name = "featured_list_slug")
+    private String featuredListSlug;
+
     // direct movie likes (not tied to diary or review)
     @Column(name = "movie_id")
     private Long movieId;
