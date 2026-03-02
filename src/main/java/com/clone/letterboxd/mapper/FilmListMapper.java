@@ -50,14 +50,14 @@ public class FilmListMapper {
         return dto;
     }
 
-    private static FilmListEntryDto toEntryDto(FilmListEntry entry) {
+    public static FilmListEntryDto toEntryDto(FilmListEntry entry) {
         if (entry == null) return null;
 
         FilmListEntryDto dto = new FilmListEntryDto();
         dto.setMovieId(entry.getMovieId());
         dto.setRank(entry.getRank());
         dto.setNote(entry.getNote());
-
+        // title/poster/release/vote will be filled by controller after fetching from TMDB
         return dto;
     }
 

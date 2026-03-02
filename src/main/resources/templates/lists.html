@@ -469,7 +469,7 @@
       <ul class="nav-links">
         <li>
           <a
-            th:href="@{/login}"
+            th:href="@{/auth/login}"
             class="bright"
             th:if="${session.loggedInUser == null}"
             >Sign In</a
@@ -477,7 +477,7 @@
         </li>
         <li>
           <a
-            th:href="@{/register}"
+            th:href="@{/auth/register}"
             class="bright"
             th:if="${session.loggedInUser == null}"
             >Create Account</a
@@ -536,8 +536,10 @@
         </div>
 
         <!--
-      featuredLists = List<MovieList> from controller (curated/official ones)
-      MovieList fields: id, name, user, entries (List<ListEntry> where entry.movie.posterUrl)
+      featuredLists = List<FilmListSummaryDto> provided by the controller.
+      Summary DTO contains id/name/owner/entryCount and a small
+      previewPosterPaths list; the template uses the latter instead of
+      iterating over the full entries collection.
     -->
         <div
           class="featured-grid"
@@ -551,24 +553,22 @@
             <!-- Poster collage: up to 5 images -->
             <div
               class="featured-collage"
-              th:if="${list.entries != null and !list.entries.isEmpty()}"
-            >
+                th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
+              >
               <div
                 class="col-img"
-                th:each="entry, i : ${list.entries}"
+                th:each="path, i : ${list.previewPosterPaths}"
                 th:if="${i.index < 5}"
               >
                 <img
-                  th:src="${entry.movie.posterUrl}"
-                  th:alt="${entry.movie.title}"
-                  th:if="${entry.movie.posterUrl != null}"
+                  th:src="${path}"
                   loading="lazy"
                 />
               </div>
             </div>
             <div
               class="featured-collage-placeholder"
-              th:if="${list.entries == null or list.entries.isEmpty()}"
+              th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
             >
               📋
             </div>
@@ -631,6 +631,50 @@
           </a>
         </div>
 
+        <!-- ── YOUR LISTS (logged‑in user) ── -->
+        <div th:if="${myLists != null and !myLists.isEmpty()}">
+          <div class="section-header">
+            <span class="section-label">Your Lists</span>
+            <a class="section-all" th:href="@{/lists/user/{username}(username=${session.loggedInUser.username})}">All</a>
+          </div>
+          <div class="popular-grid">
+            <a
+              class="popular-card"
+              th:each="list : ${myLists}"
+              th:href="@{/lists/{id}(id=${list.id})}"
+            >
+              <!-- Poster strip: up to 4 images side by side -->
+              <div
+                class="popular-strip"
+                th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
+              >
+                <div
+                  class="strip-img"
+                  th:each="path : ${list.previewPosterPaths}"
+                >
+                  <img
+                    th:src="${path}"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+              <div
+                class="popular-strip-placeholder"
+                th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
+              >
+                📋
+              </div>
+
+              <div class="popular-title" th:text="${list.name}">List Name</div>
+              <div class="popular-meta">
+                <span th:text="${list.entryCount + ' films'}">0 films</span>
+                <span>·</span>
+                <span th:text="${list.owner.username}">username</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <hr class="section-divider" />
 
         <!-- ── POPULAR THIS WEEK ── -->
@@ -640,7 +684,7 @@
         </div>
 
         <!--
-      popularLists = List<MovieList> from controller
+      popularLists = List<FilmListSummaryDto> (same structure as other sections)
     -->
         <div class="popular-grid" th:if="${!popularLists.isEmpty()}">
           <a
@@ -651,33 +695,27 @@
             <!-- Poster strip: up to 4 images side by side -->
             <div
               class="popular-strip"
-              th:if="${list.entries != null and !list.entries.isEmpty()}"
+              th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
             >
               <div
                 class="strip-img"
-                th:each="entry, i : ${list.entries}"
-                th:if="${i.index < 4}"
+                th:each="path : ${list.previewPosterPaths}"
               >
-                <img
-                  th:src="${entry.movie.posterUrl}"
-                  th:alt="${entry.movie.title}"
-                  th:if="${entry.movie.posterUrl != null}"
-                  loading="lazy"
-                />
+                <img th:src="${path}" loading="lazy" />
               </div>
             </div>
             <div
               class="popular-strip-placeholder"
-              th:if="${list.entries == null or list.entries.isEmpty()}"
+              th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
             >
               📋
             </div>
 
             <div class="popular-title" th:text="${list.name}">List Name</div>
             <div class="popular-meta">
-              <span th:text="${list.entries.size() + ' films'}">0 films</span>
+              <span th:text="${list.entryCount + ' films'}">0 films</span>
               <span>·</span>
-              <span th:text="${list.user.username}">username</span>
+              <span th:text="${list.owner.username}">username</span>
             </div>
           </a>
         </div>

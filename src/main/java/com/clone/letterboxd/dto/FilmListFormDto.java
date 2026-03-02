@@ -17,4 +17,7 @@ public class FilmListFormDto {
     private Boolean ranked = false;
     private Boolean isWatchlist = false;
     private Visibility visibility = Visibility.PUBLIC;
+
+    // when editing an existing list we want to show its current movies
+    private java.util.List<FilmListEntryDto> entries = new java.util.ArrayList<>();
 }

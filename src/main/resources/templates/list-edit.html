@@ -308,22 +308,61 @@
 
         <!-- Films in List Section -->
         <div class="film-list">
+          <!-- movie search bar for editing -->
+          <form method="post" th:action="@{/lists/search-movie}" style="margin-bottom:1rem">
+            <input type="hidden" name="listId" th:value="${list.id}" />
+            <input type="text" name="query" placeholder="Search for a movie" style="width:60%;padding:0.4rem" required />
+            <button type="submit" class="btn-green" style="margin-left:0.5rem">Search</button>
+          </form>
+
+          <!-- show search results if available -->
+          <div th:if="${searchResults != null}">
+            <div class="panel">
+              <div class="panel-header">Search results</div>
+
+              <div th:if="${searchResults.isEmpty()}">
+                <div class="empty-state" style="padding:1rem;">No movies found for that query.</div>
+              </div>
+
+              <div th:each="m : ${searchResults}" class="movie-row">
+                <img
+                  th:src="${m.poster_path != null
+                      ? 'https://image.tmdb.org/t/p/w200' + m.poster_path
+                      : 'https://via.placeholder.com/50x75?text=?'}"
+                  alt=""
+                  class="movie-poster"/>
+                <div class="movie-info">
+                  <div class="movie-title" th:text="${m.title}">Title</div>
+                  <div class="movie-year" th:text="${m.release_date != null ? m.release_date.substring(0,4) : ''}">Year</div>
+                </div>
+                <form th:action="@{/lists/add-movie}" method="post">
+                  <input type="hidden" name="listId" th:value="${list.id}"/>
+                  <input type="hidden" name="movieId" th:value="${m.id}"/>
+                  <input type="hidden" name="movieTitle" th:value="${m.title}"/>
+                  <input type="hidden" name="posterPath" th:value="${m.poster_path}"/>
+                  <input type="hidden" name="releaseYear" th:value="${m.release_date != null ? m.release_date.substring(0,4) : ''}"/>
+                  <button type="submit" class="btn-green">Add</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
           <h3 style="margin-bottom: 1.5rem">
-            Films in List (<span th:text="${#lists.size(list.entries)}"></span>)
+            Films in List (<span th:text="${list.entries != null ? #lists.size(list.entries) : 0}"></span>)
           </h3>
 
-          <div th:if="${!list.entries.isEmpty()}">
+          <div th:if="${list.entries != null and !list.entries.isEmpty()}">
             <div class="film-item" th:each="entry : ${list.entries}">
               <div class="film-info">
-                <div th:text="${entry.movie?.title}"></div>
+                <div th:text="${entry.movieTitle}"></div>
                 <div
                   class="film-year"
-                  th:if="${entry.movie?.releaseYear}"
-                  th:text="${entry.movie.releaseYear}"
+                  th:if="${entry.releaseYear != null}"
+                  th:text="${entry.releaseYear}"
                 ></div>
               </div>
               <form
-                th:action="@{/api/lists/{listId}/entries/{entryId}(listId=${list.id}, entryId=${entry.id})}"
+                th:action="@{/lists/{listId}/entries/{movieId}/remove(listId=${list.id},movieId=${entry.movieId})}"
                 method="post"
                 style="display: inline"
               >
@@ -332,8 +371,7 @@
             </div>
           </div>
 
-          <div class="empty-films" th:if="${list.entries.isEmpty()}">
-            <div class="empty-films-icon">🎬</div>
+          <div class="empty-films" th:if="${list.entries == null or list.entries.isEmpty()}">            <div class="empty-films-icon">🎬</div>
             <p>No films in this list yet.</p>
             <p style="font-size: 0.9rem; color: #555">
               Films will appear here once you add them

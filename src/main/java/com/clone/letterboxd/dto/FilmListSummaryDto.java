@@ -27,4 +27,12 @@ public class FilmListSummaryDto {
                 ? descriptionExcerpt.substring(0, 120) + "..."
                 : descriptionExcerpt;
     }
+
+    // ensure preview paths include full image URL
+    public List<String> getPreviewPosterPaths() {
+        if (previewPosterPaths == null) return List.of();
+        return previewPosterPaths.stream()
+                .map(p -> p != null ? "https://image.tmdb.org/t/p/w200" + p : null)
+                .toList();
+    }
 }

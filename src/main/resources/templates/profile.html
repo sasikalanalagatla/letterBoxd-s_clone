@@ -99,6 +99,46 @@
         background: #1a1a1a;
         border-radius: 8px;
       }
+
+      /* replicate card grid styles from lists.html */
+      .popular-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+      }
+
+      .popular-card {
+        display: block;
+        cursor: pointer;
+      }
+
+      .popular-strip {
+        display: flex;
+        height: 105px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 0.6rem;
+        gap: 2px;
+        background: #1e1e1e;
+      }
+
+      .popular-strip .strip-img {
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .popular-strip .strip-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s;
+      }
+
+      .popular-card:hover .popular-strip .strip-img img {
+        transform: scale(1.05);
+      }
     </style>
   </head>
   <body class="bg-dark text-light">
@@ -219,6 +259,44 @@
       <h2 class="section-title">Recent Activity</h2>
       <div class="empty-message">
         No activity yet. Watch some films and share your thoughts!
+      </div>
+    </div>
+
+    <!-- Lists Section -->
+    <div class="container content-section">
+      <h2 class="section-title">Lists</h2>
+
+      <!-- show a few recent or featured lists on the profile -->
+      <div th:if="${profileLists != null and !profileLists.isEmpty()}">
+        <div class="popular-grid">
+          <a
+            class="popular-card"
+            th:each="list : ${profileLists}"
+            th:href="@{/lists/{id}(id=${list.id})}"
+          >
+            <!-- Poster strip: up to 4 images side by side -->
+            <div
+              class="popular-strip"
+              th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
+            >
+              <div
+                class="strip-img"
+                th:each="path : ${list.previewPosterPaths}"
+              >
+                <img
+                  th:src="${path}"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
+            <div class="popular-card-title" th:text="${list.name}">List Name</div>
+          </a>
+        </div>
+      </div>
+      <!-- no 'view all' link; clicking a card navigates inside -->
+      <div th:if="${profileLists == null or profileLists.isEmpty()}">
+        <div class="empty-message">No lists created yet.</div>
       </div>
     </div>
 

@@ -2,10 +2,18 @@ package com.clone.letterboxd.controller;
 
 import com.clone.letterboxd.dto.UserProfileDto;
 import com.clone.letterboxd.dto.UserUpdateDto;
+import com.clone.letterboxd.dto.FilmListSummaryDto;
+import com.clone.letterboxd.dto.UserSummaryDto;
+import com.clone.letterboxd.mapper.FilmListMapper;
 import com.clone.letterboxd.mapper.UserMapper;
+import com.clone.letterboxd.model.FilmList;
+import com.clone.letterboxd.model.FilmListEntry;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.UserRepository;
+import com.clone.letterboxd.repository.FilmListRepository;
+import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,18 +21,31 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
 @RequestMapping("/profile")
+@Slf4j
 public class ProfileController {
 
     private final UserRepository userRepository;
+    private final FilmListRepository filmListRepository;
     private final UserMapper userMapper;
+    private final TmdbService tmdbService;
+    private final FilmListMapper filmListMapper;
 
-    public ProfileController(UserRepository userRepository, UserMapper userMapper) {
+    public ProfileController(UserRepository userRepository,
+                             FilmListRepository filmListRepository,
+                             UserMapper userMapper,
+                             TmdbService tmdbService, FilmListMapper filmListMapper) {
         this.userRepository = userRepository;
+        this.filmListRepository = filmListRepository;
         this.userMapper = userMapper;
+        this.tmdbService = tmdbService;
+        this.filmListMapper = filmListMapper;
     }
 
     @GetMapping
@@ -44,7 +65,13 @@ public class ProfileController {
         User user = userOptional.get();
         UserProfileDto profile = userMapper.toProfileDto(user);
         profile.setIsOwnProfile(true);
-        
+        // compute dynamic counts
+        profile.setListCount(filmListRepository.findByUser(user).size());
+
+        // include a few list summaries for display on profile
+        List<FilmList> lists = filmListRepository.findByUser(user);
+        model.addAttribute("profileLists", buildSummaryList(lists));
+
         model.addAttribute("profile", profile);
         model.addAttribute("isOwnProfile", true);
         
@@ -71,11 +98,54 @@ public class ProfileController {
         
         UserProfileDto profile = userMapper.toProfileDto(user);
         profile.setIsOwnProfile(isOwnProfile);
-        
+        profile.setListCount(filmListRepository.findByUser(user).size());
+
+        // include a few list summaries
+        List<FilmList> lists = filmListRepository.findByUser(user);
+        model.addAttribute("profileLists", buildSummaryList(lists));
+
         model.addAttribute("profile", profile);
         model.addAttribute("isOwnProfile", isOwnProfile);
         
         return "profile";
+    }
+
+    // helper methods copied from ListController for consistency
+    private List<FilmListSummaryDto> buildSummaryList(List<FilmList> lists) {
+        if (lists == null) return List.of();
+        return lists.stream().map(this::toSummaryDto).toList();
+    }
+
+    private FilmListSummaryDto toSummaryDto(FilmList list) {
+        FilmListSummaryDto dto = filmListMapper.toSummaryDto(list);
+
+        if (list.getUser() != null) {
+            UserSummaryDto owner = new UserSummaryDto();
+            owner.setId(list.getUser().getId());
+            owner.setUsername(list.getUser().getUsername());
+            owner.setDisplayName(list.getUser().getDisplayName());
+            owner.setAvatarUrl(list.getUser().getAvatarUrl());
+            dto.setOwner(owner);
+        }
+
+        if (list.getEntries() != null && !list.getEntries().isEmpty()) {
+            List<String> posters = new ArrayList<>();
+            for (FilmListEntry entry : list.getEntries()) {
+                if (posters.size() >= 4) break;
+                try {
+                    Map<String, Object> movieData = tmdbService.getMovieDetails(entry.getMovieId());
+                    if (movieData != null) {
+                        String poster = (String) movieData.get("poster_path");
+                        if (poster != null) posters.add(poster);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to fetch TMDB preview poster for movie {}", entry.getMovieId(), e);
+                }
+            }
+            dto.setPreviewPosterPaths(posters);
+        }
+
+        return dto;
     }
 
     @GetMapping("/edit")

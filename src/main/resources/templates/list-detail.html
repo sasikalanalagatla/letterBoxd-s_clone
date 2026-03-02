@@ -169,14 +169,14 @@
           <div class="col-md-4 text-end">
             <div class="action-buttons">
               <a
-                th:if="${session.loggedInUser == list.owner.username}"
+                th:if="${session.loggedInUser != null and session.loggedInUser.username == list.owner.username}"
                 th:href="@{/lists/{id}/edit(id=${list.id})}"
                 class="btn btn-primary-custom"
               >
                 Edit List
               </a>
               <form
-                th:if="${session.loggedInUser == list.owner.username}"
+                th:if="${session.loggedInUser != null and session.loggedInUser.username == list.owner.username}"
                 th:action="@{/lists/{id}/delete(id=${list.id})}"
                 method="post"
                 style="display: inline"
@@ -196,33 +196,31 @@
         <h3 style="margin-bottom: 2rem">Films</h3>
         <div th:each="entry : ${list.entries}">
           <div class="film-entry">
-            <div class="film-poster" th:if="${entry.movie}">
+            <div class="film-poster" th:if="${entry.posterPath != null}">
               <img
-                th:src="${entry.movie.posterUrl}"
-                th:alt="${entry.movie.title}"
-                onerror="
-                  this.src = 'https://via.placeholder.com/100x150?text=No+Image'
-                "
+                th:src="${entry.posterPath} ?: 'https://via.placeholder.com/100x150?text=No+Image'"
+                th:alt="${entry.movieTitle}"
+                onerror="this.src='https://via.placeholder.com/100x150?text=No+Image'"
               />
             </div>
             <div class="film-details">
-              <div class="film-title" th:text="${entry.movie?.title}"></div>
+              <div class="film-title" th:text="${entry.movieTitle}"></div>
               <div
                 class="film-year"
-                th:if="${entry.movie?.releaseYear}"
-                th:text="${entry.movie.releaseYear}"
+                th:if="${entry.releaseYear}"
+                th:text="${entry.releaseYear}"
               ></div>
-              <div class="film-rating" th:if="${entry.movie?.voteAverage}">
+              <div class="film-rating" th:if="${entry.voteAverage}">
                 ⭐
                 <span
-                  th:text="${#numbers.formatDecimal(entry.movie.voteAverage, 1, 1)}"
+                  th:text="${#numbers.formatDecimal(entry.voteAverage, 1, 1)}"
                 ></span>
                 / 10
               </div>
               <div
                 class="film-note"
-                th:if="${entry.notes}"
-                th:text="${entry.notes}"
+                th:if="${entry.note}"
+                th:text="${entry.note}"
               ></div>
               <form
                 th:if="${session.loggedInUser == list.owner.username}"
