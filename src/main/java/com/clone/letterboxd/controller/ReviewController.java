@@ -2,14 +2,15 @@ package com.clone.letterboxd.controller;
 
 import com.clone.letterboxd.dto.ReviewFormDto;
 import com.clone.letterboxd.mapper.ReviewMapper;
-import com.clone.letterboxd.model.Like;
 import com.clone.letterboxd.model.Review;
 import com.clone.letterboxd.model.User;
-import com.clone.letterboxd.repository.LikeRepository;
 import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.repository.UserRepository;
+import com.clone.letterboxd.service.ReviewService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,20 +20,24 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
 public class ReviewController {
+    private static final Logger log = LoggerFactory.getLogger(ReviewController.class);
+
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
-    private final LikeRepository likeRepository;
+    private final ReviewService reviewService;
 
-    public ReviewController(ReviewRepository reviewRepository, UserRepository userRepository, LikeRepository likeRepository) {
+    public ReviewController(ReviewRepository reviewRepository, UserRepository userRepository, ReviewService reviewService) {
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
-        this.likeRepository = likeRepository;
+        this.reviewService = reviewService;
     }
 
     @GetMapping("/reviews/{id}/edit")
     public String editReview(@PathVariable Long id, Model model, HttpSession session) {
+        log.info("Request to edit review {}", id);
         Review review = reviewRepository.findById(id).orElse(null);
         if (review == null) {
+            log.warn("Review {} not found", id);
             return "redirect:/";
         }
         User current = (User) session.getAttribute("loggedInUser");
@@ -42,6 +47,7 @@ public class ReviewController {
         boolean isOwner = current.getId().equals(review.getUser().getId());
         boolean isAdmin = Boolean.TRUE.equals(current.getIsAdmin());
         if (!isOwner && !isAdmin) {
+            log.warn("User {} unauthorized to edit review {}", current.getId(), id);
             return "redirect:/";
         }
 
@@ -59,17 +65,20 @@ public class ReviewController {
                                BindingResult bindingResult,
                                Model model,
                                HttpSession session) {
+        log.info("Updating review {}", id);
         User current = (User) session.getAttribute("loggedInUser");
         if (current == null) {
             return "redirect:/auth/login";
         }
         Review review = reviewRepository.findById(id).orElse(null);
         if (review == null) {
+            log.warn("Review {} not found during update", id);
             return "redirect:/";
         }
         boolean isOwner = current.getId().equals(review.getUser().getId());
         boolean isAdmin = Boolean.TRUE.equals(current.getIsAdmin());
         if (!isOwner && !isAdmin) {
+            log.warn("User {} unauthorized to update review {}", current.getId(), id);
             return "redirect:/";
         }
 
@@ -78,56 +87,30 @@ public class ReviewController {
             return "review-edit";
         }
 
-        ReviewMapper.updateFromDto(review, reviewForm);
-        reviewRepository.save(review);
+        reviewService.updateReview(review, reviewForm);
         return "redirect:/profile/" + review.getUser().getUsername();
     }
 
     @PostMapping("/reviews/{id}/delete")
     public String deleteReview(@PathVariable Long id, HttpSession session) {
+        log.info("Deleting review {}", id);
         User current = (User) session.getAttribute("loggedInUser");
         if (current == null) {
             return "redirect:/auth/login";
         }
         Review review = reviewRepository.findById(id).orElse(null);
         if (review == null) {
+            log.warn("Review {} not found for deletion", id);
             return "redirect:/";
         }
         boolean isOwner = current.getId().equals(review.getUser().getId());
         boolean isAdmin = Boolean.TRUE.equals(current.getIsAdmin());
         if (!isOwner && !isAdmin) {
+            log.warn("User {} unauthorized to delete review {}", current.getId(), id);
             return "redirect:/";
         }
         String owner = review.getUser().getUsername();
-        reviewRepository.delete(review);
+        reviewService.deleteReview(review);
         return "redirect:/profile/" + owner;
-    }
-
-    @PostMapping("/reviews/{id}/like")
-    public String toggleReviewLike(@PathVariable Long id, HttpSession session) {
-        Long userId = (Long) session.getAttribute("loggedInUserId");
-        if (userId == null) {
-            return "redirect:/auth/login";
-        }
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            return "redirect:/auth/login";
-        }
-        Review review = reviewRepository.findById(id).orElse(null);
-        if (review == null) {
-            return "redirect:/";
-        }
-        if (likeRepository.existsByReviewIdAndUserId(id, userId)) {
-            var existing = likeRepository.findByReviewIdAndUserId(id, userId);
-            if (existing.isPresent()) {
-                likeRepository.delete(existing.get());
-            }
-        } else {
-            Like like = new Like();
-            like.setUser(user);
-            like.setReview(review);
-            likeRepository.save(like);
-        }
-        return "redirect:/movies/" + review.getMovieId();
     }
 }

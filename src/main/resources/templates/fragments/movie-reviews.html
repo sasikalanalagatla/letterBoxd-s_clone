@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="reviewList">
+    <h4 th:if="${reviews != null and reviews.size() > 0}">Reviews</h4>
+    <p th:if="${reviews == null or reviews.size() == 0}" class="text-muted">No reviews yet</p>
+
+    <div th:each="review : ${reviews}" class="card bg-secondary text-light mb-3">
+        <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">
+                <span th:text="${review.author.displayName != null ? review.author.displayName : review.author.username}"></span>
+                &middot;
+                <small th:text="${#temporals.format(review.publishedAt, 'MMM d, yyyy')}"></small>
+            </h6>
+            <!-- review body/excerpt -->
+            <p class="mb-2" th:text="${review.bodyExcerpt != null ? review.bodyExcerpt : review.body}"></p>
+            <div class="mt-3">
+                <form th:action="@{/reviews/{id}/like(id=${review.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-heart-fill"></i> Like
+                    </button>
+                </form>
+                <small class="ms-2">
+                    <i class="bi bi-heart"></i>
+                    <span th:text="${review.likeCount}">0</span></small>
+                <a class="btn btn-sm btn-outline-light ms-2"
+                   th:if="${session.loggedInUser != null and session.loggedInUser.id == review.author.id}"
+                   th:href="@{/reviews/{id}/edit(id=${review.id})}">Edit</a>
+                <form th:if="${session.loggedInUser != null and (session.loggedInUser.id == review.author.id or session.loggedInUser.isAdmin)}"
+                      th:action="@{/reviews/{id}/delete(id=${review.id})}"
+                      method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
