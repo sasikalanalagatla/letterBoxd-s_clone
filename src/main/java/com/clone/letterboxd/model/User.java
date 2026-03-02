@@ -40,6 +40,10 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // first user becomes admin
+    @Column(name = "is_admin")
+    private Boolean isAdmin = false;
+
     @ManyToMany
     @JoinTable(
             name = "user_follows",

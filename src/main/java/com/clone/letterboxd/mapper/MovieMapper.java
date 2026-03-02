@@ -14,6 +14,7 @@ public class MovieMapper {
             boolean inWatchlist,
             Long diaryCount,
             Long reviewCount,
+            Long likeCount,
             Double averageLetterboxdRating
     ) {
         MovieDetailDto dto = new MovieDetailDto();
@@ -48,6 +49,7 @@ public class MovieMapper {
 
         dto.setDiaryCount(diaryCount);
         dto.setReviewCount(reviewCount);
+        dto.setLikeCount(likeCount);
         dto.setAverageLetterboxdRating(averageLetterboxdRating);
 
         return dto;

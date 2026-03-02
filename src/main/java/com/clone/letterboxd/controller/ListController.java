@@ -8,6 +8,8 @@ import com.clone.letterboxd.model.FilmList;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.FilmListRepository;
 import com.clone.letterboxd.repository.UserRepository;
+import com.clone.letterboxd.repository.ReviewRepository;
+import com.clone.letterboxd.repository.LikeRepository;
 import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -29,6 +31,8 @@ public class ListController {
 
     private final FilmListRepository filmListRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
+    private final LikeRepository likeRepository;
     private final FilmListMapper filmListMapper;
     private final TmdbService tmdbService;
     private static final String SESSION_MOVIE_IDS      = "pendingMovieIds";
@@ -37,10 +41,14 @@ public class ListController {
 
     public ListController(FilmListRepository filmListRepository,
                           UserRepository userRepository,
+                          ReviewRepository reviewRepository,
+                          LikeRepository likeRepository,
                           FilmListMapper filmListMapper,
                           TmdbService tmdbService) {
         this.filmListRepository = filmListRepository;
         this.userRepository     = userRepository;
+        this.reviewRepository   = reviewRepository;
+        this.likeRepository     = likeRepository;
         this.filmListMapper     = filmListMapper;
         this.tmdbService        = tmdbService;
     }
@@ -151,6 +159,16 @@ public class ListController {
                 results = (List<Map<String, Object>>) response.getOrDefault("results", List.of());
             } catch (Exception e) {
                 log.warn("TMDB search failed for query={}", query, e);
+            }
+            // attach review/like counts to each result map
+            for (Map<String, Object> movie : results) {
+                Object idObj = movie.get("id");
+                if (idObj instanceof Number) {
+                    Long mid = ((Number) idObj).longValue();
+                    movie.put("reviewCount", reviewRepository.countByMovieId(mid));
+                    long likes = likeRepository.countDirectMovieLikes(mid);
+                    movie.put("likeCount", likes);
+                }
             }
             session.setAttribute(SESSION_SEARCH_RESULTS, results);
             log.debug("stored {} results in session", results.size());

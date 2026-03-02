@@ -215,7 +215,10 @@ public class AuthController {
             newUser.setPassword(passwordEncoder.encode(userRegistration.getPassword()));
             newUser.setCreatedAt(LocalDateTime.now());
             newUser.setUpdatedAt(LocalDateTime.now());
-            
+            // if no other users exist, make this account the administrator
+            if (userRepository.count() == 0) {
+                newUser.setIsAdmin(true);
+            }
             userRepository.save(newUser);
             
             redirectAttributes.addAttribute("success", true);

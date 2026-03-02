@@ -29,6 +29,10 @@ public class Like {
     @JoinColumn(name = "film_list_id")
     private FilmList filmList;
 
+    // direct movie likes (not tied to diary or review)
+    @Column(name = "movie_id")
+    private Long movieId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

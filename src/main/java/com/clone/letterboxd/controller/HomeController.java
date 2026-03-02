@@ -3,6 +3,9 @@ package com.clone.letterboxd.controller;
 import com.clone.letterboxd.dto.MovieCardDto;
 import com.clone.letterboxd.mapper.MovieMapper;
 import com.clone.letterboxd.model.User;
+import com.clone.letterboxd.repository.ReviewRepository;
+import com.clone.letterboxd.repository.LikeRepository;
+import com.clone.letterboxd.repository.DiaryEntryRepository;
 import com.clone.letterboxd.service.TmdbService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,10 +21,20 @@ public class HomeController {
 
     private final TmdbService tmdbService;
     private final MovieMapper movieMapper;
+    private final com.clone.letterboxd.repository.ReviewRepository reviewRepository;
+    private final com.clone.letterboxd.repository.LikeRepository likeRepository;
+    private final com.clone.letterboxd.repository.DiaryEntryRepository diaryEntryRepository;
 
-    public HomeController(TmdbService tmdbService, MovieMapper movieMapper) {
+    public HomeController(TmdbService tmdbService,
+                          MovieMapper movieMapper,
+                          com.clone.letterboxd.repository.ReviewRepository reviewRepository,
+                          com.clone.letterboxd.repository.LikeRepository likeRepository,
+                          com.clone.letterboxd.repository.DiaryEntryRepository diaryEntryRepository) {
         this.tmdbService = tmdbService;
         this.movieMapper = movieMapper;
+        this.reviewRepository = reviewRepository;
+        this.likeRepository = likeRepository;
+        this.diaryEntryRepository = diaryEntryRepository;
     }
 
     private User getFakeCurrentUser() {
@@ -54,6 +67,16 @@ public class HomeController {
                     .map(movieMapper::toMovieCardDto)
                     .filter(dto -> dto != null)
                     .collect(Collectors.toList());
+
+            // enrich with local review/like counts
+            for (MovieCardDto m : movies) {
+                if (m.getId() != null) {
+                    long reviewCount = reviewRepository.countByMovieId(m.getId());
+                    long likeCount = likeRepository.countDirectMovieLikes(m.getId());
+                    m.setReviewCount(reviewCount);
+                    m.setLikeCount(likeCount);
+                }
+            }
 
             model.addAttribute("movies", movies);
             model.addAttribute("currentPage", page);

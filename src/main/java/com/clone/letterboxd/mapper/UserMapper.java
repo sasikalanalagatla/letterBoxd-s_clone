@@ -37,6 +37,7 @@ public class UserMapper {
         dto.setBio(user.getBio());
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setJoinedAt(user.getCreatedAt());
+        dto.setIsAdmin(user.getIsAdmin());
 
         return dto;
     }

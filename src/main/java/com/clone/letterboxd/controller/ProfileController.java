@@ -5,12 +5,14 @@ import com.clone.letterboxd.dto.UserUpdateDto;
 import com.clone.letterboxd.dto.FilmListSummaryDto;
 import com.clone.letterboxd.dto.UserSummaryDto;
 import com.clone.letterboxd.mapper.FilmListMapper;
+import com.clone.letterboxd.mapper.ReviewMapper;
 import com.clone.letterboxd.mapper.UserMapper;
 import com.clone.letterboxd.model.FilmList;
 import com.clone.letterboxd.model.FilmListEntry;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.UserRepository;
 import com.clone.letterboxd.repository.FilmListRepository;
+import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -33,16 +35,19 @@ public class ProfileController {
 
     private final UserRepository userRepository;
     private final FilmListRepository filmListRepository;
+    private final ReviewRepository reviewRepository;
     private final UserMapper userMapper;
     private final TmdbService tmdbService;
     private final FilmListMapper filmListMapper;
 
     public ProfileController(UserRepository userRepository,
                              FilmListRepository filmListRepository,
+                             ReviewRepository reviewRepository,
                              UserMapper userMapper,
                              TmdbService tmdbService, FilmListMapper filmListMapper) {
         this.userRepository = userRepository;
         this.filmListRepository = filmListRepository;
+        this.reviewRepository = reviewRepository;
         this.userMapper = userMapper;
         this.tmdbService = tmdbService;
         this.filmListMapper = filmListMapper;
@@ -67,10 +72,31 @@ public class ProfileController {
         profile.setIsOwnProfile(true);
         // compute dynamic counts
         profile.setListCount(filmListRepository.findByUser(user).size());
+        profile.setReviewCount((int) reviewRepository.countByUser(user));
 
         // include a few list summaries for display on profile
         List<FilmList> lists = filmListRepository.findByUser(user);
         model.addAttribute("profileLists", buildSummaryList(lists));
+
+        // add reviews written by this user
+        var userReviews = reviewRepository.findByUser(user);
+        List<com.clone.letterboxd.dto.ReviewDisplayDto> reviewDtos = userReviews.stream()
+                .map(r -> {
+                    var rd = ReviewMapper.toDisplayDto(r);
+                    // fetch movie title/poster from TMDB
+                    try {
+                        Map<String,Object> movieData = tmdbService.getMovieDetails(r.getMovieId());
+                        if (movieData != null) {
+                            rd.setMovieTitle((String) movieData.get("title"));
+                            String poster = (String) movieData.get("poster_path");
+                            if (poster != null) rd.setMoviePosterPath(poster);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to load TMDB info for movie {}", r.getMovieId(), e);
+                    }
+                    return rd;
+                }).toList();
+        model.addAttribute("profileReviews", reviewDtos);
 
         model.addAttribute("profile", profile);
         model.addAttribute("isOwnProfile", true);
@@ -99,10 +125,30 @@ public class ProfileController {
         UserProfileDto profile = userMapper.toProfileDto(user);
         profile.setIsOwnProfile(isOwnProfile);
         profile.setListCount(filmListRepository.findByUser(user).size());
+        profile.setReviewCount((int) reviewRepository.countByUser(user));
 
         // include a few list summaries
         List<FilmList> lists = filmListRepository.findByUser(user);
         model.addAttribute("profileLists", buildSummaryList(lists));
+
+        // fetch reviews for public view; they will all belong to this profile
+        var userReviews = reviewRepository.findByUser(user);
+        List<com.clone.letterboxd.dto.ReviewDisplayDto> reviewDtos = userReviews.stream()
+                .map(r -> {
+                    var rd = ReviewMapper.toDisplayDto(r);
+                    try {
+                        Map<String,Object> movieData = tmdbService.getMovieDetails(r.getMovieId());
+                        if (movieData != null) {
+                            rd.setMovieTitle((String) movieData.get("title"));
+                            String poster = (String) movieData.get("poster_path");
+                            if (poster != null) rd.setMoviePosterPath(poster);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to load TMDB info for movie {}", r.getMovieId(), e);
+                    }
+                    return rd;
+                }).toList();
+        model.addAttribute("profileReviews", reviewDtos);
 
         model.addAttribute("profile", profile);
         model.addAttribute("isOwnProfile", isOwnProfile);

@@ -24,4 +24,5 @@ public class UserProfileDto {
     private Boolean isOwnProfile;
     private Boolean isFollowing;
     private Boolean isBlocked;
+    private Boolean isAdmin;
 }

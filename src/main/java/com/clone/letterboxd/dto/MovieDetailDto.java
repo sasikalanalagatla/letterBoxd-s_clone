@@ -28,6 +28,7 @@ public class MovieDetailDto {
     private Long diaryEntryId;
     private Long diaryCount;
     private Long reviewCount;
+    private Long likeCount;
     private Double averageLetterboxdRating;
 
     public String getPosterUrl() {

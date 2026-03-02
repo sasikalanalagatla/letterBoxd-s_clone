@@ -19,6 +19,10 @@ public class MovieCardDto {
     private Boolean inDiary;
     private Boolean inWatchlist;
 
+    // aggregated counts from our own data
+    private Long reviewCount;
+    private Long likeCount;
+
     public String getPosterUrl() {
         return posterPath != null
                 ? "https://image.tmdb.org/t/p/w500" + posterPath

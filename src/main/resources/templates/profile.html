@@ -200,7 +200,10 @@
           />
           <div class="profile-info">
             <div class="username" th:text="${profile.username}"></div>
-            <div class="display-name" th:text="${profile.displayName}"></div>
+            <div class="display-name">
+              <span th:text="${profile.displayName}"></span>
+              <small class="text-warning" th:if="${profile.isAdmin}">(admin)</small>
+            </div>
             <div class="bio" th:text="${profile.bio}"></div>
             <div class="joined-date">
               Joined
@@ -297,6 +300,41 @@
       <!-- no 'view all' link; clicking a card navigates inside -->
       <div th:if="${profileLists == null or profileLists.isEmpty()}">
         <div class="empty-message">No lists created yet.</div>
+      </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="container content-section">
+      <h2 class="section-title">Reviews</h2>
+      <div th:if="${profileReviews != null and !profileReviews.isEmpty()}">
+        <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
+          <div class="col" th:each="review : ${profileReviews}">
+            <div class="card bg-secondary h-100 border-0">
+              <a th:href="@{/movies/{id}(id=${review.movieId})}">
+                <img th:src="${'https://image.tmdb.org/t/p/w780' + review.moviePosterPath}"
+                     class="card-img-top"
+                     th:alt="${review.movieTitle}"
+                     style="height: 250px; object-fit: cover;" />
+              </a>
+              <div class="card-body text-center">
+                <small class="text-muted" th:text="${#temporals.format(review.publishedAt, 'MMM d, yyyy')}"></small>
+                <div class="mt-2">
+                  <a class="btn btn-sm btn-outline-light"
+                     th:if="${session.loggedInUser != null and session.loggedInUser.id == profile.id}"
+                     th:href="@{/reviews/{id}/edit(id=${review.id})}">Edit</a>
+                  <form th:if="${session.loggedInUser != null and (session.loggedInUser.id == profile.id or session.loggedInUser.isAdmin)}"
+                        th:action="@{/reviews/{id}/delete(id=${review.id})}"
+                        method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div th:if="${profileReviews == null or profileReviews.isEmpty()}">
+        <div class="empty-message">No reviews written yet.</div>
       </div>
     </div>
 
