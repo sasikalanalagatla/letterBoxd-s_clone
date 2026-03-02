@@ -44,9 +44,9 @@ public class TmdbService {
 
     public Map<String, Object> getMovieDetails(Long movieId) {
         String url = baseUrl + "/movie/" + movieId +
-                "?api_key=" + apiKey +
-                "&language=en-US" +
-                "&append_to_response=credits,videos,images";
+            "?api_key=" + apiKey +
+            "&language=en-US" +
+            "&append_to_response=credits,videos,images,external_ids";
 
         return executeGetRequest(url);
     }
@@ -59,6 +59,19 @@ public class TmdbService {
                 "&include_adult=false" +
                 "&language=en-US";
 
+        return executeGetRequest(url);
+    }
+
+    public Map<String, Object> getWatchProviders(Long movieId) {
+        String url = baseUrl + "/movie/" + movieId + "/watch/providers" +
+                "?api_key=" + apiKey;
+        return executeGetRequest(url);
+    }
+
+    public Map<String, Object> getSimilarMovies(Long movieId) {
+        String url = baseUrl + "/movie/" + movieId + "/similar" +
+                "?api_key=" + apiKey +
+                "&language=en-US";
         return executeGetRequest(url);
     }
 

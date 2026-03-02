@@ -23,10 +23,12 @@
         </div>
         <div class="col-md-8">
             <h1 th:text="${movie.title}"></h1>
-            <p class="text-muted" th:if="${movie.tagline}" th:text="${movie.tagline}"></p>
             <div class="mb-2">
                 <small th:if="${movie.year}"><strong th:text="${movie.year}"></strong></small>
                 <small th:if="${movie.runtime}"> • <span th:text="${movie.runtime}"></span> min</small>
+            </div>
+            <div class="mb-2" th:if="${movie.language != null}">
+                <strong>Language:</strong> <span th:text="${movie.language}"></span>
             </div>
             <div class="movie-stats mb-3">
                 <small class="me-3">
@@ -43,8 +45,69 @@
                 </small>
             </div>
 
-            <div class="mb-2" th:if="${session.loggedInUser != null}">
-                <form th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post" class="d-flex align-items-center gap-2">
+            <div class="mb-3">
+                <div th:if="${movie.genres != null}">
+                    <strong>Genres:</strong>
+                    <span th:each="g,iterStat : ${movie.genres}">
+                        <span th:text="${g}"></span><span th:if="${!iterStat.last}">, </span>
+                    </span>
+                </div>
+
+                <div th:if="${movie.directors != null and movie.directors.size() > 0}">
+                    <strong>Director:</strong>
+                    <span th:text="${movie.directors[0]}"></span>
+                </div>
+
+                <div th:if="${movie.mainCast != null}">
+                    <strong>Starring:</strong>
+                    <span th:each="c,iterStat : ${movie.mainCast}">
+                        <span th:text="${c}"></span><span th:if="${!iterStat.last}">, </span>
+                    </span>
+                </div>
+
+                <div th:if="${movie.whereToWatch != null}">
+                    <strong>Where to watch:</strong>
+                    <span th:text="${movie.whereToWatch}"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div th:if="${movie.releaseType != null}">
+                    <strong>Release type:</strong>
+                    <span th:text="${movie.releaseType}"></span>
+                </div>
+
+                <div th:if="${movie.releaseDate != null}">
+                    <strong>Release date:</strong>
+                    <span th:text="${movie.releaseDate}"></span>
+                </div>
+
+                <div th:if="${movie.voteAverage != null}">
+                    <strong>TMDB rating:</strong>
+                    <span th:text="${movie.voteAverage}"></span>
+                    <small th:if="${movie.voteCount != null}">(<span th:text="${movie.voteCount}"></span> votes)</small>
+                </div>
+                <!-- IMDb link removed per request -->
+
+                <div th:if="${movie.cast != null}">
+                    <strong>Full cast:</strong>
+                    <span th:each="p,iter : ${movie.cast}">
+                        <span th:if="${iter.index &lt; 8}" th:text="${p}"></span><span th:if="${iter.index &lt; 7}">, </span>
+                    </span>
+                    <span th:if="${movie.cast.size() &gt; 8}"> and <span th:text="${movie.cast.size() - 8}"></span> more</span>
+                </div>
+
+                <div th:if="${movie.crew != null}">
+                    <strong>Crew:</strong>
+                    <span th:each="p,iter : ${movie.crew}">
+                        <span th:if="${iter.index &lt; 6}" th:text="${p}"></span><span th:if="${iter.index &lt; 5}">, </span>
+                    </span>
+                    <span th:if="${movie.crew.size() &gt; 6}"> and <span th:text="${movie.crew.size() - 6}"></span> more</span>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <form id="rating-form" th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post" class="d-flex align-items-center gap-2">
                     <label class="mb-0">Your rating:</label>
                     <div class="btn-group" role="group" aria-label="rating">
                         <button type="submit" name="rating" value="1" class="btn btn-link p-0" title="1 star">
@@ -66,8 +129,8 @@
                 </form>
             </div>
 
-            <div class="mb-3" th:if="${session.loggedInUser != null}">
-                <form th:action="@{/movies/{id}/like(id=${movie.id})}" method="post" style="display:inline;">
+            <div class="mb-3">
+                <form id="like-form" th:action="@{/movies/{id}/like(id=${movie.id})}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-heart-fill"></i> Like this movie
                     </button>
@@ -77,55 +140,106 @@
         </div>
     </div>
 
-    <!-- review form and list -->
-    <div class="row mt-5">
+    <!-- popular reviews section -->
+    <div id="popular-reviews" class="row mt-5" th:if="${popularReviews != null and popularReviews.size() > 0}">
         <div class="col-12">
-            <!-- form only visible to logged-in users -->
-            <div th:if="${session.loggedInUser != null}">
-                <h4>Write a review</h4>
-
-                <form id="review-form" th:object="${reviewForm}"
-                      method="post"
-                      th:action="@{/movies/{id}/reviews(id=${movie.id})}">
-                    <!-- display validation errors if any (must be inside form) -->
-                    <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
-                        <ul class="mb-0">
-                            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
-                        </ul>
-                    </div>
-                    <input type="hidden" th:field="*{movieId}" />
-
-                    <div class="mb-3">
-                        <label for="body" class="form-label">Your review</label>
-                        <textarea class="form-control" id="body" rows="5" th:field="*{body}" placeholder="Write your review"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </form>
+            <h4>Popular reviews</h4>
+            <div th:replace="~{fragments/movie-reviews :: reviewList}" th:with="reviews=${popularReviews}"></div>
+            <div th:if="${allReviewsSize != null and allReviewsSize > popularReviews.size()}">
+                <a th:href="@{/movies/{id}/reviews(id=${movie.id})}" class="btn btn-link">More reviews...</a>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
+    <!-- review form -->
+    <div class="row mt-5">
         <div class="col-12">
-            <!-- reviews are rendered via separate fragment -->
-            <div id="reviews-container" th:insert="~{fragments/movie-reviews :: reviewList}"></div>
+            <h4>Write a review</h4>
+
+            <form id="review-form" th:object="${reviewForm}"
+                  method="post"
+                  th:action="@{/movies/{id}/reviews(id=${movie.id})}">
+                <!-- display validation errors if any (must be inside form) -->
+                <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                    <ul class="mb-0">
+                        <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+                    </ul>
+                </div>
+                <input type="hidden" th:field="*{movieId}" />
+
+                <div class="mb-3">
+                    <label for="body" class="form-label">Your review</label>
+                    <textarea class="form-control" id="body" rows="5" th:field="*{body}" placeholder="Write your review"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="row mt-5" th:if="${relatedMovies != null and relatedMovies.size() > 0}">
+        <div class="col-12">
+            <h4>Related movies</h4>
+            <div class="row">
+                <div class="col-md-2" th:each="m : ${relatedMovies}">
+                    <div class="card bg-secondary text-light mb-3">
+                        <img th:src="${m.posterPath != null ? 'https://image.tmdb.org/t/p/w185' + m.posterPath : '/images/no-poster.png'}" class="card-img-top" />
+                        <div class="card-body p-2">
+                            <a th:href="@{/movies/{id}(id=${m.id})}" class="stretched-link text-light" th:text="${m.title}"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${relatedTotal != null and relatedTotal > relatedMovies.size()}">
+                <a th:href="${'https://www.themoviedb.org/movie/' + movie.id + '/similar'}" class="btn btn-link">More related movies...</a>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-// script placed at end of body so DOM is already available; no need to wait for DOMContentLoaded
 (function() {
-    function loadReviews() {
+    const isLoggedIn = [[${session.loggedInUser != null}]];
+    const loginUrl = '/auth/login';
+
+    function loadPopular() {
         const movieId = window.location.pathname.split('/').pop();
         return fetch('/movies/' + movieId + '/reviews').then(r => r.text());
     }
 
-    // Handle review form submission
+    // Check login and redirect if needed
+    function checkLogin(e) {
+        if (!isLoggedIn) {
+            e.preventDefault();
+            alert('Please sign in to perform this action.');
+            window.location = loginUrl;
+            return false;
+        }
+        return true;
+    }
+
+    // Rating form
+    const ratingForm = document.getElementById('rating-form');
+    if (ratingForm) {
+        ratingForm.addEventListener('submit', function(e) {
+            if (!checkLogin(e)) return;
+        });
+    }
+
+    // Like form
+    const likeForm = document.getElementById('like-form');
+    if (likeForm) {
+        likeForm.addEventListener('submit', function(e) {
+            if (!checkLogin(e)) return;
+        });
+    }
+
+    // Review form
     const reviewForm = document.getElementById('review-form');
     if (reviewForm) {
         reviewForm.addEventListener('submit', function(e) {
+            if (!checkLogin(e)) return;
             e.preventDefault();
             const formData = new FormData(this);
             fetch(this.action, { method: 'POST', body: formData })
@@ -137,8 +251,8 @@
                     return response.text();
                 })
                 .then(html => {
-                    console.log('review fragment response:', html);
-                    const container = document.getElementById('reviews-container');
+                    console.log('popular fragment response:', html);
+                    const container = document.getElementById('popular-reviews');
                     if (container) {
                         container.innerHTML = html;
                     }
@@ -148,17 +262,17 @@
         });
     }
 
-    // Handle like and delete forms via event delegation (attached once only)
-    const container = document.getElementById('reviews-container');
+    const container = document.getElementById('popular-reviews');
     if (container) {
         container.addEventListener('submit', function(e) {
             const form = e.target;
             const action = form.getAttribute('action') || '';
             if (action.includes('/like') || action.includes('/delete')) {
+                if (!checkLogin(e)) return;
                 e.preventDefault();
                 fetch(action, { method: 'POST' })
-                    .then(() => loadReviews().then(html => {
-                        document.getElementById('reviews-container').innerHTML = html;
+                    .then(() => loadPopular().then(html => {
+                        document.getElementById('popular-reviews').innerHTML = html;
                     }))
                     .catch(err => console.error('Error:', err));
             }

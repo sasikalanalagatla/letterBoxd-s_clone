@@ -23,18 +23,15 @@ public class HomeController {
     private final MovieMapper movieMapper;
     private final com.clone.letterboxd.repository.ReviewRepository reviewRepository;
     private final com.clone.letterboxd.repository.LikeRepository likeRepository;
-    private final com.clone.letterboxd.repository.DiaryEntryRepository diaryEntryRepository;
 
     public HomeController(TmdbService tmdbService,
                           MovieMapper movieMapper,
                           com.clone.letterboxd.repository.ReviewRepository reviewRepository,
-                          com.clone.letterboxd.repository.LikeRepository likeRepository,
-                          com.clone.letterboxd.repository.DiaryEntryRepository diaryEntryRepository) {
+                          com.clone.letterboxd.repository.LikeRepository likeRepository) {
         this.tmdbService = tmdbService;
         this.movieMapper = movieMapper;
         this.reviewRepository = reviewRepository;
         this.likeRepository = likeRepository;
-        this.diaryEntryRepository = diaryEntryRepository;
     }
 
     private User getFakeCurrentUser() {

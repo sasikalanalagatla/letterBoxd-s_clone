@@ -17,7 +17,12 @@ public class MovieDetailDto {
     private String releaseDate;
     private Integer runtime;
     private List<String> genres;
+    private List<String> cast;
+    private List<String> crew;
+    private String releaseType;
+    private String whereToWatch;
     private Double voteAverage;
+    private String language;
     private Integer voteCount;
     private List<String> directors;
     private List<String> mainCast;

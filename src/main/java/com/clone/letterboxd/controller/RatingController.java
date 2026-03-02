@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -28,15 +27,6 @@ public class RatingController {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Create or update a diary entry rating for the current user/movie.
-     * The form posts a numeric value (0-10 or 1-5) in the <code>rating</code>
-     * parameter. A diary entry is either created or updated accordingly.
-     *
-     * This endpoint behaves exactly like LikeController: it always redirects
-     * back to the movie page so the JS handler can decide whether to reload the
-     * full page or update a fragment.
-     */
     @PostMapping("/movies/{movieId}/rate")
     @Transactional
     public String rateMovie(@PathVariable Long movieId,

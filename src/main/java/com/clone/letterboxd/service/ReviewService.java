@@ -70,6 +70,16 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Return the top n reviews by like count for a movie.
+     */
+    public List<ReviewDisplayDto> getTopReviewsForMovie(Long movieId, User currentUser, int limit) {
+        return getDisplayDtosForMovie(movieId, currentUser).stream()
+                .sorted((a, b) -> Integer.compare(b.getLikeCount(), a.getLikeCount()))
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
     public List<Review> getReviewsByUserId(Long userId) {
         log.trace("Getting reviews for user {}", userId);
         User lookup = new User();

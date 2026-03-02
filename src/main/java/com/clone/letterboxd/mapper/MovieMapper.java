@@ -31,7 +31,21 @@ public class MovieMapper {
 
         dto.setVoteAverage(getDouble(tmdbMovie, "vote_average"));
         dto.setVoteCount(getInteger(tmdbMovie, "vote_count"));
-
+        
+        // genres
+        if (tmdbMovie instanceof java.util.Map) {
+            Object genresObj = ((java.util.Map<?, ?>) tmdbMovie).get("genres");
+            if (genresObj instanceof java.util.List) {
+                java.util.List<String> names = new java.util.ArrayList<>();
+                for (Object g : (java.util.List<?>) genresObj) {
+                    if (g instanceof java.util.Map) {
+                        Object name = ((java.util.Map<?, ?>) g).get("name");
+                        if (name != null) names.add(name.toString());
+                    }
+                }
+                dto.setGenres(names);
+            }
+        }
         if (usersDiaryEntry != null) {
             dto.setUserRating(usersDiaryEntry.getRating());
             dto.setWatched(true);
@@ -51,6 +65,54 @@ public class MovieMapper {
         dto.setReviewCount(reviewCount);
         dto.setLikeCount(likeCount);
         dto.setAverageLetterboxdRating(averageLetterboxdRating);
+
+        if (tmdbMovie instanceof java.util.Map) {
+            Object creditsObj = ((java.util.Map<?, ?>) tmdbMovie).get("credits");
+            if (creditsObj instanceof java.util.Map) {
+                Object castObj = ((java.util.Map<?, ?>) creditsObj).get("cast");
+                if (castObj instanceof java.util.List) {
+                    java.util.List<String> castNames = new java.util.ArrayList<>();
+                    int count = 0;
+                    for (Object c : (java.util.List<?>) castObj) {
+                        if (c instanceof java.util.Map) {
+                            Object name = ((java.util.Map<?, ?>) c).get("name");
+                            if (name != null) {
+                                castNames.add(name.toString());
+                                if (++count >= 8) break; 
+                            }
+                        }
+                    }
+                    dto.setCast(castNames);
+                    dto.setMainCast(castNames.size() > 4 ? castNames.subList(0,4) : castNames);
+                }
+
+                Object crewObj = ((java.util.Map<?, ?>) creditsObj).get("crew");
+                if (crewObj instanceof java.util.List) {
+                    java.util.List<String> crewNames = new java.util.ArrayList<>();
+                    java.util.List<String> directors = new java.util.ArrayList<>();
+                    for (Object c : (java.util.List<?>) crewObj) {
+                        if (c instanceof java.util.Map) {
+                            Object job = ((java.util.Map<?, ?>) c).get("job");
+                            Object name = ((java.util.Map<?, ?>) c).get("name");
+                            if (name != null) crewNames.add(name.toString());
+                            if (job != null && "Director".equals(job.toString())) {
+                                directors.add(name.toString());
+                            }
+                        }
+                    }
+                    dto.setCrew(crewNames);
+                    dto.setDirectors(directors);
+                }
+            }
+        }
+
+        if (getString(tmdbMovie, "release_date") != null) {
+            dto.setReleaseType("Theatrical");
+        }
+        String lang = getString(tmdbMovie, "original_language");
+        if (lang != null) {
+            dto.setLanguage(lang);
+        }
 
         return dto;
     }
