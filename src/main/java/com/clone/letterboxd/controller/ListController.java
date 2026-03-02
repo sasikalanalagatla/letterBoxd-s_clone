@@ -79,6 +79,9 @@ public class ListController {
                 FilmListSummaryDto dto = featuredListService.toSummaryDto(item);
                 // Fetch and add movie posters
                 enrichWithMoviePosters(dto, item);
+                // Fetch actual like count from database
+                long actualLikes = likeRepository.countByFeaturedListSlug(item.getSlug());
+                dto.setLikeCount((int) actualLikes);
                 return dto;
             })
             .toList();
@@ -584,7 +587,6 @@ public class ListController {
         List<String> posters = new ArrayList<>();
         List<Long> ids = new ArrayList<>();
         for (Long movieId : item.getMovieIds()) {
-            if (posters.size() >= 5) break; // Limit to 5 posters for collage
             try {
                 Map<String, Object> movieData = tmdbService.getMovieDetails(movieId);
                 if (movieData != null) {

@@ -110,9 +110,6 @@
             </a>
           </div>
         </div>
-        <!-- note that grid shows only a preview (max 5) -->
-        <small th:if="${list.previewPosterPaths != null and #lists.size(list.previewPosterPaths) < list.entryCount}"
-               style="color:var(--text-dim);">showing <span th:text="${#lists.size(list.previewPosterPaths)}"></span> of <span th:text="${list.entryCount}"></span> movies</small>
 
         <!-- reviews for each movie in this list -->
         <div class="reviews-section" th:if="${reviewsByMovie != null and !reviewsByMovie.isEmpty()}">
