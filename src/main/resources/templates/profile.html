@@ -58,6 +58,28 @@
         background-color: #6b8e23;
         color: white;
       }
+      .btn-follow {
+        background-color: #556b2f;
+        border: none;
+        color: white;
+        margin-top: 1rem;
+        margin-left: 0.5rem;
+      }
+      .btn-follow:hover {
+        background-color: #6b8e23;
+        color: white;
+      }
+      .btn-unfollow {
+        background-color: #4a5a1f;
+        border: 1px solid #556b2f;
+        color: #556b2f;
+        margin-top: 1rem;
+        margin-left: 0.5rem;
+      }
+      .btn-unfollow:hover {
+        background-color: #556b2f;
+        color: white;
+      }
       .stats-section {
         display: flex;
         gap: 2rem;
@@ -211,13 +233,35 @@
                 th:text="${#temporals.format(profile.joinedAt, 'MMM d, yyyy')}"
               ></span>
             </div>
-            <a
-              th:if="${isOwnProfile}"
-              th:href="@{/profile/edit}"
-              class="btn btn-edit"
-            >
-              Edit Profile
-            </a>
+            <div>
+              <a
+                th:if="${isOwnProfile}"
+                th:href="@{/profile/edit}"
+                class="btn btn-edit"
+              >
+                Edit Profile
+              </a>
+              <form 
+                th:if="${!isOwnProfile && session.loggedInUserId != null}"
+                th:action="@{/profile/{username}/(username=${profile.username})}"
+                method="post"
+                style="display: inline;">
+                <button 
+                  type="submit"
+                  th:if="${!isFollowing}"
+                  th:formaction="@{/profile/{username}/follow(username=${profile.username})}"
+                  class="btn btn-follow">
+                  Follow
+                </button>
+                <button 
+                  type="submit"
+                  th:if="${isFollowing}"
+                  th:formaction="@{/profile/{username}/unfollow(username=${profile.username})}"
+                  class="btn btn-unfollow">
+                  Unfollow
+                </button>
+              </form>
+            </div>
           </div>
         </div>
 
@@ -239,12 +283,16 @@
             <div class="stat-label">Lists</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number" th:text="${profile.followingCount}"></div>
-            <div class="stat-label">Following</div>
+            <a th:href="@{/profile/{username}/following(username=${profile.username})}" style="color:inherit; text-decoration:none">
+              <div class="stat-number" th:text="${profile.followingCount}"></div>
+              <div class="stat-label">Following</div>
+            </a>
           </div>
           <div class="stat-card">
-            <div class="stat-number" th:text="${profile.followersCount}"></div>
-            <div class="stat-label">Followers</div>
+            <a th:href="@{/profile/{username}/followers(username=${profile.username})}" style="color:inherit; text-decoration:none">
+              <div class="stat-number" th:text="${profile.followersCount}"></div>
+              <div class="stat-label">Followers</div>
+            </a>
           </div>
         </div>
       </div>

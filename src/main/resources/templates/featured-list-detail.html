@@ -119,7 +119,9 @@
             <div th:if="${entry.value != null and entry.value.size() > 0}">
               <div th:each="review : ${entry.value}" class="review-card">
                 <h5>
-                  <span th:text="${review.author.displayName != null ? review.author.displayName : review.author.username}"></span>
+                  <a th:href="@{/profile/{username}(username=${review.author.username})}" style="text-decoration: none; color: inherit;">
+                    <span th:text="${review.author.displayName != null ? review.author.displayName : review.author.username}"></span>
+                  </a>
                   &middot;
                   <small th:text="${#temporals.format(review.publishedAt, 'MMM d, yyyy')}"></small>
                 </h5>

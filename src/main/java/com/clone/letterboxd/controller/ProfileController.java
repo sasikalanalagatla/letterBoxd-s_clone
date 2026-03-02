@@ -15,6 +15,7 @@ import com.clone.letterboxd.repository.FilmListRepository;
 import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -73,6 +74,8 @@ public class ProfileController {
         // compute dynamic counts
         profile.setListCount(filmListRepository.findByUser(user).size());
         profile.setReviewCount((int) reviewRepository.countByUser(user));
+        profile.setFollowersCount((int) userRepository.countFollowers(userId));
+        profile.setFollowingCount((int) userRepository.countFollowing(userId));
 
         // include a few list summaries for display on profile
         List<FilmList> lists = filmListRepository.findByUser(user);
@@ -126,6 +129,8 @@ public class ProfileController {
         profile.setIsOwnProfile(isOwnProfile);
         profile.setListCount(filmListRepository.findByUser(user).size());
         profile.setReviewCount((int) reviewRepository.countByUser(user));
+        profile.setFollowersCount((int) userRepository.countFollowers(user.getId()));
+        profile.setFollowingCount((int) userRepository.countFollowing(user.getId()));
 
         // include a few list summaries
         List<FilmList> lists = filmListRepository.findByUser(user);
@@ -150,10 +155,72 @@ public class ProfileController {
                 }).toList();
         model.addAttribute("profileReviews", reviewDtos);
 
+        // Check if logged-in user is following this profile user
+        boolean isFollowing = false;
+        if (loggedInUserId != null && !isOwnProfile) {
+            isFollowing = userRepository.isFollowing(loggedInUserId, user.getId());
+        }
+        
         model.addAttribute("profile", profile);
         model.addAttribute("isOwnProfile", isOwnProfile);
+        model.addAttribute("isFollowing", isFollowing);
         
         return "profile";
+    }
+
+    @GetMapping("/{username}/followers")
+    public String showFollowers(
+            @PathVariable String username,
+            HttpSession session,
+            Model model) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            model.addAttribute("error", "User not found");
+            return "error";
+        }
+
+        User user = userOptional.get();
+        List<User> followers = userRepository.getFollowers(user.getId());
+        List<UserSummaryDto> dtoList = followers.stream()
+                .map(UserMapper::toSummaryDto)
+                .toList();
+
+        // build profile dto for header back link/title convenience
+        UserProfileDto profile = userMapper.toProfileDto(user);
+        Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
+        profile.setIsOwnProfile(loggedInUserId != null && loggedInUserId.equals(user.getId()));
+
+        model.addAttribute("users", dtoList);
+        model.addAttribute("listTitle", "Followers");
+        model.addAttribute("profile", profile);
+        return "user-list";
+    }
+
+    @GetMapping("/{username}/following")
+    public String showFollowing(
+            @PathVariable String username,
+            HttpSession session,
+            Model model) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            model.addAttribute("error", "User not found");
+            return "error";
+        }
+
+        User user = userOptional.get();
+        List<User> following = userRepository.getFollowing(user.getId());
+        List<UserSummaryDto> dtoList = following.stream()
+                .map(UserMapper::toSummaryDto)
+                .toList();
+
+        UserProfileDto profile = userMapper.toProfileDto(user);
+        Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
+        profile.setIsOwnProfile(loggedInUserId != null && loggedInUserId.equals(user.getId()));
+
+        model.addAttribute("users", dtoList);
+        model.addAttribute("listTitle", "Following");
+        model.addAttribute("profile", profile);
+        return "user-list";
     }
 
     // helper methods copied from ListController for consistency
@@ -253,5 +320,76 @@ public class ProfileController {
             model.addAttribute("userUpdate", userUpdate);
             return "profile-edit";
         }
+    }
+
+    @PostMapping("/{username}/follow")
+    @Transactional
+    public String followUser(
+            @PathVariable String username,
+            HttpSession session) {
+        
+        Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
+        
+        if (loggedInUserId == null) {
+            return "redirect:/auth/login";
+        }
+        
+        Optional<User> loggedInUserOpt = userRepository.findById(loggedInUserId);
+        Optional<User> targetUserOpt = userRepository.findByUsername(username);
+        
+        if (loggedInUserOpt.isEmpty() || targetUserOpt.isEmpty()) {
+            return "redirect:/profile/" + username;
+        }
+        
+        User loggedInUser = loggedInUserOpt.get();
+        User targetUser = targetUserOpt.get();
+        
+        // Can't follow yourself
+        if (loggedInUser.getId().equals(targetUser.getId())) {
+            return "redirect:/profile/" + username;
+        }
+
+        /*
+         * We previously ran into a ConcurrentModificationException when
+         * calling loggedInUser.getFollowing().add(targetUser) while the
+         * persistent collection was still being initialized by Hibernate.
+         * The Hibernate error stack trace showed
+         * PersistentSet.injectLoadedState / PersistentSet.add throwing
+         * C.M.E. because a lazy collection was iterating an internal list
+         * while we were modifying it.  Avoid the problem by bypassing the
+         * collection entirely: perform a simple native insert into the
+         * join table.  This keeps the session from loading the `following`
+         * set at all and eliminates the concurrency issue.  We also mark
+         * the controller method as @Transactional to ensure the modify
+         * query executes in a single transaction.
+         */
+        userRepository.addFollow(loggedInUser.getId(), targetUser.getId());
+        
+        return "redirect:/profile/" + username;
+    }
+
+    @PostMapping("/{username}/unfollow")
+    public String unfollowUser(
+            @PathVariable String username,
+            HttpSession session) {
+        
+        Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
+        
+        if (loggedInUserId == null) {
+            return "redirect:/auth/login";
+        }
+        
+        Optional<User> targetUserOpt = userRepository.findByUsername(username);
+        
+        if (targetUserOpt.isEmpty()) {
+            return "redirect:/profile/" + username;
+        }
+        
+        User targetUser = targetUserOpt.get();
+        
+        // Use repository method to remove follow relationship directly
+        userRepository.removeFollow(loggedInUserId, targetUser.getId());
+        
+        return "redirect:/profile/" + username;
     }
 }
