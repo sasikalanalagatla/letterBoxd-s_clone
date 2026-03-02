@@ -5,8 +5,9 @@ import com.clone.letterboxd.mapper.MovieMapper;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.repository.LikeRepository;
-import com.clone.letterboxd.repository.DiaryEntryRepository;
 import com.clone.letterboxd.service.TmdbService;
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,12 +18,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
+@Slf4j
 public class HomeController {
 
     private final TmdbService tmdbService;
     private final MovieMapper movieMapper;
-    private final com.clone.letterboxd.repository.ReviewRepository reviewRepository;
-    private final com.clone.letterboxd.repository.LikeRepository likeRepository;
+    private final ReviewRepository reviewRepository;
+    private final LikeRepository likeRepository;
 
     public HomeController(TmdbService tmdbService,
                           MovieMapper movieMapper,
@@ -34,20 +36,19 @@ public class HomeController {
         this.likeRepository = likeRepository;
     }
 
-    private User getFakeCurrentUser() {
-        User user = new User();
-        user.setId(1L);
-        user.setUsername("testuser");
-        user.setDisplayName("Test User");
-        user.setEmail("test@example.com");
-        return user;
-    }
 
     @GetMapping("/")
     public String home(Model model,
+                       HttpSession session,
                        @RequestParam(defaultValue = "1") int page) {
 
-        User currentUser = getFakeCurrentUser();
+        log.debug("GET / requested, page={}", page);
+        User currentUser = (User) session.getAttribute("loggedInUser");
+        if (currentUser == null) {
+            log.trace("no user in session");
+        } else {
+            log.debug("currentUser == {}", currentUser.getUsername());
+        }
 
         try {
             Map<String, Object> popularResponse = tmdbService.getPopularMovies(page);
@@ -84,13 +85,13 @@ public class HomeController {
             model.addAttribute("currentUser", currentUser);
 
         } catch (Exception e) {
+            log.error("failed to load popular movies", e);
             model.addAttribute("error", "Failed to load movies: " + e.getMessage());
             // make sure template has required pagination attributes even on error
             model.addAttribute("movies", java.util.Collections.emptyList());
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", 1);
             model.addAttribute("currentUser", currentUser);
-            e.printStackTrace();
         }
 
         return "index";

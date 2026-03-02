@@ -56,9 +56,11 @@ public class ProfileController {
 
     @GetMapping
     public String myProfile(HttpSession session, Model model) {
+        log.debug("myProfile request received");
         Long userId = (Long) session.getAttribute("loggedInUserId");
         
         if (userId == null) {
+            log.debug("myProfile redirecting to login");
             return "redirect:/auth/login";
         }
 
@@ -112,10 +114,11 @@ public class ProfileController {
             @PathVariable String username,
             HttpSession session,
             Model model) {
-        
+        log.debug("viewProfile for {}", username);
         Optional<User> userOptional = userRepository.findByUsername(username);
         
         if (userOptional.isEmpty()) {
+            log.warn("viewProfile: user {} not found", username);
             model.addAttribute("error", "User not found");
             return "error";
         }
@@ -175,11 +178,13 @@ public class ProfileController {
             Model model) {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isEmpty()) {
+            log.warn("showFollowers: username {} not found", username);
             model.addAttribute("error", "User not found");
             return "error";
         }
 
         User user = userOptional.get();
+        log.debug("Loading followers for user {}", user.getId());
         List<User> followers = userRepository.getFollowers(user.getId());
         List<UserSummaryDto> dtoList = followers.stream()
                 .map(UserMapper::toSummaryDto)
@@ -203,11 +208,13 @@ public class ProfileController {
             Model model) {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isEmpty()) {
+            log.warn("showFollowing: username {} not found", username);
             model.addAttribute("error", "User not found");
             return "error";
         }
 
         User user = userOptional.get();
+        log.debug("Loading following list for user {}", user.getId());
         List<User> following = userRepository.getFollowing(user.getId());
         List<UserSummaryDto> dtoList = following.stream()
                 .map(UserMapper::toSummaryDto)
@@ -223,7 +230,6 @@ public class ProfileController {
         return "user-list";
     }
 
-    // helper methods copied from ListController for consistency
     private List<FilmListSummaryDto> buildSummaryList(List<FilmList> lists) {
         if (lists == null) return List.of();
         return lists.stream().map(this::toSummaryDto).toList();
@@ -292,10 +298,11 @@ public class ProfileController {
             HttpSession session,
             UserUpdateDto userUpdate,
             Model model) {
-        
+        log.debug("updateProfile called");
         Long userId = (Long) session.getAttribute("loggedInUserId");
         
         if (userId == null) {
+            log.debug("updateProfile attempted without login");
             return "redirect:/auth/login";
         }
 
@@ -346,24 +353,13 @@ public class ProfileController {
         
         // Can't follow yourself
         if (loggedInUser.getId().equals(targetUser.getId())) {
+            log.debug("User {} attempted to follow themself", loggedInUserId);
             return "redirect:/profile/" + username;
         }
 
-        /*
-         * We previously ran into a ConcurrentModificationException when
-         * calling loggedInUser.getFollowing().add(targetUser) while the
-         * persistent collection was still being initialized by Hibernate.
-         * The Hibernate error stack trace showed
-         * PersistentSet.injectLoadedState / PersistentSet.add throwing
-         * C.M.E. because a lazy collection was iterating an internal list
-         * while we were modifying it.  Avoid the problem by bypassing the
-         * collection entirely: perform a simple native insert into the
-         * join table.  This keeps the session from loading the `following`
-         * set at all and eliminates the concurrency issue.  We also mark
-         * the controller method as @Transactional to ensure the modify
-         * query executes in a single transaction.
-         */
+        // perform follow by direct insert rather than touching the set
         userRepository.addFollow(loggedInUser.getId(), targetUser.getId());
+        log.info("User {} now follows {}", loggedInUserId, targetUser.getId());
         
         return "redirect:/profile/" + username;
     }
@@ -374,21 +370,20 @@ public class ProfileController {
             HttpSession session) {
         
         Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
-        
         if (loggedInUserId == null) {
+            log.debug("unfollowUser called without login");
             return "redirect:/auth/login";
         }
-        
+
         Optional<User> targetUserOpt = userRepository.findByUsername(username);
-        
         if (targetUserOpt.isEmpty()) {
+            log.warn("unfollowUser: target {} not found", username);
             return "redirect:/profile/" + username;
         }
-        
+
         User targetUser = targetUserOpt.get();
-        
-        // Use repository method to remove follow relationship directly
         userRepository.removeFollow(loggedInUserId, targetUser.getId());
+        log.info("User {} unfollowed {}", loggedInUserId, targetUser.getId());
         
         return "redirect:/profile/" + username;
     }
