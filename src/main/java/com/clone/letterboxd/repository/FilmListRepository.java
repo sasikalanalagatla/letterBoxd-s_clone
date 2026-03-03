@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.Query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,4 +20,7 @@ public interface FilmListRepository extends JpaRepository<FilmList, Long> {
     Page<FilmList> findMostPopularLists(Pageable pageable);
     
     List<FilmList> findByNameContainingIgnoreCase(String name);
+
+    @Query("SELECT DISTINCT fl FROM FilmList fl JOIN fl.entries e WHERE e.movieId IN :movieIds")
+    List<FilmList> findByMovieIds(@Param("movieIds") List<Long> movieIds);
 }

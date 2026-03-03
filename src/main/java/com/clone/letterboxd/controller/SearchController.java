@@ -64,7 +64,6 @@ public class SearchController {
             return "search-results";
         }
 
-        // --- Films (via TMDB) ---
         List<MovieCardDto> films = Collections.emptyList();
         try {
             Map<String, Object> response = tmdbService.searchMovies(q, 1);
@@ -82,7 +81,6 @@ public class SearchController {
         }
         model.addAttribute("films", films);
 
-        // --- Profiles (from DB) ---
         List<UserSummaryDto> profiles = Collections.emptyList();
         try {
             List<User> users = userRepository
@@ -95,11 +93,36 @@ public class SearchController {
         }
         model.addAttribute("profiles", profiles);
 
-        // --- Lists (from DB) ---
         List<FilmListSummaryDto> lists = Collections.emptyList();
         try {
-            List<FilmList> rawLists = filmListRepository.findByNameContainingIgnoreCase(q);
-            lists = rawLists.stream()
+            List<FilmList> byName = filmListRepository.findByNameContainingIgnoreCase(q);
+
+            List<Long> matchedMovieIds = new ArrayList<>();
+            try {
+                Map<String, Object> response = tmdbService.searchMovies(q, 1);
+                if (response != null && response.containsKey("results")) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
+                    for (Map<String, Object> res : results) {
+                        Object idObj = res.get("id");
+                        if (idObj instanceof Number) {
+                            matchedMovieIds.add(((Number) idObj).longValue());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Could not fetch TMDB IDs for list-by-film search, query={}", q, e);
+            }
+
+            List<FilmList> byFilm = matchedMovieIds.isEmpty()
+                    ? Collections.emptyList()
+                    : filmListRepository.findByMovieIds(matchedMovieIds);
+
+            Map<Long, FilmList> merged = new java.util.LinkedHashMap<>();
+            for (FilmList fl : byName)  merged.put(fl.getId(), fl);
+            for (FilmList fl : byFilm)  merged.putIfAbsent(fl.getId(), fl);
+
+            lists = merged.values().stream()
                     .map(this::toSummaryDto)
                     .collect(Collectors.toList());
         } catch (Exception e) {
