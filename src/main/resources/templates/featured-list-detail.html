@@ -64,20 +64,25 @@
   </head>
   <body>
     <header class="header">
-      <div class="logo">
+      <a class="logo" th:href="@{/}">
         <div class="logo-dots">
           <span class="dot-o"></span>
           <span class="dot-g"></span>
           <span class="dot-b"></span>
         </div>
         <span class="logo-name">LetterBoxd's</span>
-      </div>
+      </a>
       <ul class="nav-links">
         <li><a href="/">Home</a></li>
-        <li><a href="/movies">Search</a></li>
         <li><a href="/lists" class="active">Lists</a></li>
-        <li><a href="/profile">Profile</a></li>
+        <li th:if="${session.loggedInUser != null}"><a href="/profile" th:text="${session.loggedInUser.username}">Profile</a></li>
+        <li th:if="${session.loggedInUser != null}"><a href="/auth/logout">Logout</a></li>
+        <li th:if="${session.loggedInUser == null}"><a href="/auth/login">Sign In</a></li>
       </ul>
+      <form class="search-wrap" th:action="@{/search}" method="get">
+        <input type="text" name="q" placeholder="Films, people, lists..." />
+        <button class="search-icon-btn" type="submit">🔍</button>
+      </form>
     </header>
     <main>
       <div class="container">

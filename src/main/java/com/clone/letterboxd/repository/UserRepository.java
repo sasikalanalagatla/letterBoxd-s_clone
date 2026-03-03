@@ -14,7 +14,9 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+
     Optional<User> findByEmail(String email);
+
     Optional<User> findByResetToken(String resetToken);
     
     @Query("SELECT COUNT(f) FROM User u JOIN u.followers f WHERE u.id = :userId")
@@ -37,9 +39,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "DELETE FROM user_follows WHERE follower_id = :followerId AND following_id = :followingId", nativeQuery = true)
     void removeFollow(@Param("followerId") Long followerId, @Param("followingId") Long followingId);
 
-    // helper to insert a follow relationship without triggering lazy collection initialization
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO user_follows (follower_id, following_id) VALUES (:followerId, :followingId)", nativeQuery = true)
     void addFollow(@Param("followerId") Long followerId, @Param("followingId") Long followingId);
+
+    List<User> findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(
+            String username, String displayName);
 }

@@ -71,7 +71,14 @@
           Letterboxd
         </a>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
+          <form class="d-flex ms-3 me-auto" th:action="@{/search}" method="get">
+            <div class="input-group input-group-sm">
+              <input type="text" name="q" class="form-control nav-search-input"
+                     placeholder="Search films, people, lists…" />
+              <button class="btn nav-search-btn" type="submit"><i class="bi bi-search"></i></button>
+            </div>
+          </form>
+          <ul class="navbar-nav">
             <li class="nav-item" th:if="${session.loggedInUser != null}">
               <a class="nav-link" th:href="@{/profile}">My Profile</a>
             </li>
@@ -87,13 +94,13 @@
     </nav>
 
     <style>
-      .bg-darker {
-        background-color: #1a1a1a !important;
-        border-bottom: 1px solid #333;
-      }
-      .navbar-brand:hover {
-        color: #556b2f !important;
-      }
+      .bg-darker { background-color: #1a1a1a !important; border-bottom: 1px solid #333; }
+      .navbar-brand:hover { color: #556b2f !important; }
+      .nav-search-input { background-color: #2c3440 !important; color: #c8d0d8 !important; border-color: #456 !important; min-width: 200px; }
+      .nav-search-input::placeholder { color: #667 !important; }
+      .nav-search-input:focus { box-shadow: 0 0 0 2px rgba(0,192,48,.25) !important; border-color: #00c030 !important; }
+      .nav-search-btn { border-color: #456 !important; color: #c8d0d8 !important; }
+      .nav-search-btn:hover { background-color: #00c030 !important; border-color: #00c030 !important; color: #fff !important; }
     </style>
 
     <div class="container">

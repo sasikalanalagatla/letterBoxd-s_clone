@@ -57,7 +57,6 @@ public class FilmListMapper {
         dto.setMovieId(entry.getMovieId());
         dto.setRank(entry.getRank());
         dto.setNote(entry.getNote());
-        // title/poster/release/vote will be filled by controller after fetching from TMDB
         return dto;
     }
 
@@ -79,29 +78,5 @@ public class FilmListMapper {
         dto.setEntryCount(list.getEntries() != null ? list.getEntries().size() : 0);
 
         return dto;
-    }
-
-    public static FilmList toEntity(FilmListFormDto dto, User user) {
-        if (dto == null) return null;
-
-        FilmList list = new FilmList();
-        list.setUser(user);
-        list.setName(dto.getName());
-        list.setDescription(dto.getDescription());
-        list.setRanked(dto.getRanked() != null ? dto.getRanked() : false);
-        list.setIsWatchlist(dto.getIsWatchlist() != null ? dto.getIsWatchlist() : false);
-        list.setVisibility(dto.getVisibility() != null ? dto.getVisibility() : Visibility.PUBLIC);
-
-        return list;
-    }
-
-    public static void updateEntity(FilmList list, FilmListFormDto dto) {
-        if (dto == null || list == null) return;
-
-        if (dto.getName() != null) list.setName(dto.getName());
-        if (dto.getDescription() != null) list.setDescription(dto.getDescription());
-        if (dto.getRanked() != null) list.setRanked(dto.getRanked());
-        if (dto.getIsWatchlist() != null) list.setIsWatchlist(dto.getIsWatchlist());
-        if (dto.getVisibility() != null) list.setVisibility(dto.getVisibility());
     }
 }

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="'Search: ' + ${query} + ' — Letterboxd Clone'">Search Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+      body { background-color: #14181c; color: #c8d0d8; }
+      .bg-darker { background-color: #1a1a1a !important; border-bottom: 1px solid #333; }
+      .navbar-brand:hover { color: #00c030 !important; }
+
+      /* Search bar */
+      .nav-search-input {
+        background-color: #2c3440 !important;
+        color: #c8d0d8 !important;
+        border-color: #456 !important;
+        min-width: 240px;
+      }
+      .nav-search-input::placeholder { color: #667 !important; }
+      .nav-search-input:focus { box-shadow: 0 0 0 2px rgba(0,192,48,.3) !important; border-color: #00c030 !important; }
+      .nav-search-btn { border-color: #456 !important; color: #c8d0d8 !important; }
+      .nav-search-btn:hover { background-color: #00c030 !important; border-color: #00c030 !important; color: #fff !important; }
+
+      /* Tabs */
+      .nav-tabs { border-bottom: 1px solid #2c3440; }
+      .nav-tabs .nav-link { color: #89a; border: none; padding: .6rem 1.2rem; }
+      .nav-tabs .nav-link:hover { color: #00c030; background: transparent; }
+      .nav-tabs .nav-link.active { color: #00c030; background: transparent; border-bottom: 2px solid #00c030; }
+
+      /* Film cards */
+      .film-card { background: #1c2128; border-radius: 6px; overflow: hidden; border: none; transition: transform .2s; }
+      .film-card:hover { transform: translateY(-4px); }
+      .film-poster { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+      .film-card-body { padding: .5rem; }
+      .film-title { font-size: .8rem; font-weight: 600; color: #c8d0d8; margin-bottom: 2px; line-height: 1.2; }
+      .film-year { font-size: .72rem; color: #667; }
+
+      /* Profile cards */
+      .profile-card { background: #1c2128; border-radius: 8px; padding: 1rem; display: flex; align-items: center; gap: .9rem; border: 1px solid #2c3440; transition: border-color .2s; text-decoration: none; color: inherit; }
+      .profile-card:hover { border-color: #00c030; color: inherit; }
+      .profile-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #2c3440; flex-shrink: 0; }
+      .profile-username { font-weight: 700; font-size: .95rem; color: #c8d0d8; }
+      .profile-display { font-size: .82rem; color: #667; }
+
+      /* List cards */
+      .list-card { background: #1c2128; border-radius: 8px; border: 1px solid #2c3440; overflow: hidden; transition: border-color .2s; text-decoration: none; color: inherit; display: block; }
+      .list-card:hover { border-color: #00c030; color: inherit; }
+      .list-poster-strip { display: flex; height: 90px; gap: 2px; background: #0d1117; }
+      .list-poster-strip .strip-cell { flex: 1; overflow: hidden; }
+      .list-poster-strip .strip-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .list-card-body { padding: .75rem; }
+      .list-name { font-weight: 700; font-size: .9rem; color: #c8d0d8; margin-bottom: 2px; }
+      .list-meta { font-size: .78rem; color: #667; }
+
+      /* Empty state */
+      .empty-state { text-align: center; padding: 3rem 1rem; color: #445; }
+      .empty-state i { font-size: 2.5rem; display: block; margin-bottom: .8rem; }
+
+      /* Result heading */
+      .search-heading { font-size: 1.6rem; font-weight: 700; margin: 2rem 0 1.5rem; color: #c8d0d8; }
+      .search-heading span { color: #00c030; }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-darker">
+      <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/}" style="font-weight:700;font-size:1.5rem;color:#00c030;">Letterboxd</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <!-- Search form -->
+          <form class="d-flex ms-3 me-auto" th:action="@{/search}" method="get">
+            <div class="input-group input-group-sm">
+              <input type="text" name="q" class="form-control nav-search-input"
+                     placeholder="Search films, people, lists…"
+                     th:value="${query}" />
+              <button class="btn nav-search-btn" type="submit">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+          </form>
+          <ul class="navbar-nav">
+            <li class="nav-item" th:if="${session.loggedInUser == null}">
+              <a class="nav-link" th:href="@{/auth/login}">Sign In</a>
+            </li>
+            <li class="nav-item" th:if="${session.loggedInUser == null}">
+              <a class="nav-link btn btn-primary btn-sm" th:href="@{/auth/register}" style="margin-left:.5rem">Create Account</a>
+            </li>
+            <li class="nav-item dropdown" th:if="${session.loggedInUser != null}">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                 data-bs-toggle="dropdown" aria-expanded="false">
+                <span th:text="${session.loggedInUser.username}"></span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" th:href="@{/profile}">My Profile</a></li>
+                <li><a class="dropdown-item" th:href="@{/lists}">All Lists</a></li>
+                <li><a class="dropdown-item" th:href="@{/lists/create}">Create List</a></li>
+                <li><a class="dropdown-item" th:href="@{/watchlist}">My Watchlist</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><a class="dropdown-item text-danger" th:href="@{/auth/logout}">Logout</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <!-- Heading -->
+      <h1 class="search-heading">
+        Results for: <span th:text="'&quot;' + ${query} + '&quot;'"></span>
+      </h1>
+
+      <!-- Tabs -->
+      <ul class="nav nav-tabs mb-4" id="searchTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="films-tab" data-bs-toggle="tab"
+                  data-bs-target="#films" type="button" role="tab">
+            <i class="bi bi-film me-1"></i>Films
+            <span class="badge bg-secondary ms-1" th:text="${films.size()}">0</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="profiles-tab" data-bs-toggle="tab"
+                  data-bs-target="#profiles" type="button" role="tab">
+            <i class="bi bi-people me-1"></i>Members
+            <span class="badge bg-secondary ms-1" th:text="${profiles.size()}">0</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="lists-tab" data-bs-toggle="tab"
+                  data-bs-target="#lists" type="button" role="tab">
+            <i class="bi bi-list-ul me-1"></i>Lists
+            <span class="badge bg-secondary ms-1" th:text="${lists.size()}">0</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="searchTabContent">
+        <!-- ===== FILMS TAB ===== -->
+        <div class="tab-pane fade show active" id="films" role="tabpanel">
+          <div th:if="${films.isEmpty()}" class="empty-state">
+            <i class="bi bi-camera-reels"></i>
+            No films found for <strong th:text="${query}"></strong>
+          </div>
+          <div th:if="${!films.isEmpty()}" class="row row-cols-3 row-cols-sm-4 row-cols-md-6 row-cols-lg-8 g-3">
+            <div class="col" th:each="film : ${films}">
+              <a th:href="@{/movies/{id}(id=${film.id})}" class="text-decoration-none">
+                <div class="film-card">
+                  <img th:src="${film.posterUrl}" th:alt="${film.title}" class="film-poster" loading="lazy"
+                       onerror="this.src='https://placehold.co/342x513/1c2128/667?text=No+Poster'" />
+                  <div class="film-card-body">
+                    <div class="film-title" th:text="${film.title}">Title</div>
+                    <div class="film-year" th:text="${film.year}">2024</div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PROFILES TAB ===== -->
+        <div class="tab-pane fade" id="profiles" role="tabpanel">
+          <div th:if="${profiles.isEmpty()}" class="empty-state">
+            <i class="bi bi-person-x"></i>
+            No members found for <strong th:text="${query}"></strong>
+          </div>
+          <div th:if="${!profiles.isEmpty()}" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            <div class="col" th:each="user : ${profiles}">
+              <a th:href="@{/profile/{u}(u=${user.username})}" class="profile-card">
+                <img th:src="${user.avatarUrl != null ? user.avatarUrl : 'https://placehold.co/52x52/2c3440/9ab?text=U'}"
+                     th:alt="${user.username}" class="profile-avatar" loading="lazy"
+                     onerror="this.src='https://placehold.co/52x52/2c3440/9ab?text=?'" />
+                <div>
+                  <div class="profile-username" th:text="${user.username}">username</div>
+                  <div class="profile-display" th:text="${user.displayName}">Display Name</div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== LISTS TAB ===== -->
+        <div class="tab-pane fade" id="lists" role="tabpanel">
+          <div th:if="${lists.isEmpty()}" class="empty-state">
+            <i class="bi bi-collection"></i>
+            No lists found for <strong th:text="${query}"></strong>
+          </div>
+          <div th:if="${!lists.isEmpty()}" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div class="col" th:each="lst : ${lists}">
+              <a th:href="@{/lists/{id}(id=${lst.id})}" class="list-card">
+                <!-- Poster strip -->
+                <div class="list-poster-strip"
+                     th:if="${lst.previewPosterPaths != null and !lst.previewPosterPaths.isEmpty()}">
+                  <div class="strip-cell" th:each="path : ${lst.previewPosterPaths}">
+                    <img th:src="${path}" loading="lazy" />
+                  </div>
+                </div>
+                <div class="list-card-body">
+                  <div class="list-name" th:text="${lst.name}">List Name</div>
+                  <div class="list-meta">
+                    <span th:if="${lst.owner != null}" th:text="'by ' + ${lst.owner.username}"></span>
+                    <span class="ms-2" th:text="${lst.entryCount} + ' films'"></span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

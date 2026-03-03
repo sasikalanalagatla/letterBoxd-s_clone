@@ -26,13 +26,13 @@ public class MovieCardDto {
     public String getPosterUrl() {
         return posterPath != null
                 ? "https://image.tmdb.org/t/p/w500" + posterPath
-                : "/images/no-poster.png";
+                : "https://placehold.co/500x750/1c2128/667?text=No+Poster";
     }
 
     public String getPosterUrlSmall() {
         return posterPath != null
                 ? "https://image.tmdb.org/t/p/w342" + posterPath
-                : "/images/no-poster.png";
+                : "https://placehold.co/342x513/1c2128/667?text=No+Poster";
     }
 
     public String getYear() {
