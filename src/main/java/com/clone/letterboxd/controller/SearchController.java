@@ -20,7 +20,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -55,6 +59,11 @@ public class SearchController {
             @RequestParam(value = "lang",      required = false, defaultValue = "") String filterLang,
             @RequestParam(value = "minRating", required = false, defaultValue = "") String filterMinRating,
             @RequestParam(value = "sort",      required = false, defaultValue = "default") String sort,
+            // new sorts for profiles and lists
+            @RequestParam(value = "pSort",     required = false, defaultValue = "username_az") String pSort,
+            @RequestParam(value = "lSort",     required = false, defaultValue = "name_az") String lSort,
+            // which tab should be shown
+            @RequestParam(value = "tab",      required = false, defaultValue = "films") String tab,
             Model model,
             HttpSession session) {
 
@@ -67,6 +76,11 @@ public class SearchController {
         model.addAttribute("filterLang",      filterLang);
         model.addAttribute("filterMinRating", filterMinRating);
         model.addAttribute("sort",            sort);
+        // profile/list sort state
+        model.addAttribute("pSort",           pSort);
+        model.addAttribute("lSort",           lSort);
+        // active tab to keep correct pane
+        model.addAttribute("activeTab",       tab);
 
         if (q.isEmpty()) {
             model.addAttribute("films",        Collections.emptyList());
@@ -77,10 +91,13 @@ public class SearchController {
             model.addAttribute("allLangs",     Collections.emptyList());
             model.addAttribute("totalCount",   0);
             model.addAttribute("currentPage", page);
+            model.addAttribute("pSort",        pSort);
+            model.addAttribute("lSort",        lSort);
+            model.addAttribute("activeTab",    tab);
             return "search-results";
         }
 
-        return performSearch(q, page, filterYear, filterGenre, filterLang, filterMinRating, sort, model);
+        return performSearch(q, page, filterYear, filterGenre, filterLang, filterMinRating, sort, pSort, lSort, tab, model);
     }
 
     private String mapSortToTmdb(String sort) {
@@ -95,7 +112,7 @@ public class SearchController {
         }
     }
 
-    private String performSearch(String q, int page, String filterYear, String filterGenre, String filterLang, String filterMinRating, String sort, Model model) {
+    private String performSearch(String q, int page, String filterYear, String filterGenre, String filterLang, String filterMinRating, String sort, String pSort, String lSort, String tab, Model model) {
         final int BATCH_SIZE = 60;
         final int ITEMS_PER_API_PAGE = 20;
         int neededItems = page * BATCH_SIZE;
@@ -178,12 +195,30 @@ public class SearchController {
         model.addAttribute("films", aggregated);
         model.addAttribute("totalCount", totalResults);
         model.addAttribute("currentPage", page);
+        // make sure sort parameters flow back to view
+        model.addAttribute("pSort", pSort);
+        model.addAttribute("lSort", lSort);
+        model.addAttribute("activeTab", tab);
 
         // ── PROFILES ───────────────────────────────────────────────────────────
         List<UserSummaryDto> profiles = Collections.emptyList();
         try {
             List<User> users = userRepository
                     .findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(q, q);
+            // apply sort on users entity before mapping
+            switch (pSort) {
+                case "username_za":
+                    users.sort(Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER).reversed());
+                    break;
+                case "joined_asc":
+                    users.sort(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())));
+                    break;
+                case "joined_desc":
+                    users.sort(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+                    break;
+                default: // username_az
+                    users.sort(Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER));
+            }
             profiles = users.stream()
                     .map(UserMapper::toSummaryDto)
                     .collect(Collectors.toList());
@@ -213,6 +248,26 @@ public class SearchController {
             lists = merged.values().stream()
                     .map(this::toSummaryDto)
                     .collect(Collectors.toList());
+            // apply list sorting
+            switch (lSort) {
+                case "name_za":
+                    lists.sort(Comparator.comparing(FilmListSummaryDto::getName, String.CASE_INSENSITIVE_ORDER).reversed());
+                    break;
+                case "size_asc":
+                    lists.sort(Comparator.comparing(FilmListSummaryDto::getEntryCount, Comparator.nullsLast(Comparator.naturalOrder())));
+                    break;
+                case "size_desc":
+                    lists.sort(Comparator.comparing(FilmListSummaryDto::getEntryCount, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+                    break;
+                case "created_asc":
+                    lists.sort(Comparator.comparing(FilmListSummaryDto::getId)); // crude proxy since no date field
+                    break;
+                case "created_desc":
+                    lists.sort(Comparator.comparing(FilmListSummaryDto::getId).reversed());
+                    break;
+                default: // name_az
+                    lists.sort(Comparator.comparing(FilmListSummaryDto::getName, String.CASE_INSENSITIVE_ORDER));
+            }
         } catch (Exception e) {
             log.warn("List search failed for query={}", q, e);
         }
