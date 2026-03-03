@@ -254,30 +254,35 @@
     <!-- FEATURED LISTS -->
     <div class="section-header">
       <span class="section-label">Featured Lists</span>
+      <a th:if="${showAllLink}" th:href="@{/lists(allFeatured=true)}" style="font-size:.8rem; color:var(--text-dim); text-decoration:underline;">All Featured Lists</a>
     </div>
 
     <div class="featured-grid"
          th:if="${featuredLists != null and !featuredLists.isEmpty()}">
 
-      <a class="featured-card"
-         th:each="list : ${featuredLists}"
-         th:href="@{/lists/{id}(id=${list.id})}">
+      <div class="featured-card"
+         th:each="list : ${featuredLists}">
 
-        <div class="featured-collage"
-             th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
-          <div th:each="path : ${list.previewPosterPaths}">
-            <img th:src="${path}" />
+        <a th:href="@{/lists/featured/{slug}(slug=${list.slug})}" style="display:block;">
+          <div class="featured-collage"
+               th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
+            <div th:each="path : ${list.previewPosterPaths}">
+              <img th:src="${path}" />
+            </div>
           </div>
-        </div>
 
-        <div class="featured-title" th:text="${list.name}">List Name</div>
+          <div class="featured-title" th:text="${list.name}">List Name</div>
+        </a>
 
         <div class="featured-creator">
           Created by
-          <span th:text="${list.owner?.username ?: 'Official Lists'}"></span>
+          <a th:if="${list.owner != null and list.owner.username != 'Official Lists'}" 
+             th:href="@{/profile/{username}(username=${list.owner.username})}" 
+             th:text="${list.owner.username}" style="color:var(--text-muted); font-weight:600;"></a>
+          <span th:if="${list.owner == null or list.owner.username == 'Official Lists'}">Official Lists</span>
         </div>
 
-      </a>
+      </div>
     </div>
 
     <!-- POPULAR THIS WEEK -->
@@ -288,26 +293,30 @@
     <div class="popular-grid"
          th:if="${popularLists != null and !popularLists.isEmpty()}">
 
-      <a class="popular-card"
-         th:each="list : ${popularLists}"
-         th:href="@{/lists/{id}(id=${list.id})}">
+      <div class="popular-card"
+         th:each="list : ${popularLists}">
 
-        <div class="popular-strip"
-             th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
-          <div th:each="path : ${list.previewPosterPaths}">
-            <img th:src="${path}" />
+        <a th:href="@{/lists/{id}(id=${list.id})}" style="display:block;">
+          <div class="popular-strip"
+               th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
+            <div th:each="path : ${list.previewPosterPaths}">
+              <img th:src="${path}" />
+            </div>
           </div>
-        </div>
 
-        <div class="popular-title" th:text="${list.name}">List Name</div>
+          <div class="popular-title" th:text="${list.name}">List Name</div>
+        </a>
 
         <div class="popular-meta">
-          <span th:text="${list.owner?.username ?: 'Official Lists'}"></span>
+          <a th:if="${list.owner != null and list.owner.username != 'Official Lists'}" 
+             th:href="@{/profile/{username}(username=${list.owner.username})}" 
+             th:text="${list.owner.username}" style="color:var(--text-muted); font-weight:600;"></a>
+          <span th:if="${list.owner == null or list.owner.username == 'Official Lists'}">Official Lists</span>
           •
           <span th:text="${list.entryCount + ' films'}"></span>
         </div>
 
-      </a>
+      </div>
     </div>
 
     <div class="empty-state"
