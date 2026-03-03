@@ -1,779 +1,322 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lists - LetterBoxd's</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Merriweather:wght@700;900&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --green: #00c030;
-        --green-dark: #009924;
-        --bg-dark: #14181c;
-        --bg-mid: #1c2228;
-        --bg-card: #2c3440;
-        --border: rgba(255, 255, 255, 0.08);
-        --text-muted: #678;
-        --text-dim: #9ab;
-        --text: #ccc;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lists - LetterBoxd's</title>
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      html {
-        scroll-behavior: smooth;
-      }
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet"/>
 
-      body {
-        font-family: "Titillium Web", sans-serif;
-        background: var(--bg-dark);
-        color: var(--text);
-        min-height: 100vh;
-      }
+  <style>
+    :root {
+      --green:#00c030;
+      --bg-dark:#14181c;
+      --bg-card:#2c3440;
+      --border:rgba(255,255,255,0.08);
+      --text:#ccc;
+      --text-dim:#9ab;
+      --text-muted:#678;
+    }
 
-      a {
-        text-decoration: none;
-        color: inherit;
-      }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:"Titillium Web",sans-serif;
+      background:var(--bg-dark);
+      color:var(--text);
+    }
 
-      /* ── HEADER ── */
-      .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        background: rgba(20, 24, 28, 0.97);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--border);
-        height: 56px;
-        display: flex;
-        align-items: center;
-        padding: 0 2rem;
-      }
+    a{text-decoration:none;color:inherit;}
 
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-shrink: 0;
-        margin-right: 2.5rem;
-      }
+    /* HEADER */
+    .header{
+      position:fixed;
+      top:0;left:0;right:0;
+      height:56px;
+      display:flex;
+      align-items:center;
+      padding:0 2rem;
+      background:#14181c;
+      border-bottom:1px solid var(--border);
+      z-index:100;
+    }
 
-      .logo-dots {
-        display: flex;
-        gap: 4px;
-      }
-      .logo-dots span {
-        width: 13px;
-        height: 13px;
-        border-radius: 50%;
-        display: block;
-      }
-      .dot-o {
-        background: #f97316;
-      }
-      .dot-g {
-        background: #22c55e;
-      }
-      .dot-b {
-        background: #3b82f6;
-      }
-      .logo-name {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #fff;
-      }
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      margin-right:2rem;
+      color:#fff;
+      font-weight:700;
+    }
 
-      .nav-links {
-        display: flex;
-        align-items: center;
-        list-style: none;
-        gap: 0.1rem;
-        flex: 1;
-      }
+    .logo-dots span{
+      width:13px;height:13px;border-radius:50%;display:inline-block;
+    }
+    .dot-o{background:#f97316;}
+    .dot-g{background:#22c55e;}
+    .dot-b{background:#3b82f6;}
 
-      .nav-links li a {
-        color: var(--text-dim);
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 0.45rem 0.8rem;
-        border-radius: 3px;
-        transition:
-          color 0.2s,
-          background 0.2s;
-        display: block;
-      }
+    .nav-links{
+      display:flex;
+      list-style:none;
+      gap:.5rem;
+      flex:1;
+    }
 
-      .nav-links li a:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.05);
-      }
-      .nav-links li a.bright {
-        color: #ddd;
-      }
-      .nav-links li a.active {
-        color: #fff;
-      }
+    .nav-links a{
+      font-size:.75rem;
+      font-weight:600;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--text-dim);
+      padding:.4rem .8rem;
+    }
 
-      .search-wrap {
-        margin-left: auto;
-        position: relative;
-        display: flex;
-        align-items: center;
-      }
+    .nav-links a.active,
+    .nav-links a:hover{
+      color:#fff;
+    }
 
-      .search-wrap input {
-        height: 32px;
-        width: 175px;
-        padding: 0 2.2rem 0 0.85rem;
-        background: rgba(255, 255, 255, 0.09);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 16px;
-        font-size: 0.82rem;
-        font-family: inherit;
-        color: #fff;
-        transition: all 0.25s;
-      }
+    .search-wrap input{
+      height:30px;
+      padding:0 .8rem;
+      border-radius:15px;
+      border:1px solid var(--border);
+      background:#222;
+      color:#fff;
+      font-size:.8rem;
+    }
 
-      .search-wrap input::placeholder {
-        color: rgba(255, 255, 255, 0.35);
-      }
-      .search-wrap input:focus {
-        outline: none;
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(255, 255, 255, 0.3);
-        width: 220px;
-      }
+    /* MAIN */
+    .main{padding-top:56px;}
 
-      .search-icon-btn {
-        position: absolute;
-        right: 0.65rem;
-        background: none;
-        border: none;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.85rem;
-        cursor: pointer;
-      }
+    .hero-tagline{
+      text-align:center;
+      padding:3rem 1rem;
+      border-bottom:1px solid var(--border);
+    }
 
-      /* ── MAIN ── */
-      .main {
-        padding-top: 56px;
-      }
+    .hero-tagline p{
+      font-family:"Merriweather",serif;
+      font-size:1.4rem;
+      font-weight:700;
+      color:var(--text-dim);
+      margin-bottom:1rem;
+    }
 
-      /* Hero tagline */
-      .hero-tagline {
-        text-align: center;
-        padding: 3.5rem 2rem 2rem;
-        border-bottom: 1px solid var(--border);
-      }
+    .btn-start-list{
+      padding:.5rem 1.5rem;
+      border:1px solid rgba(255,255,255,.3);
+      border-radius:4px;
+      font-size:.8rem;
+    }
 
-      .hero-tagline p {
-        font-family: "Merriweather", serif;
-        font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-        font-weight: 700;
-        color: var(--text-dim);
-        margin-bottom: 1.5rem;
-      }
+    .btn-start-list:hover{
+      color:#fff;
+      border-color:#fff;
+    }
 
-      .btn-start-list {
-        display: inline-block;
-        padding: 0.5rem 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 3px;
-        color: var(--text-dim);
-        font-size: 0.8rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        transition: all 0.2s;
-      }
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      padding:0 2rem;
+    }
 
-      .btn-start-list:hover {
-        border-color: rgba(255, 255, 255, 0.5);
-        color: #fff;
-      }
+    .section-header{
+      display:flex;
+      justify-content:space-between;
+      padding:2rem 0 1rem;
+    }
 
-      /* ── CONTAINER ── */
-      .container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 0 2rem;
-      }
+    .section-label{
+      font-size:.7rem;
+      letter-spacing:.15em;
+      text-transform:uppercase;
+      color:var(--text-dim);
+      font-weight:700;
+    }
 
-      /* ── SECTION HEADERS ── */
-      .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 2.5rem 0 1.25rem;
-      }
+    .featured-grid,
+    .popular-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:1.5rem;
+      margin-bottom:2rem;
+    }
 
-      .section-label {
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--text-dim);
-      }
+    /* Featured */
+    .featured-collage{
+      display:flex;
+      height:130px;
+      border-radius:4px;
+      overflow:hidden;
+      gap:2px;
+      background:var(--bg-card);
+      margin-bottom:.6rem;
+    }
 
-      .section-all {
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--text-dim);
-        transition: color 0.2s;
-      }
+    .featured-collage img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
 
-      .section-all:hover {
-        color: #fff;
-      }
+    .featured-title{
+      font-weight:700;
+      color:#fff;
+      font-size:.9rem;
+      margin-bottom:.3rem;
+    }
 
-      /* ── FEATURED LISTS (3-col poster collage cards) ── */
-      .featured-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2.5rem;
-      }
+    .featured-creator{
+      font-size:.75rem;
+      color:var(--text-muted);
+    }
 
-      .featured-card {
-        display: block;
-        cursor: pointer;
-      }
+    /* Popular */
+    .popular-strip{
+      display:flex;
+      height:105px;
+      border-radius:4px;
+      overflow:hidden;
+      gap:2px;
+      background:var(--bg-card);
+      margin-bottom:.5rem;
+    }
 
-      .featured-collage {
-        display: flex;
-        height: 130px;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 0.7rem;
-        gap: 2px;
-        background: var(--bg-card);
-      }
+    .popular-strip img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
 
-      /* First image wider */
-      .featured-collage .col-img:first-child {
-        flex: 1.4;
-      }
+    .popular-title{
+      font-weight:700;
+      color:#fff;
+      font-size:.85rem;
+      margin-bottom:.3rem;
+    }
 
-      .featured-collage .col-img {
-        flex: 1;
-        overflow: hidden;
-      }
+    .popular-meta{
+      font-size:.7rem;
+      color:var(--text-muted);
+    }
 
-      .featured-collage .col-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        transition: transform 0.3s;
-      }
+    .empty-state{
+      text-align:center;
+      padding:2rem;
+      color:var(--text-muted);
+    }
 
-      .featured-card:hover .featured-collage .col-img img {
-        transform: scale(1.04);
+    @media(max-width:768px){
+      .featured-grid,
+      .popular-grid{
+        grid-template-columns:1fr;
       }
+      .nav-links{display:none;}
+    }
+  </style>
+</head>
 
-      .featured-collage-placeholder {
-        height: 130px;
-        border-radius: 4px;
-        background: var(--bg-card);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin-bottom: 0.7rem;
-        color: var(--text-muted);
-      }
+<body>
 
-      .featured-title {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.35rem;
-        transition: color 0.2s;
-      }
+<header class="header">
+  <a class="logo" th:href="@{/}">
+    <div class="logo-dots">
+      <span class="dot-o"></span><span class="dot-g"></span><span class="dot-b"></span>
+    </div>
+    <span class="logo-name">Letterboxd's</span>
+  </a>
+  <ul class="nav-links">
+    <li><a th:href="@{/auth/login}"    class="bright" th:if="${session.loggedInUser == null}">Sign In</a></li>
+    <li><a th:href="@{/auth/register}" class="bright" th:if="${session.loggedInUser == null}">Create Account</a></li>
+    <li><a th:href="@{/profile}" class="bright" th:if="${session.loggedInUser != null}" th:text="${session.loggedInUser.username}">Profile</a></li>
+    <li><a th:href="@{/}">Films</a></li>
+    <li><a th:href="@{/lists}">Lists</a></li>
+    <li><a th:href="@{/members}" class="active">Members</a></li>
+    <li th:if="${session.loggedInUser != null}"><a th:href="@{/auth/logout}">Logout</a></li>
+  </ul>
+  <form class="search-wrap" th:action="@{/search}" method="get">
+    <input type="text" name="q" placeholder="Films, people, lists..."/>
+    <button class="search-icon-btn" type="submit">&#128269;</button>
+  </form>
+</header>
 
-      .featured-card:hover .featured-title {
-        color: var(--green);
-      }
+<main class="main">
 
-      .featured-creator {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.72rem;
-        color: var(--text-muted);
-      }
+  <div class="hero-tagline">
+    <p>Collect, curate, and share. Lists are the perfect way to group films.</p>
+    <a th:href="@{/lists/create}" class="btn-start-list">Start your own list</a>
+  </div>
 
-      .creator-avatar {
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: var(--bg-card);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.6rem;
-        overflow: hidden;
-        flex-shrink: 0;
-      }
+  <div class="container">
 
-      .creator-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
+    <!-- FEATURED LISTS -->
+    <div class="section-header">
+      <span class="section-label">Featured Lists</span>
+    </div>
 
-      .creator-label {
-        color: var(--text-muted);
-      }
-      .creator-name {
-        color: var(--text-dim);
-        font-weight: 600;
-      }
+    <div class="featured-grid"
+         th:if="${featuredLists != null and !featuredLists.isEmpty()}">
 
-      /* ── POPULAR THIS WEEK (wide poster strips) ── */
-      .popular-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-      }
+      <a class="featured-card"
+         th:each="list : ${featuredLists}"
+         th:href="@{/lists/{id}(id=${list.id})}">
 
-      .popular-card {
-        display: block;
-        cursor: pointer;
-      }
-
-      .popular-strip {
-        display: flex;
-        height: 105px;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 0.6rem;
-        gap: 2px;
-        background: var(--bg-card);
-      }
-
-      .popular-strip .strip-img {
-        flex: 1;
-        overflow: hidden;
-      }
-
-      .popular-strip .strip-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        transition: transform 0.3s;
-      }
-
-      .popular-card:hover .popular-strip .strip-img img {
-        transform: scale(1.05);
-      }
-
-      .popular-strip-placeholder {
-        height: 105px;
-        border-radius: 4px;
-        background: var(--bg-card);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        margin-bottom: 0.6rem;
-      }
-
-      .popular-title {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.25rem;
-        transition: color 0.2s;
-      }
-
-      .popular-card:hover .popular-title {
-        color: var(--green);
-      }
-
-      .popular-meta {
-        font-size: 0.68rem;
-        color: var(--text-muted);
-        display: flex;
-        gap: 0.5rem;
-      }
-
-      /* ── DIVIDER ── */
-      .section-divider {
-        border: none;
-        border-top: 1px solid var(--border);
-      }
-
-      /* ── EMPTY STATE ── */
-      .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-      }
-
-      .empty-icon {
-        font-size: 2.5rem;
-        margin-bottom: 0.75rem;
-        opacity: 0.5;
-      }
-
-      /* ── RESPONSIVE ── */
-      @media (max-width: 768px) {
-        .nav-links {
-          display: none;
-        }
-        .featured-grid,
-        .popular-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      ::-webkit-scrollbar {
-        width: 5px;
-      }
-      ::-webkit-scrollbar-track {
-        background: var(--bg-dark);
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #334;
-        border-radius: 3px;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- ── HEADER ── -->
-    <header class="header">
-      <a class="logo" th:href="@{/}">
-        <div class="logo-dots">
-          <span class="dot-o"></span>
-          <span class="dot-g"></span>
-          <span class="dot-b"></span>
+        <div class="featured-collage"
+             th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
+          <div th:each="path : ${list.previewPosterPaths}">
+            <img th:src="${path}" />
+          </div>
         </div>
-        <span class="logo-name">Letterboxd's</span>
+
+        <div class="featured-title" th:text="${list.name}">List Name</div>
+
+        <div class="featured-creator">
+          Created by
+          <span th:text="${list.owner?.username ?: 'Official Lists'}"></span>
+        </div>
+
       </a>
+    </div>
 
-      <ul class="nav-links">
-        <li>
-          <a
-            th:href="@{/auth/login}"
-            class="bright"
-            th:if="${session.loggedInUser == null}"
-            >Sign In</a
-          >
-        </li>
-        <li>
-          <a
-            th:href="@{/auth/register}"
-            class="bright"
-            th:if="${session.loggedInUser == null}"
-            >Create Account</a
-          >
-        </li>
-        <li>
-          <a
-            th:href="@{/profile}"
-            class="bright"
-            th:if="${session.loggedInUser != null}"
-            th:text="${session.loggedInUser.username}"
-            >Profile</a
-          >
-        </li>
-        <li><a th:href="@{/}">Films</a></li>
-        <li><a th:href="@{/lists}" class="active">Lists</a></li>
-        <li><a th:href="@{/members}">Members</a></li>
-        <li><a th:href="@{/journal}">Journal</a></li>
-        <li th:if="${session.loggedInUser != null}">
-          <a th:href="@{/auth/logout}">Logout</a>
-        </li>
-      </ul>
+    <!-- POPULAR THIS WEEK -->
+    <div class="section-header">
+      <span class="section-label">Popular This Week</span>
+    </div>
 
-      <form class="search-wrap" th:action="@{/search}" method="get">
-        <input type="text" name="q" placeholder="Films, people, lists..." />
-        <button class="search-icon-btn" type="submit">🔍</button>
-      </form>
-    </header>
+    <div class="popular-grid"
+         th:if="${popularLists != null and !popularLists.isEmpty()}">
 
-    <!-- ── MAIN ── -->
-    <main class="main">
-      <!-- Hero Tagline -->
-      <div class="hero-tagline">
-        <p>
-          Collect, curate, and share. Lists are the perfect way to group films.
-        </p>
-        <a
-          th:href="@{/lists/create}"
-          class="btn-start-list"
-          th:if="${session.loggedInUser != null}"
-          >Start your own list</a
-        >
-        <a
-          th:href="@{/auth/login}"
-          class="btn-start-list"
-          th:if="${session.loggedInUser == null}"
-          >Start your own list</a
-        >
-      </div>
+      <a class="popular-card"
+         th:each="list : ${popularLists}"
+         th:href="@{/lists/{id}(id=${list.id})}">
 
-      <div class="container">
-        <!-- ── FEATURED LISTS ── -->
-        <div class="section-header">
-          <span class="section-label">Featured Lists</span>
-          <a
-            class="section-all"
-            th:if="${showAllLink}"
-            th:href="@{/lists(allFeatured=true)}"
-          >All <span th:text="${totalFeaturedCount}">22</span> lists</a>
-        </div>
-
-        <div
-          class="featured-grid"
-          th:if="${featuredLists != null and !featuredLists.isEmpty()}"
-        >
-          <a
-            class="featured-card"
-            th:each="list : ${featuredLists}"
-            th:href="@{/lists/featured/{slug}(slug=${list.slug})}"
-          >
-            <div class="featured-likes">❤️ <span th:text="${list.likeCount}">0</span></div>
-            <!-- Poster collage: up to 5 images -->
-            <div
-              class="featured-collage"
-                th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
-              >
-              <div
-                class="col-img"
-                th:each="path, i : ${list.previewPosterPaths}"
-                th:if="${i.index < 5}"
-              >
-                <img
-                  th:src="${path}"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-            <div
-              class="featured-collage-placeholder"
-              th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
-            >
-              📋
-            </div>
-
-            <div class="featured-title" th:text="${list.name}">List Name</div>
-            <div class="featured-creator">
-              <div class="creator-avatar">
-                <img
-                  th:if="${list.owner?.avatarUrl != null}"
-                  th:src="${list.owner.avatarUrl}"
-                  th:alt="${list.owner.username}"
-                />
-                <span
-                  th:unless="${list.owner?.avatarUrl != null}"
-                  th:text="${list.owner?.username?.substring(0,1)?.toUpperCase()?: '○'}"
-                ></span>
-              </div>
-              <span class="creator-label">Created by</span>
-              <a th:if="${list.owner?.username}" th:href="@{/profile/{username}(username=${list.owner.username})}" style="text-decoration: none; color: inherit;">
-                <span class="creator-name" th:text="${list.owner.username}">username</span>
-              </a>
-              <span th:unless="${list.owner?.username}" class="creator-name">Official Lists</span>
-            </div>
-          </a>
-        </div>
-
-        <!-- Fallback: static curated cards if no DB data yet -->
-        <div
-          class="featured-grid"
-          th:if="${featuredLists == null or featuredLists.isEmpty()}"
-        >
-          <a class="featured-card" th:href="@{/lists/curated/top-500}">
-            <div class="featured-collage-placeholder">🏆</div>
-            <div class="featured-title">Top 500 Narrative Feature Films</div>
-            <div class="featured-creator">
-              <div class="creator-avatar">⭐</div>
-              <span class="creator-label">Created by</span>
-              <span class="creator-name">Official Lists</span>
-            </div>
-          </a>
-          <a class="featured-card" th:href="@{/lists/curated/most-fans}">
-            <div class="featured-collage-placeholder">👥</div>
-            <div class="featured-title">Most Fans on Letterboxd's</div>
-            <div class="featured-creator">
-              <div class="creator-avatar">⭐</div>
-              <span class="creator-label">Created by</span>
-              <span class="creator-name">Official Lists</span>
-            </div>
-          </a>
-          <a
-            class="featured-card"
-            th:href="@{/lists/curated/one-million-watched}"
-          >
-            <div class="featured-collage-placeholder">🎬</div>
-            <div class="featured-title">One Million Watched Club</div>
-            <div class="featured-creator">
-              <div class="creator-avatar">⭐</div>
-              <span class="creator-label">Created by</span>
-              <span class="creator-name">Official Lists</span>
-            </div>
-          </a>
-        </div>
-
-        <!-- ── YOUR LISTS (logged‑in user) ── -->
-        <div th:if="${myLists != null and !myLists.isEmpty()}">
-          <div class="section-header">
-            <span class="section-label">Your Lists</span>
-            <a class="section-all" th:href="@{/lists/user/{username}(username=${session.loggedInUser.username})}">All</a>
-          </div>
-          <div class="popular-grid">
-            <a
-              class="popular-card"
-              th:each="list : ${myLists}"
-              th:href="@{/lists/{id}(id=${list.id})}"
-            >
-              <!-- Poster strip: up to 4 images side by side -->
-              <div
-                class="popular-strip"
-                th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
-              >
-                <div
-                  class="strip-img"
-                  th:each="path : ${list.previewPosterPaths}"
-                >
-                  <img
-                    th:src="${path}"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-              <div
-                class="popular-strip-placeholder"
-                th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
-              >
-                📋
-              </div>
-
-              <div class="popular-title" th:text="${list.name}">List Name</div>
-              <div class="popular-meta">
-                <span th:text="${list.entryCount + ' films'}">0 films</span>
-                <span>·</span>
-                <a th:if="${list.owner?.username}" th:href="@{/profile/{username}(username=${list.owner.username})}" style="text-decoration: none; color: inherit;">
-                  <span th:text="${list.owner.username}">username</span>
-                </a>
-                <span th:unless="${list.owner?.username}">Official Lists</span>
-              </div>
-            </a>
+        <div class="popular-strip"
+             th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
+          <div th:each="path : ${list.previewPosterPaths}">
+            <img th:src="${path}" />
           </div>
         </div>
 
-        <hr class="section-divider" />
-        <!-- ── RECENTLY LIKED ── -->
-        <div class="section-header">
-          <span class="section-label">Recently Liked Lists</span>
-          <a class="section-all" href="#">More</a>
-        </div>
-        <div class="popular-grid" th:if="${recentlyLiked != null}">
-          <a
-            class="popular-card"
-            th:each="list : ${recentlyLiked}"
-            th:href="@{/lists/{id}(id=${list.id})}"
-          >
-            <div
-              class="popular-strip"
-              th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
-            >
-              <div
-                class="strip-img"
-                th:each="path : ${list.previewPosterPaths}"
-              >
-                <img
-                  th:src="${path}"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-            <div
-              class="popular-strip-placeholder"
-              th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
-            >
-              📋
-            </div>
+        <div class="popular-title" th:text="${list.name}">List Name</div>
 
-            <div class="popular-title" th:text="${list.name}">List Name</div>
-            <div class="popular-meta">
-              <span th:text="${list.entryCount + ' films'}">0 films</span>
-              <span>·</span>
-              <a th:if="${list.owner?.username}" th:href="@{/profile/{username}(username=${list.owner.username})}" style="text-decoration: none; color: inherit;">
-                <span th:text="${list.owner.username}">username</span>
-              </a>
-              <span th:unless="${list.owner?.username}">Official Lists</span>
-            </div>
-          </a>
+        <div class="popular-meta">
+          <span th:text="${list.owner?.username ?: 'Official Lists'}"></span>
+          •
+          <span th:text="${list.entryCount + ' films'}"></span>
         </div>
 
-        <!-- ── POPULAR THIS WEEK ── -->
-        <div class="section-header">
-          <span class="section-label">Popular This Week</span>
-          <a class="section-all" th:href="@{/lists/popular}">More</a>
-        </div>
+      </a>
+    </div>
 
-        <!-- recently liked section inserted by next patch -->
-      popularLists = List<FilmListSummaryDto> (same structure as other sections)
-    -->
-        <div class="popular-grid" th:if="${!popularLists.isEmpty()}">
-          <a
-            class="popular-card"
-            th:each="list : ${popularLists}"
-            th:href="@{/lists/{id}(id=${list.id})}"
-          >
-            <!-- Poster strip: up to 4 images side by side -->
-            <div
-              class="popular-strip"
-              th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
-            >
-              <div
-                class="strip-img"
-                th:each="path : ${list.previewPosterPaths}"
-              >
-                <img th:src="${path}" loading="lazy" />
-              </div>
-            </div>
-            <div
-              class="popular-strip-placeholder"
-              th:if="${list.previewPosterPaths == null or list.previewPosterPaths.isEmpty()}"
-            >
-              📋
-            </div>
+    <div class="empty-state"
+         th:if="${popularLists == null or popularLists.isEmpty()}">
+      No community lists yet — be the first to create one!
+    </div>
 
-            <div class="popular-title" th:text="${list.name}">List Name</div>
-            <div class="popular-meta">
-              <span th:text="${list.entryCount + ' films'}">0 films</span>
-              <span>·</span>
-              <a th:if="${list.owner?.username}" th:href="@{/profile/{username}(username=${list.owner.username})}" style="text-decoration: none; color: inherit;">
-                <span th:text="${list.owner.username}">username</span>
-              </a>
-              <span th:unless="${list.owner?.username}">Official Lists</span>
-            </div>
-          </a>
-        </div>
+  </div>
+</main>
 
-        <div class="empty-state" th:if="${popularLists.isEmpty()}">
-          <div class="empty-icon">📋</div>
-          <p>No community lists yet — be the first to create one!</p>
-        </div>
-      </div>
-    </main>
-  </body>
+</body>
 </html>

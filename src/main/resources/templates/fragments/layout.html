@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <!-- layout fragments for consistent site look & feel -->
+
+  <head th:fragment="baseHead(title)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${title}">Letterboxd Clone</title>
+
+    <!-- Bootstrap icons used across the site -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"/>
+
+    <!-- global colours and component styles copied from members.html -->
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg:       #14181c;
+        --nav-bg:   #1a1a1a;
+        --card:     #2c3440;
+        --border:   #2c3440;
+        --green:    #00c030;
+        --blue:     #40bcf4;
+        --text:     #9ab;
+        --white:    #fff;
+        --muted:    #678;
+        --divider:  #222a32;
+      }
+
+      body { background: var(--bg); color: var(--text); font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.5; }
+      a { color: inherit; text-decoration: none; }
+
+      /* navigation and search bar */
+      .nav-wrap { background: var(--nav-bg); border-bottom: 1px solid #111; position: sticky; top: 0; z-index: 100; }
+      .nav-inner { max-width: 1160px; margin: auto; padding: 0 16px; display: flex; align-items: center; height: 44px; gap: 8px; }
+      .brand { font-size: 20px; font-weight: 900; color: #fff !important; letter-spacing: -.5px; margin-right: 8px; }
+      .nav-links { display: flex; height: 100%; }
+      .nav-links a {
+        display: flex; align-items: center;
+        padding: 0 12px;
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+        color: var(--muted);
+        border-bottom: 2px solid transparent;
+        transition: color .15s;
+      }
+      .nav-links a:hover { color: #ccc; }
+      .nav-links a.active { color: #fff; border-bottom-color: var(--green); }
+
+      .nav-search {
+        display: flex; align-items: center; gap: 6px;
+        background: #2c3440; border: 1px solid #456; border-radius: 3px;
+        padding: 3px 8px; margin-left: 8px;
+      }
+      .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 12px; width: 180px; }
+      .nav-search input::placeholder { color: #567; }
+      .nav-search i { color: #678; font-size: 11px; }
+
+      .nav-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+      .btn-sm-nav {
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+        padding: 4px 10px; border-radius: 3px; cursor: pointer; white-space: nowrap;
+      }
+      .btn-outline { border: 1px solid #456; color: var(--text); background: none; }
+      .btn-outline:hover { border-color: #789; color: #ccc; }
+      .btn-green { background: var(--green); color: #000 !important; border: none; font-weight: 800; }
+      .btn-green:hover { background: #00e040; }
+
+      /* shared layout structure */
+      .page-outer {
+        max-width: 1160px; margin: auto; padding: 24px 16px 60px;
+        display: grid; grid-template-columns: 1fr 268px; gap: 24px;
+      }
+    </style>
+  </head>
+
+  <!-- navigation bar fragment (can be inserted into body of any page) -->
+  <nav th:fragment="navbar" class="nav-wrap">
+    <div class="nav-inner">
+      <a class="brand" th:href="@{/}">Letterboxd</a>
+      <div class="nav-links">
+        <a th:href="@{/films}">Films</a>
+        <a th:href="@{/lists}">Lists</a>
+        <a th:href="@{/members}" class="active">Members</a>
+      </div>
+      <form th:action="@{/search}" method="get" style="display:contents">
+        <div class="nav-search">
+          <i class="bi bi-search"></i>
+          <input type="text" name="q" placeholder="Search films, people, lists…"/>
+        </div>
+      </form>
+      <div class="nav-right">
+        <span th:if="${session.loggedInUser == null}" style="display:contents">
+          <a class="btn-sm-nav btn-outline" th:href="@{/auth/login}">Sign In</a>
+          <a class="btn-sm-nav btn-green"   th:href="@{/auth/register}">Create Account</a>
+        </span>
+        <span th:if="${session.loggedInUser != null}" style="display:contents">
+          <a class="btn-sm-nav btn-outline" th:href="@{/profile}">
+            <i class="bi bi-person-fill" style="margin-right:4px"></i>
+            <span th:text="${session.loggedInUser.username}"></span>
+          </a>
+          <a class="btn-sm-nav btn-outline" th:href="@{/auth/logout}">Sign Out</a>
+        </span>
+      </div>
+    </div>
+  </nav>
+</html>
