@@ -75,6 +75,7 @@
       <ul class="nav-links">
         <li><a href="/">Home</a></li>
         <li><a href="/lists" class="active">Lists</a></li>
+        <li><a th:href="@{/members}">Members</a></li>
         <li th:if="${session.loggedInUser != null}"><a href="/profile" th:text="${session.loggedInUser.username}">Profile</a></li>
         <li th:if="${session.loggedInUser != null}"><a href="/auth/logout">Logout</a></li>
         <li th:if="${session.loggedInUser == null}"><a href="/auth/login">Sign In</a></li>

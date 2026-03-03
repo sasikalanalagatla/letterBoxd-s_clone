@@ -46,6 +46,9 @@
             </div>
           </form>
           <ul class="navbar-nav">
+            <li class="nav-item me-1">
+              <a class="nav-link" th:href="@{/members}">Members</a>
+            </li>
             <!-- Show if user is NOT logged in -->
             <li class="nav-item" th:if="${session.loggedInUser == null}">
               <a class="nav-link" th:href="@{/auth/login}">Sign In</a>
