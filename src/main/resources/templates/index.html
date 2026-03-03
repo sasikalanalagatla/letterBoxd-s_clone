@@ -139,10 +139,11 @@
       .filter-count { font-size: .78rem; color: #667; margin-left: auto; }
     </style>
     <div class="container mt-4">
-      <h1 class="mb-3">Popular Films</h1>
+      <h1 class="mb-3">Popular Films This Week</h1>
 
       <!-- Filter Form -->
       <form th:action="@{/}" method="get" class="filter-bar">
+        <!-- page is managed by the "More" button; filters always reset to first batch -->
         <input type="hidden" name="page" value="1" />
 
         <label for="fYear">Year</label>
@@ -192,8 +193,12 @@
 
         <button type="submit" class="filter-btn">Apply</button>
         <a th:href="@{/}" class="filter-reset">Reset</a>
-        <span class="filter-count" th:text="${movies.size()} + ' film' + (${movies.size()} != 1 ? 's' : '')"></span>
+        <span class="filter-count" th:text="'Showing ' + ${movies.size()} + ' of ' + ${totalCount} + ' film' + (${totalCount} != 1 ? 's' : '')"></span>
       </form>
+      <p class="small text-muted ms-2" style="margin-top: -0.5rem;">
+        Filters are applied across all TMDB data; only the first batch is shown here.  Click
+        the <strong>More</strong> button below to load additional matching films.
+      </p>      </form>
 
       <!-- Empty state -->
       <div th:if="${movies.isEmpty()}" class="text-center py-5" style="color:#445;">
@@ -201,7 +206,7 @@
         No films match your filters.
       </div>
 
-      <div th:if="${!movies.isEmpty()}" class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
+      <div th:if="${!movies.isEmpty()}" class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4">
         <div class="col" th:each="movie : ${movies}">
           <div class="card bg-secondary h-100 border-0">
             <a th:href="@{/movies/{id}(id=${movie.id})}">
@@ -230,41 +235,16 @@
         </div>
       </div>
 
-      <nav aria-label="Page navigation" class="mt-5">
-        <ul class="pagination justify-content-center">
-          <li
-            class="page-item"
-            th:classappend="${currentPage == 1} ? 'disabled' : ''"
-          >
-            <a
-              class="page-link"
-              th:href="${currentPage == 1} ? '#' : @{/(page=${currentPage - 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}"
-              th:style="${currentPage == 1} ? 'pointer-events: none; opacity: 0.5;' : ''"
-              >Previous</a
-            >
-          </li>
-          <li
-            class="page-item"
-            th:each="i : ${#numbers.sequence(T(java.lang.Math).max(1, currentPage - 5), T(java.lang.Math).min(totalPages, currentPage + 5))}"
-            th:classappend="${i == currentPage} ? 'active' : ''"
-          >
-            <a class="page-link"
-               th:href="@{/(page=${i}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}"
-               th:text="${i}"></a>
-          </li>
-          <li
-            class="page-item"
-            th:classappend="${currentPage == totalPages} ? 'disabled' : ''"
-          >
-            <a
-              class="page-link"
-              th:href="${currentPage == totalPages} ? '#' : @{/(page=${currentPage + 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}"
-              th:style="${currentPage == totalPages} ? 'pointer-events: none; opacity: 0.5;' : ''"
-              >Next</a
-            >
-          </li>
-        </ul>
-      </nav>
+      <!-- Instead of numbered pagination we provide a simple "More" button that loads
+           another batch of 60 films.  The backend still understands the `page` parameter but
+           the UI hides all pages from the user. -->
+      <div class="text-center mt-5">
+        <a class="btn btn-outline-light"
+           th:if="${movies.size()} &lt; ${totalCount}"
+           th:href="@{/(page=${currentPage + 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}">
+          More
+        </a>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

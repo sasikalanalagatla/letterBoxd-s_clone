@@ -20,11 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -51,8 +47,9 @@ public class SearchController {
     }
 
     @GetMapping("/search")
-    public String search(
+    public Object search(
             @RequestParam(value = "q",         required = false, defaultValue = "") String query,
+            @RequestParam(value = "page",      required = false, defaultValue = "1") int page,
             @RequestParam(value = "year",      required = false, defaultValue = "") String filterYear,
             @RequestParam(value = "genre",     required = false, defaultValue = "") String filterGenre,
             @RequestParam(value = "lang",      required = false, defaultValue = "") String filterLang,
@@ -78,73 +75,109 @@ public class SearchController {
             model.addAttribute("allYears",     Collections.emptyList());
             model.addAttribute("allGenres",    Collections.emptyList());
             model.addAttribute("allLangs",     Collections.emptyList());
+            model.addAttribute("totalCount",   0);
+            model.addAttribute("currentPage", page);
             return "search-results";
         }
 
-        // ── FILMS ──────────────────────────────────────────────────────────────
-        List<MovieCardDto> allFilms = Collections.emptyList();
+        return performSearch(q, page, filterYear, filterGenre, filterLang, filterMinRating, sort, model);
+    }
+
+    private String mapSortToTmdb(String sort) {
+        switch (sort) {
+            case "az":          return "original_title.asc";
+            case "za":          return "original_title.desc";
+            case "year_asc":    return "primary_release_date.asc";
+            case "year_desc":   return "primary_release_date.desc";
+            case "rating_asc":  return "vote_average.asc";
+            case "rating_desc": return "vote_average.desc";
+            default:             return "popularity.desc";
+        }
+    }
+
+    private String performSearch(String q, int page, String filterYear, String filterGenre, String filterLang, String filterMinRating, String sort, Model model) {
+        final int BATCH_SIZE = 60;
+        final int ITEMS_PER_API_PAGE = 20;
+        int neededItems = page * BATCH_SIZE;
+        int neededApiPages = (neededItems + ITEMS_PER_API_PAGE - 1) / ITEMS_PER_API_PAGE;
+
+        List<MovieCardDto> aggregated = new ArrayList<>();
+        int totalPagesFromApi = Integer.MAX_VALUE;
+        int totalResults = 0;
+
         try {
-            Map<String, Object> response = tmdbService.searchMovies(q, 1);
-            if (response != null && response.containsKey("results")) {
+            for (int apiPage = 1; apiPage <= neededApiPages && apiPage <= totalPagesFromApi; apiPage++) {
+                Map<String, Object> response;
+                boolean usingFilters = !filterYear.isBlank() || !filterGenre.isBlank()
+                        || !filterLang.isBlank() || !filterMinRating.isBlank() || !"default".equals(sort);
+
+                String sortBy = mapSortToTmdb(sort);
+                Double minRatingVal = filterMinRating.isBlank() ? null : Double.parseDouble(filterMinRating);
+                String genreParam = MovieMapper.lookupGenreIdByName(filterGenre);
+
+                if (usingFilters) {
+                    response = tmdbService.searchWithFilters(q, apiPage,
+                            filterYear, genreParam, filterLang, minRatingVal, sortBy);
+                } else {
+                    response = tmdbService.searchMovies(q, apiPage);
+                }
+
+                if (response == null || !response.containsKey("results")) {
+                    break;
+                }
+
+                if (apiPage == 1) {
+                    Number totalResultsNum = (Number) response.get("total_results");
+                    totalResults = totalResultsNum != null ? totalResultsNum.intValue() : 0;
+                    Number totalPagesNum = (Number) response.get("total_pages");
+                    totalPagesFromApi = totalPagesNum != null ? totalPagesNum.intValue() : 1;
+                }
+
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-                allFilms = results.stream()
-                        .limit(40)                         // fetch more so filters have data to work with
+                List<MovieCardDto> pageMovies = results.stream()
                         .map(movieMapper::toMovieCardDto)
                         .filter(dto -> dto != null)
                         .collect(Collectors.toList());
+
+
+                aggregated.addAll(pageMovies);
             }
         } catch (Exception e) {
             log.warn("Film search failed for query={}", q, e);
         }
 
-        // Build distinct dropdown option sets from the FULL result set
-        List<String> allYears = allFilms.stream()
+        // build filter dropdowns from the set of movies we actually fetched for this query
+        List<String> allYears = aggregated.stream()
                 .map(MovieCardDto::getYear)
                 .filter(y -> y != null && !y.isBlank())
                 .distinct().sorted(Comparator.reverseOrder())
                 .collect(Collectors.toList());
 
-        List<String> allGenres = allFilms.stream()
+        List<String> allGenres = aggregated.stream()
                 .filter(f -> f.getGenreNames() != null)
                 .flatMap(f -> f.getGenreNames().stream())
                 .filter(g -> g != null && !g.isBlank())
                 .distinct().sorted()
                 .collect(Collectors.toList());
 
-        List<String> allLangs = allFilms.stream()
+        List<String> allLangs = aggregated.stream()
                 .map(MovieCardDto::getOriginalLanguage)
                 .filter(l -> l != null && !l.isBlank())
                 .distinct().sorted()
                 .collect(Collectors.toList());
 
-        model.addAttribute("allYears",  allYears);
+        model.addAttribute("allYears", allYears);
         model.addAttribute("allGenres", allGenres);
-        model.addAttribute("allLangs",  allLangs);
+        model.addAttribute("allLangs", allLangs);
 
-        // Apply filters in Java
-        double minRating = filterMinRating.isBlank() ? 0.0 : Double.parseDouble(filterMinRating);
-
-        List<MovieCardDto> films = allFilms.stream()
-                .filter(f -> filterYear.isBlank()  || filterYear.equals(f.getYear()))
-                .filter(f -> filterGenre.isBlank() || (f.getGenreNames() != null && f.getGenreNames().contains(filterGenre)))
-                .filter(f -> filterLang.isBlank()  || filterLang.equals(f.getOriginalLanguage()))
-                .filter(f -> minRating <= 0        || (f.getVoteAverage() != null && f.getVoteAverage() >= minRating))
-                .collect(Collectors.toList());
-
-        // Apply sort in Java
-        Comparator<MovieCardDto> comparator = null;
-        switch (sort) {
-            case "az":          comparator = Comparator.comparing(f -> f.getTitle() != null ? f.getTitle() : ""); break;
-            case "za":          comparator = Comparator.comparing((MovieCardDto f) -> f.getTitle() != null ? f.getTitle() : "").reversed(); break;
-            case "year_asc":    comparator = Comparator.comparing(f -> f.getYear() != null ? f.getYear() : ""); break;
-            case "year_desc":   comparator = Comparator.comparing((MovieCardDto f) -> f.getYear() != null ? f.getYear() : "").reversed(); break;
-            case "rating_asc":  comparator = Comparator.comparing(f -> f.getVoteAverage() != null ? f.getVoteAverage() : 0.0); break;
-            case "rating_desc": comparator = Comparator.comparing((MovieCardDto f) -> f.getVoteAverage() != null ? f.getVoteAverage() : 0.0).reversed(); break;
+        // trim to requested batch
+        if (aggregated.size() > neededItems) {
+            aggregated = aggregated.subList(0, neededItems);
         }
-        if (comparator != null) films.sort(comparator);
-
-        model.addAttribute("films", films);
+        model.addAttribute("films", aggregated);
+        model.addAttribute("totalCount", totalResults);
+        model.addAttribute("currentPage", page);
 
         // ── PROFILES ───────────────────────────────────────────────────────────
         List<UserSummaryDto> profiles = Collections.emptyList();
@@ -164,7 +197,7 @@ public class SearchController {
         try {
             List<FilmList> byName = filmListRepository.findByNameContainingIgnoreCase(q);
 
-            List<Long> matchedMovieIds = allFilms.stream()
+            List<Long> matchedMovieIds = aggregated.stream()
                     .filter(f -> f.getId() != null)
                     .map(MovieCardDto::getId)
                     .collect(Collectors.toList());

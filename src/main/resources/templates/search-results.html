@@ -161,6 +161,7 @@
 
           <form th:action="@{/search}" method="get" class="filter-bar" th:if="${!allYears.isEmpty() or !films.isEmpty()}">
             <input type="hidden" name="q" th:value="${query}" />
+            <input type="hidden" name="page" th:value="${currentPage}" />
 
             <label for="fYear">Year</label>
             <select class="filter-select" id="fYear" name="year">
@@ -209,8 +210,12 @@
 
             <button type="submit" class="filter-btn">Apply</button>
             <a th:href="@{/search(q=${query})}" class="filter-reset">Reset</a>
-            <span class="filter-count" th:text="${films.size()} + ' film' + (${films.size()} != 1 ? 's' : '')"></span>
+            <span class="filter-count" th:text="'Showing ' + ${films.size()} + ' of ' + ${totalCount} + ' film' + (${totalCount} != 1 ? 's' : '')"></span>
           </form>
+          <p class="small text-muted ms-2" style="margin-top: -0.5rem;">
+            Filters affect only the films returned by your search; initially only the first batch
+            is displayed. Click the <strong>More</strong> button to load additional matches.
+          </p>
 
           <div th:if="${films.isEmpty()}" class="empty-state">
             <i class="bi bi-camera-reels"></i>
@@ -230,6 +235,13 @@
                 </div>
               </a>
             </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <a class="btn btn-outline-dark" th:if="${films.size()} &lt; ${totalCount}"
+               th:href="@{/search(q=${query}, page=${currentPage + 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}">
+              More
+            </a>
           </div>
         </div>
 

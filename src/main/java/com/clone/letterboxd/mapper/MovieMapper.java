@@ -145,6 +145,22 @@ public class MovieMapper {
         GENRE_MAP.put(37,    "Western");
     }
 
+    /**
+     * Look up the numeric TMDB genre id for the provided human-readable name.  Returns
+     * {@code null} if the name is blank or not recognized.
+     */
+    public static String lookupGenreIdByName(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        for (Map.Entry<Integer, String> entry : GENRE_MAP.entrySet()) {
+            if (entry.getValue().equalsIgnoreCase(name)) {
+                return entry.getKey().toString();
+            }
+        }
+        return null;
+    }
+
     public MovieCardDto toMovieCardDto(Object tmdbMovie) {
         MovieCardDto dto = new MovieCardDto();
 

@@ -48,8 +48,12 @@ public class HomeController {
                        @RequestParam(value = "minRating", required = false, defaultValue = "") String filterMinRating,
                        @RequestParam(value = "sort",      required = false, defaultValue = "default") String sort) {
 
-        log.debug("GET / requested, page={}", page);
+        log.debug("GET / requested, page(batch)={}", page);
         User currentUser = (User) session.getAttribute("loggedInUser");
+
+        // remember which batch the user has loaded (1 == first 60 films, 2 == 120, etc.)
+        model.addAttribute("currentPage",     page);
+        model.addAttribute("currentUser",     currentUser);
 
         // pass filter values back to the view
         model.addAttribute("filterYear",      filterYear);
@@ -57,102 +61,125 @@ public class HomeController {
         model.addAttribute("filterLang",      filterLang);
         model.addAttribute("filterMinRating", filterMinRating);
         model.addAttribute("sort",            sort);
-        model.addAttribute("currentPage",     page);
-        model.addAttribute("currentUser",     currentUser);
+
+        // figure out how many API pages we need to fetch to satisfy the
+        // requested batch of 60 items per click.  TMDB returns 20 items per page.
+        final int BATCH_SIZE = 60;
+        final int ITEMS_PER_API_PAGE = 20;
+        int neededItems = page * BATCH_SIZE;
+        int neededApiPages = (neededItems + ITEMS_PER_API_PAGE - 1) / ITEMS_PER_API_PAGE;
+
+        List<MovieCardDto> aggregated = new java.util.ArrayList<>();
+        int totalPagesFromApi = Integer.MAX_VALUE;
+        int totalResults = 0;
 
         try {
-            Map<String, Object> popularResponse = tmdbService.getPopularMovies(page);
+            for (int apiPage = 1; apiPage <= neededApiPages && apiPage <= totalPagesFromApi; apiPage++) {
+                Map<String, Object> response;
+                boolean usingFilters = !filterYear.isBlank() || !filterGenre.isBlank()
+                        || !filterLang.isBlank() || !filterMinRating.isBlank() || !"default".equals(sort);
 
-            if (popularResponse == null || !popularResponse.containsKey("results")) {
-                model.addAttribute("error", "No movies returned from TMDB");
-                model.addAttribute("movies", Collections.emptyList());
-                model.addAttribute("allYears",  Collections.emptyList());
-                model.addAttribute("allGenres", Collections.emptyList());
-                model.addAttribute("allLangs",  Collections.emptyList());
-                model.addAttribute("totalPages", 1);
-                return "index";
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> results = (List<Map<String, Object>>) popularResponse.get("results");
-
-            // Map all movies first (needed to build full dropdown lists)
-            List<MovieCardDto> allMovies = results.stream()
-                    .map(movieMapper::toMovieCardDto)
-                    .filter(dto -> dto != null)
-                    .collect(Collectors.toList());
-
-            // Enrich with local review/like counts
-            for (MovieCardDto m : allMovies) {
-                if (m.getId() != null) {
-                    long reviewCount = reviewRepository.countByMovieId(m.getId());
-                    long likeCount   = likeRepository.countDirectMovieLikes(m.getId());
-                    m.setReviewCount(reviewCount);
-                    m.setLikeCount(likeCount);
+                if (usingFilters) {
+                    // sortBy for discover
+                    String sortBy = mapSortToTmdb(sort);
+                    Double minRatingVal = filterMinRating.isBlank() ? null : Double.parseDouble(filterMinRating);
+                    // convert the genre name to TMDB genre id if possible
+                    String genreParam = MovieMapper.lookupGenreIdByName(filterGenre);
+                    response = tmdbService.discoverMovies(apiPage,
+                            filterYear, genreParam, filterLang, minRatingVal, sortBy);
+                } else {
+                    // no filters -> show weekly trending (popular this week) rather than generic popular
+                    response = tmdbService.getTrendingMovies("week", apiPage);
                 }
+
+                if (response == null || !response.containsKey("results")) {
+                    break;
+                }
+
+                if (apiPage == 1) {
+                    Number totalResultsNum = (Number) response.get("total_results");
+                    totalResults = totalResultsNum != null ? totalResultsNum.intValue() : 0;
+                    Number totalPagesNum = (Number) response.get("total_pages");
+                    totalPagesFromApi = totalPagesNum != null ? totalPagesNum.intValue() : 1;
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
+                List<MovieCardDto> pageMovies = results.stream()
+                        .map(movieMapper::toMovieCardDto)
+                        .filter(dto -> dto != null)
+                        .collect(Collectors.toList());
+
+                // enrich with counts
+                for (MovieCardDto m : pageMovies) {
+                    if (m.getId() != null) {
+                        long reviewCount = reviewRepository.countByMovieId(m.getId());
+                        long likeCount   = likeRepository.countDirectMovieLikes(m.getId());
+                        m.setReviewCount(reviewCount);
+                        m.setLikeCount(likeCount);
+                    }
+                }
+
+                aggregated.addAll(pageMovies);
             }
 
-            // Build dropdown option sets from the full page
-            List<String> allYears = allMovies.stream()
-                    .map(MovieCardDto::getYear)
-                    .filter(y -> y != null && !y.isBlank())
-                    .distinct().sorted(Comparator.reverseOrder())
-                    .collect(Collectors.toList());
+            // build global dropdown sets rather than depending on the tiny batch of
+            // movies we happen to have loaded.  This ensures filters reflect the entire
+            // TMDB catalogue.
+            List<String> allYears = java.time.Year.now().atDay(1).getYear() != 0
+                    ? java.util.stream.IntStream.rangeClosed(1900, java.time.Year.now().getValue())
+                        .mapToObj(Integer::toString)
+                        .collect(Collectors.toList())
+                    : java.util.Collections.emptyList();
+            Collections.reverse(allYears); // most recent first
 
-            List<String> allGenres = allMovies.stream()
-                    .filter(f -> f.getGenreNames() != null)
-                    .flatMap(f -> f.getGenreNames().stream())
-                    .filter(g -> g != null && !g.isBlank())
-                    .distinct().sorted()
-                    .collect(Collectors.toList());
+            Map<Integer, String> genreMap = tmdbService.getGenreMap();
+            List<String> allGenres = new java.util.ArrayList<>(genreMap.values());
+            Collections.sort(allGenres);
 
-            List<String> allLangs = allMovies.stream()
-                    .map(MovieCardDto::getOriginalLanguage)
-                    .filter(l -> l != null && !l.isBlank())
-                    .distinct().sorted()
-                    .collect(Collectors.toList());
+            List<String> allLangs = tmdbService.getLanguages();
+            Collections.sort(allLangs);
 
             model.addAttribute("allYears",  allYears);
             model.addAttribute("allGenres", allGenres);
             model.addAttribute("allLangs",  allLangs);
 
-            // Apply filters
-            double minRating = filterMinRating.isBlank() ? 0.0 : Double.parseDouble(filterMinRating);
-
-            List<MovieCardDto> movies = allMovies.stream()
-                    .filter(f -> filterYear.isBlank()  || filterYear.equals(f.getYear()))
-                    .filter(f -> filterGenre.isBlank() || (f.getGenreNames() != null && f.getGenreNames().contains(filterGenre)))
-                    .filter(f -> filterLang.isBlank()  || filterLang.equals(f.getOriginalLanguage()))
-                    .filter(f -> minRating <= 0        || (f.getVoteAverage() != null && f.getVoteAverage() >= minRating))
-                    .collect(Collectors.toList());
-
-            // Apply sort
-            Comparator<MovieCardDto> comparator = null;
-            switch (sort) {
-                case "az":          comparator = Comparator.comparing(f -> f.getTitle() != null ? f.getTitle() : ""); break;
-                case "za":          comparator = Comparator.comparing((MovieCardDto f) -> f.getTitle() != null ? f.getTitle() : "").reversed(); break;
-                case "year_asc":    comparator = Comparator.comparing(f -> f.getYear() != null ? f.getYear() : ""); break;
-                case "year_desc":   comparator = Comparator.comparing((MovieCardDto f) -> f.getYear() != null ? f.getYear() : "").reversed(); break;
-                case "rating_asc":  comparator = Comparator.comparing(f -> f.getVoteAverage() != null ? f.getVoteAverage() : 0.0); break;
-                case "rating_desc": comparator = Comparator.comparing((MovieCardDto f) -> f.getVoteAverage() != null ? f.getVoteAverage() : 0.0).reversed(); break;
+            // when filters have been applied we already asked TMDB for a filtered set so
+            // there is nothing more to do here; otherwise the data is just the trending
+            // results and no additional filtering is necessary.
+            // only show up to the number items requested by the client (batch * 60)
+            if (aggregated.size() > neededItems) {
+                aggregated = aggregated.subList(0, neededItems);
             }
-            if (comparator != null) movies.sort(comparator);
-
-            model.addAttribute("movies", movies);
-
-            Number totalPagesNum = (Number) popularResponse.get("total_pages");
-            model.addAttribute("totalPages", totalPagesNum != null ? totalPagesNum.intValue() : 1);
+            model.addAttribute("movies", aggregated);
+            model.addAttribute("totalCount", totalResults);
 
         } catch (Exception e) {
-            log.error("failed to load popular movies", e);
+            log.error("failed to load popular/trending movies", e);
             model.addAttribute("error", "Failed to load movies: " + e.getMessage());
             model.addAttribute("movies",    Collections.emptyList());
             model.addAttribute("allYears",  Collections.emptyList());
             model.addAttribute("allGenres", Collections.emptyList());
             model.addAttribute("allLangs",  Collections.emptyList());
-            model.addAttribute("totalPages", 1);
+            model.addAttribute("totalCount", 0);
         }
 
         return "index";
     }
+
+    /**
+     * Map the simple sort keys used by the UI into TMDB discover sort_by values.
+     */
+    private String mapSortToTmdb(String sort) {
+        switch (sort) {
+            case "az":          return "original_title.asc";
+            case "za":          return "original_title.desc";
+            case "year_asc":    return "primary_release_date.asc";
+            case "year_desc":   return "primary_release_date.desc";
+            case "rating_asc":  return "vote_average.asc";
+            case "rating_desc": return "vote_average.desc";
+            default:             return "popularity.desc";
+        }
+    }
+
 }
