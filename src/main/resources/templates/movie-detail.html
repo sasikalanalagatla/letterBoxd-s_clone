@@ -82,7 +82,10 @@
                     <span th:text="${movie.averageLetterboxdRating}">N/A</span> avg rating
                 </small>
             </div>
-            <div class="mb-3">
+            <div th:if="${!movie.released}" class="alert alert-info">
+                Interactions (likes, ratings, reviews) become available once the movie is released.
+            </div>
+            <div th:if="${movie.released}" class="mb-3">
                 <form id="like-form" th:action="@{/movies/{id}/like(id=${movie.id})}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-heart-fill"></i> Like this movie
@@ -90,7 +93,7 @@
                 </form>
             </div>
 
-            <div class="mb-2">
+            <div th:if="${movie.released}" class="mb-2">
                 <form id="rating-form" th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post" class="d-flex align-items-center gap-2">
                     <label class="mb-0">Your rating:</label>
                     <div class="btn-group" role="group" aria-label="rating">
@@ -190,7 +193,12 @@
     </div>
 
     <!-- review form -->
-    <div class="row mt-5">
+    <div th:if="${!movie.released}" class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info">You can only leave ratings, likes or reviews once the movie has been released.</div>
+        </div>
+    </div>
+    <div th:if="${movie.released}" class="row mt-5">
         <div class="col-12">
             <h4>Write a review</h4>
 

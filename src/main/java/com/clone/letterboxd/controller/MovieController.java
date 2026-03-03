@@ -198,6 +198,16 @@ public class MovieController {
 
         boolean ajax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
 
+        // only allow reviews once the movie has actually been released
+        if (!tmdbService.isMovieReleased(id)) {
+            log.info("Attempted review on unreleased movie {} by user {}", id, current.getId());
+            if (!ajax) {
+                return "redirect:/movies/" + id;
+            }
+            model.addAttribute("reviews", reviewService.getTopReviewsForMovie(id, current, 6));
+            return "fragments/movie-reviews :: reviewList";
+        }
+
         if (bindingResult.hasErrors()) {
             if (!ajax) {
                 return "redirect:/movies/" + id;

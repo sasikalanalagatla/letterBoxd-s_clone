@@ -253,7 +253,7 @@
             <input type="hidden" name="page" th:value="${currentPage}" />
             <input type="hidden" name="tab" value="profiles" />
             <label for="pSort">Sort</label>
-            <select class="filter-select" id="pSort" name="pSort">
+            <select class="filter-select" id="pSort" name="pSort" onchange="this.form.submit()">
               <option value="username_az" th:selected="${pSort == 'username_az'}">Username A → Z</option>
               <option value="username_za" th:selected="${pSort == 'username_za'}">Username Z → A</option>
               <option value="joined_desc" th:selected="${pSort == 'joined_desc'}">Newest members</option>
@@ -288,7 +288,7 @@
             <input type="hidden" name="page" th:value="${currentPage}" />
             <input type="hidden" name="tab" value="lists" />
             <label for="lSort">Sort</label>
-            <select class="filter-select" id="lSort" name="lSort">
+            <select class="filter-select" id="lSort" name="lSort" onchange="this.form.submit()">
               <option value="name_az" th:selected="${lSort == 'name_az'}">Name A → Z</option>
               <option value="name_za" th:selected="${lSort == 'name_za'}">Name Z → A</option>
               <option value="size_desc" th:selected="${lSort == 'size_desc'}">Largest first</option>

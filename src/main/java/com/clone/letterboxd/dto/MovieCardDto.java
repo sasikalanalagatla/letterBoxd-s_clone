@@ -41,4 +41,14 @@ public class MovieCardDto {
         if (releaseDate == null || releaseDate.length() < 4) return null;
         return releaseDate.substring(0, 4);
     }
+
+    public boolean isReleased() {
+        if (releaseDate == null || releaseDate.isBlank()) return false;
+        try {
+            java.time.LocalDate d = java.time.LocalDate.parse(releaseDate);
+            return !d.isAfter(java.time.LocalDate.now());
+        } catch (java.time.format.DateTimeParseException e) {
+            return false;
+        }
+    }
 }

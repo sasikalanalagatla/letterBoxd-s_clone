@@ -6,6 +6,7 @@ import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.LikeRepository;
 import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.repository.UserRepository;
+import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Controller;
@@ -20,11 +21,13 @@ public class LikeController {
     private final LikeRepository likeRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private final TmdbService tmdbService;
 
-    public LikeController(LikeRepository likeRepository, ReviewRepository reviewRepository, UserRepository userRepository) {
+    public LikeController(LikeRepository likeRepository, ReviewRepository reviewRepository, UserRepository userRepository, TmdbService tmdbService) {
         this.likeRepository = likeRepository;
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
+        this.tmdbService = tmdbService;
     }
 
     @PostMapping("/movies/{movieId}/like")
@@ -37,6 +40,10 @@ public class LikeController {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return "redirect:/auth/login";
+        }
+        // don't allow liking unreleased movie
+        if (!tmdbService.isMovieReleased(movieId)) {
+            return "redirect:/movies/" + movieId;
         }
         if (likeRepository.existsByMovieIdAndUserId(movieId, userId)) {
             likeRepository.deleteByMovieIdAndUserId(movieId, userId);

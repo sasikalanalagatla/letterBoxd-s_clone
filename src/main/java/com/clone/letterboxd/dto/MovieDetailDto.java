@@ -52,4 +52,18 @@ public class MovieDetailDto {
         if (releaseDate == null || releaseDate.length() < 4) return null;
         return releaseDate.substring(0, 4);
     }
+
+    /**
+     * Returns true if the movie has already been released (release date <= today).
+     * This will be used by templates to disable review/rating/likes on unreleased titles.
+     */
+    public boolean isReleased() {
+        if (releaseDate == null || releaseDate.isBlank()) return false;
+        try {
+            java.time.LocalDate d = java.time.LocalDate.parse(releaseDate);
+            return !d.isAfter(java.time.LocalDate.now());
+        } catch (java.time.format.DateTimeParseException e) {
+            return false;
+        }
+    }
 }

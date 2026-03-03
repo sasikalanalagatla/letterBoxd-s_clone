@@ -51,6 +51,9 @@
         vertical-align: middle;
         margin-left: 0.6rem;
       }
+      /* filter bar (members page) */
+      .filter-bar { background: #1c2128; border: 1px solid #2c3440; border-radius: 8px; padding: .75rem 1rem; margin-top:1rem; margin-bottom:1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+      .filter-bar label { font-size: .75rem; color: #667; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 0; white-space: nowrap; }
       .page-subtitle {
         color: #667;
         font-size: 0.95rem;
@@ -205,6 +208,16 @@
           <span class="count-badge" th:text="${totalCount}">0</span>
         </h1>
         <p class="page-subtitle">All registered members of this community</p>
+        <!-- sort form -->
+        <form th:action="@{/members}" method="get" class="filter-bar">
+          <label for="sort">Sort</label>
+          <select class="filter-select" id="sort" name="sort" onchange="this.form.submit()">
+            <option value="username_az" th:selected="${sort == 'username_az'}">Username A → Z</option>
+            <option value="username_za" th:selected="${sort == 'username_za'}">Username Z → A</option>
+            <option value="joined_desc" th:selected="${sort == 'joined_desc'}">Newest members</option>
+            <option value="joined_asc" th:selected="${sort == 'joined_asc'}">Oldest members</option>
+          </select>
+        </form>
       </div>
     </div>
 

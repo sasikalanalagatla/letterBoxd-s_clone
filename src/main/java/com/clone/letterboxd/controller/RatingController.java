@@ -6,6 +6,7 @@ import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.DiaryEntryRepository;
 import com.clone.letterboxd.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
+import com.clone.letterboxd.service.TmdbService;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,11 +21,14 @@ public class RatingController {
 
     private final DiaryEntryRepository diaryEntryRepository;
     private final UserRepository userRepository;
+    private final TmdbService tmdbService;
 
     public RatingController(DiaryEntryRepository diaryEntryRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            TmdbService tmdbService) {
         this.diaryEntryRepository = diaryEntryRepository;
         this.userRepository = userRepository;
+        this.tmdbService = tmdbService;
     }
 
     @PostMapping("/movies/{movieId}/rate")
@@ -41,6 +45,10 @@ public class RatingController {
             return "redirect:/auth/login";
         }
         User user = userOpt.get();
+        // disallow rating before release
+        if (!tmdbService.isMovieReleased(movieId)) {
+            return "redirect:/movies/" + movieId;
+        }
 
         DiaryEntry entry = diaryEntryRepository
                 .findByUserAndMovieId(user, movieId)

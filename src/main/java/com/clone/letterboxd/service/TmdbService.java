@@ -137,6 +137,26 @@ public Map<String, Object> discoverMovies(Integer page,                         
         return executeGetRequest(url);
     }
 
+    /**
+     * Return true if the given movie has a release date that is on or before today.
+     * Useful for gating user actions like reviews/likes/ratings.
+     */
+    public boolean isMovieReleased(Long movieId) {
+        Map<String, Object> details = getMovieDetails(movieId);
+        if (details == null) return false;
+        Object rdObj = details.get("release_date");
+        if (!(rdObj instanceof String)) return false;
+        String rd = ((String) rdObj).trim();
+        if (rd.isEmpty()) return false;
+        try {
+            java.time.LocalDate date = java.time.LocalDate.parse(rd);
+            return !date.isAfter(java.time.LocalDate.now());
+        } catch (java.time.format.DateTimeParseException e) {
+            log.debug("Cannot parse release date '{}' for movie {}", rd, movieId);
+            return false;
+        }
+    }
+
     public Map<String, Object> searchMovies(String query, int page) {
         String url = baseUrl + "/search/movie" +
                 "?api_key=" + apiKey +

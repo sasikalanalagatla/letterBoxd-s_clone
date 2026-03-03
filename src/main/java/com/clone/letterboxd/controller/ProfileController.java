@@ -19,15 +19,9 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 @RequestMapping("/profile")
@@ -174,6 +168,7 @@ public class ProfileController {
     @GetMapping("/{username}/followers")
     public String showFollowers(
             @PathVariable String username,
+            @RequestParam(value = "sort", required = false, defaultValue = "username_az") String sort,
             HttpSession session,
             Model model) {
         Optional<User> userOptional = userRepository.findByUsername(username);
@@ -186,6 +181,20 @@ public class ProfileController {
         User user = userOptional.get();
         log.debug("Loading followers for user {}", user.getId());
         List<User> followers = userRepository.getFollowers(user.getId());
+        // apply sort
+        switch (sort) {
+            case "username_za":
+                followers.sort(Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER).reversed());
+                break;
+            case "joined_asc":
+                followers.sort(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())));
+                break;
+            case "joined_desc":
+                followers.sort(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+                break;
+            default:
+                followers.sort(Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER));
+        }
         List<UserSummaryDto> dtoList = followers.stream()
                 .map(UserMapper::toSummaryDto)
                 .toList();
@@ -198,12 +207,16 @@ public class ProfileController {
         model.addAttribute("users", dtoList);
         model.addAttribute("listTitle", "Followers");
         model.addAttribute("profile", profile);
+        model.addAttribute("sort", sort);
+        // include the base path for the current list so the template can build the form action
+        model.addAttribute("basePath", "/profile/" + username + "/followers");
         return "user-list";
     }
 
     @GetMapping("/{username}/following")
     public String showFollowing(
             @PathVariable String username,
+            @RequestParam(value = "sort", required = false, defaultValue = "username_az") String sort,
             HttpSession session,
             Model model) {
         Optional<User> userOptional = userRepository.findByUsername(username);
@@ -216,6 +229,19 @@ public class ProfileController {
         User user = userOptional.get();
         log.debug("Loading following list for user {}", user.getId());
         List<User> following = userRepository.getFollowing(user.getId());
+        switch (sort) {
+            case "username_za":
+                following.sort(Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER).reversed());
+                break;
+            case "joined_asc":
+                following.sort(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())));
+                break;
+            case "joined_desc":
+                following.sort(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+                break;
+            default:
+                following.sort(Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER));
+        }
         List<UserSummaryDto> dtoList = following.stream()
                 .map(UserMapper::toSummaryDto)
                 .toList();
@@ -227,6 +253,9 @@ public class ProfileController {
         model.addAttribute("users", dtoList);
         model.addAttribute("listTitle", "Following");
         model.addAttribute("profile", profile);
+        model.addAttribute("sort", sort);
+        // provide basePath for template
+        model.addAttribute("basePath", "/profile/" + username + "/following");
         return "user-list";
     }
 
