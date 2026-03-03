@@ -46,6 +46,14 @@ public class MembersController {
                 .map(UserMapper::toSummaryDto)
                 .collect(Collectors.toList());
 
+        // debug log - count and first usernames
+        if (members.isEmpty()) {
+            System.out.println("[DEBUG] members list empty");
+        } else {
+            System.out.println("[DEBUG] members count=" + members.size() + ", sort=" + sort + 
+                               ", first=" + members.get(0).getUsername());
+        }
+
         model.addAttribute("members", members);
         model.addAttribute("totalCount", members.size());
         model.addAttribute("sort", sort);

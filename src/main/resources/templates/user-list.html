@@ -115,7 +115,7 @@
       <div class="page-header">
         <h1>
           <span th:text="${listTitle}"></span>
-          <span th:if="${profile != null}"> of <span th:text="${profile.username}"></span></span>
+          <span th:if="${profile != null}"> of <span th:text="${profile.displayName != null && profile.displayName != '' ? profile.displayName : profile.username}"></span></span>
         </h1>
         <p style="color: #999; margin-bottom: 0">
           <span th:text="${#lists.size(users)}"></span>
@@ -138,7 +138,7 @@
           <a th:href="@{/profile/{username}(username=${usr.username})}" style="text-decoration: none">
             <div class="user-card">
               <img class="avatar" th:if="${usr.avatarUrl}" th:src="${usr.avatarUrl}" />
-              <div class="username" th:text="${usr.username}"></div>
+              <div class="username" th:text="${usr.displayName != null && usr.displayName != '' ? usr.displayName : usr.username}"></div>
             </div>
           </a>
         </div>

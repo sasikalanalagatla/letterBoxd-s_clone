@@ -1,265 +1,376 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Members — Letterboxd Clone</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
-    <style>
-      body { background-color: #14181c; color: #c8d0d8; }
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Members — Letterboxd Clone</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      /* ── NAV ── */
-      .bg-darker { background-color: #1a1a1a !important; border-bottom: 1px solid #333; }
-      .navbar-brand { font-weight: 700; font-size: 1.5rem; color: #00c030 !important; }
-      .navbar-brand:hover { color: #00e040 !important; }
-      .nav-search-input {
-        background-color: #2c3440 !important;
-        color: #c8d0d8 !important;
-        border-color: #456 !important;
-        min-width: 220px;
-      }
-      .nav-search-input::placeholder { color: #667 !important; }
-      .nav-search-input:focus { box-shadow: 0 0 0 2px rgba(0,192,48,.3) !important; border-color: #00c030 !important; }
-      .nav-search-btn { border-color: #456 !important; color: #c8d0d8 !important; }
-      .nav-search-btn:hover { background-color: #00c030 !important; border-color: #00c030 !important; color: #fff !important; }
-      .nav-link-members { color: #00c030 !important; font-weight: 600; }
+    :root {
+      --bg:       #14181c;
+      --nav-bg:   #1a1a1a;
+      --card:     #2c3440;
+      --border:   #2c3440;
+      --green:    #00c030;
+      --blue:     #40bcf4;
+      --text:     #9ab;
+      --white:    #fff;
+      --muted:    #678;
+      --divider:  #222a32;
+    }
 
-      /* ── PAGE HEADER ── */
-      .page-hero {
-        background: linear-gradient(135deg, #1a1f25 0%, #0d1117 100%);
-        border-bottom: 1px solid #2c3440;
-        padding: 3rem 0 2.5rem;
-        margin-bottom: 2.5rem;
-      }
-      .page-hero h1 {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #fff;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.4rem;
-      }
-      .count-badge {
-        display: inline-block;
-        background: rgba(0,192,48,.15);
-        color: #00c030;
-        border: 1px solid rgba(0,192,48,.3);
-        border-radius: 20px;
-        padding: 0.2rem 0.85rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        vertical-align: middle;
-        margin-left: 0.6rem;
-      }
-      /* filter bar (members page) */
-      .filter-bar { background: #1c2128; border: 1px solid #2c3440; border-radius: 8px; padding: .75rem 1rem; margin-top:1rem; margin-bottom:1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
-      .filter-bar label { font-size: .75rem; color: #667; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 0; white-space: nowrap; }
-      .page-subtitle {
-        color: #667;
-        font-size: 0.95rem;
-        margin-top: 0.4rem;
-      }
+    body { background: var(--bg); color: var(--text); font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.5; }
+    a { color: inherit; text-decoration: none; }
 
-      /* ── MEMBER CARDS ── */
-      .member-card {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background: #1c2128;
-        border: 1px solid #2c3440;
-        border-radius: 10px;
-        padding: 1rem 1.2rem;
-        text-decoration: none;
-        color: inherit;
-        transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-      }
-      .member-card:hover {
-        border-color: #00c030;
-        color: inherit;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(0,192,48,.1);
-      }
-      .member-avatar {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #2c3440;
-        flex-shrink: 0;
-        background: #2c3440;
-        transition: border-color 0.2s;
-      }
-      .member-card:hover .member-avatar {
-        border-color: #00c030;
-      }
-      .member-avatar-placeholder {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2c3440, #1a1f25);
-        border: 2px solid #2c3440;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #00c030;
-        text-transform: uppercase;
-        transition: border-color 0.2s;
-      }
-      .member-card:hover .member-avatar-placeholder {
-        border-color: #00c030;
-      }
-      .member-info { flex: 1; min-width: 0; }
-      .member-username {
-        font-weight: 700;
-        font-size: 0.97rem;
-        color: #c8d0d8;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .member-display {
-        font-size: 0.82rem;
-        color: #667;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-top: 2px;
-      }
-      .member-arrow {
-        color: #2c3440;
-        font-size: 0.9rem;
-        transition: color 0.2s;
-        flex-shrink: 0;
-      }
-      .member-card:hover .member-arrow { color: #00c030; }
+    /* ── NAV ── */
+    .nav-wrap { background: var(--nav-bg); border-bottom: 1px solid #111; position: sticky; top: 0; z-index: 100; }
+    .nav-inner { max-width: 1160px; margin: auto; padding: 0 16px; display: flex; align-items: center; height: 44px; gap: 8px; }
 
-      /* ── EMPTY STATE ── */
-      .empty-state {
-        text-align: center;
-        padding: 5rem 1rem;
-        color: #445;
-      }
-      .empty-state i { font-size: 3rem; display: block; margin-bottom: 1rem; }
-    </style>
-  </head>
-  <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-darker">
-      <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/}">Letterboxd</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarNav" aria-controls="navbarNav"
-                aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <!-- Search -->
-          <form class="d-flex ms-3 me-auto" th:action="@{/search}" method="get">
-            <div class="input-group input-group-sm">
-              <input type="text" name="q" class="form-control nav-search-input"
-                     placeholder="Search films, people, lists…" />
-              <button class="btn nav-search-btn" type="submit">
-                <i class="bi bi-search"></i>
-              </button>
-            </div>
-          </form>
-          <ul class="navbar-nav">
-            <!-- Members link (active on this page) -->
-            <li class="nav-item me-2">
-              <a class="nav-link nav-link-members" th:href="@{/members}">
-                <i class="bi bi-people-fill me-1"></i>Members
-              </a>
-            </li>
-            <!-- Unauthenticated -->
-            <li class="nav-item" th:if="${session.loggedInUser == null}">
-              <a class="nav-link" th:href="@{/auth/login}">Sign In</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser == null}">
-              <a class="nav-link btn btn-primary btn-sm" th:href="@{/auth/register}"
-                 style="margin-left:.5rem">Create Account</a>
-            </li>
-            <!-- Authenticated -->
-            <li class="nav-item dropdown" th:if="${session.loggedInUser != null}">
-              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                 data-bs-toggle="dropdown" aria-expanded="false">
-                <span th:text="${session.loggedInUser.username}"></span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" th:href="@{/profile}">My Profile</a></li>
-                <li><a class="dropdown-item" th:href="@{/lists}">All Lists</a></li>
-                <li><a class="dropdown-item" th:href="@{/lists/create}">Create List</a></li>
-                <li><hr class="dropdown-divider" /></li>
-                <li><a class="dropdown-item text-danger" th:href="@{/auth/logout}">Logout</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div>
+    .brand { font-size: 20px; font-weight: 900; color: #fff !important; letter-spacing: -.5px; margin-right: 8px; }
+
+    .nav-links { display: flex; height: 100%; }
+    .nav-links a {
+      display: flex; align-items: center;
+      padding: 0 12px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: #ccc; }
+    .nav-links a.active { color: #fff; border-bottom-color: var(--green); }
+
+    .nav-search {
+      display: flex; align-items: center; gap: 6px;
+      background: #2c3440; border: 1px solid #456; border-radius: 3px;
+      padding: 3px 8px; margin-left: 8px;
+    }
+    .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 12px; width: 180px; }
+    .nav-search input::placeholder { color: #567; }
+    .nav-search i { color: #678; font-size: 11px; }
+
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .btn-sm-nav {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      padding: 4px 10px; border-radius: 3px; cursor: pointer; white-space: nowrap;
+    }
+    .btn-outline { border: 1px solid #456; color: var(--text); background: none; }
+    .btn-outline:hover { border-color: #789; color: #ccc; }
+    .btn-green { background: var(--green); color: #000 !important; border: none; font-weight: 800; }
+    .btn-green:hover { background: #00e040; }
+
+    /* ── SUBNAV ── */
+    .subnav {
+      background: #1a1f25;
+      border-bottom: 1px solid #111;
+    }
+    .subnav-inner {
+      max-width: 1160px; margin: auto; padding: 0 16px;
+      display: flex; align-items: center; height: 36px; gap: 0;
+    }
+    .subnav-inner h1 {
+      font-size: 13px; font-weight: 700; color: #fff;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .subnav-inner h1 .count {
+      font-size: 11px; font-weight: 400; color: var(--muted);
+    }
+    .subnav-sep { width: 1px; background: #2c3440; height: 18px; margin: 0 12px; }
+    .subnav-tabs { display: flex; height: 100%; gap: 0; }
+    .subnav-tabs a {
+      display: flex; align-items: center;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--muted); padding: 0 10px;
+      border-bottom: 2px solid transparent;
+      transition: color .15s;
+    }
+    .subnav-tabs a:hover { color: #ccc; }
+    .subnav-tabs a.active { color: #fff; border-bottom-color: var(--green); }
+
+    /* ── PAGE ── */
+    .page-outer {
+      max-width: 1160px; margin: auto; padding: 24px 16px 60px;
+      display: grid; grid-template-columns: 1fr 268px; gap: 24px;
+    }
+
+    /* ── MEMBER LIST ── */
+    .list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .list-header-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+    /* sort pills */
+    .sort-pills { display: flex; gap: 2px; }
+    .sort-pills a {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--muted); padding: 3px 8px; border-radius: 2px; background: #1c242c;
+      border: 1px solid #2c3440; transition: background .15s, color .15s;
+    }
+    .sort-pills a:hover { color: #ccc; }
+    .sort-pills a.active { background: #2c3440; color: #fff; border-color: #456; }
+
+    /* ─ member row ─ */
+    .member-row {
+      display: flex; align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--divider);
+      gap: 12px;
+    }
+    .row-num { width: 24px; flex-shrink: 0; font-size: 11px; color: var(--muted); padding-top: 2px; text-align: right; }
+
+    /* avatar */
+    .row-avatar, .row-avatar-init {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      object-fit: cover; background: #2c3440;
+    }
+    .row-avatar-init {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: var(--green); text-transform: uppercase;
+    }
+
+    .row-body { flex: 1; min-width: 0; }
+
+    .row-top { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; flex-wrap: wrap; }
+    .row-username {
+      font-size: 14px; font-weight: 700; color: #fff;
+      transition: color .15s;
+    }
+    .member-row:hover .row-username { color: var(--blue); }
+    .row-displayname { font-size: 11px; color: var(--muted); }
+
+    .row-bio { font-size: 12px; color: #7a8fa0; margin-bottom: 8px; line-height: 1.45; }
+
+    /* poster strip */
+    .poster-strip { display: flex; gap: 3px; margin-bottom: 8px; }
+    .p-thumb {
+      width: 30px; height: 46px; border-radius: 2px;
+      object-fit: cover; background: #1e2730; flex-shrink: 0;
+      opacity: .7; transition: opacity .15s;
+    }
+    .member-row:hover .p-thumb { opacity: .9; }
+    .p-thumb-img { opacity: .75; }
+
+    /* stats */
+    .row-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat { font-size: 11px; color: var(--muted); }
+    .stat strong { color: #9ab; font-weight: 600; }
+
+    /* action */
+    .row-action { flex-shrink: 0; padding-top: 2px; }
+    .btn-follow {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      padding: 4px 10px; border-radius: 3px; border: 1px solid #456;
+      background: none; color: var(--muted); cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-follow:hover { border-color: var(--green); color: var(--green); }
+
+    /* empty */
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty i { font-size: 2rem; display: block; margin-bottom: 10px; opacity: .35; }
+
+    /* ── SIDEBAR ── */
+    .sidebar-box { margin-bottom: 20px; }
+    .sb-head {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); padding-bottom: 6px; margin-bottom: 6px;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .sb-member {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; border-bottom: 1px solid #1a2028;
+    }
+    .sb-member:last-child { border-bottom: none; }
+    .sb-avatar, .sb-avatar-init {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      object-fit: cover; background: #2c3440;
+    }
+    .sb-avatar-init {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--green); text-transform: uppercase;
+    }
+    .sb-info { flex: 1; min-width: 0; }
+    .sb-uname {
+      font-size: 12px; font-weight: 700; color: #ccc;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sb-member:hover .sb-uname { color: var(--blue); }
+    .sb-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .about-blurb { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .about-blurb a { color: var(--blue); }
+
+    @media (max-width: 800px) {
+      .page-outer { grid-template-columns: 1fr; }
+      .side-col { display: none; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav-wrap">
+  <div class="nav-inner">
+    <a class="brand" th:href="@{/}">Letterboxd</a>
+    <div class="nav-links">
+      <a th:href="@{/films}">Films</a>
+      <a th:href="@{/lists}">Lists</a>
+      <a th:href="@{/members}" class="active">Members</a>
+      <a th:href="@{/journal}">Journal</a>
+    </div>
+    <form th:action="@{/search}" method="get" style="display:contents">
+      <div class="nav-search">
+        <i class="bi bi-search"></i>
+        <input type="text" name="q" placeholder="Search films, people, lists…"/>
       </div>
-    </nav>
+    </form>
+    <div class="nav-right">
+      <span th:if="${session.loggedInUser == null}" style="display:contents">
+        <a class="btn-sm-nav btn-outline" th:href="@{/auth/login}">Sign In</a>
+        <a class="btn-sm-nav btn-green"   th:href="@{/auth/register}">Create Account</a>
+      </span>
+      <span th:if="${session.loggedInUser != null}" style="display:contents">
+        <a class="btn-sm-nav btn-outline" th:href="@{/profile}">
+          <i class="bi bi-person-fill" style="margin-right:4px"></i>
+          <span th:text="${session.loggedInUser.username}"></span>
+        </a>
+        <a class="btn-sm-nav btn-outline" th:href="@{/auth/logout}">Sign Out</a>
+      </span>
+    </div>
+  </div>
+</nav>
 
-    <!-- Page Hero -->
-    <div class="page-hero">
-      <div class="container">
-        <h1>
-          <i class="bi bi-people-fill me-2" style="color:#00c030;"></i>Members
-          <span class="count-badge" th:text="${totalCount}">0</span>
-        </h1>
-        <p class="page-subtitle">All registered members of this community</p>
-        <!-- sort form -->
-        <form th:action="@{/members}" method="get" class="filter-bar">
-          <label for="sort">Sort</label>
-          <select class="filter-select" id="sort" name="sort" onchange="this.form.submit()">
-            <option value="username_az" th:selected="${sort == 'username_az'}">Username A → Z</option>
-            <option value="username_za" th:selected="${sort == 'username_za'}">Username Z → A</option>
-            <option value="joined_desc" th:selected="${sort == 'joined_desc'}">Newest members</option>
-            <option value="joined_asc" th:selected="${sort == 'joined_asc'}">Oldest members</option>
-          </select>
-        </form>
+<!-- ── PAGE ── -->
+<div class="page-outer">
+
+  <!-- MAIN -->
+  <div class="main-col">
+    <div class="list-header">
+      <span class="list-header-title">All Members</span>
+      <div class="sort-pills">
+        <a th:href="@{/members(sort='username_az')}" th:classappend="${sort == 'username_az' or sort == null ? ' active' : ''}">A–Z</a>
+        <a th:href="@{/members(sort='username_za')}" th:classappend="${sort == 'username_za' ? ' active' : ''}">Z–A</a>
+        <a th:href="@{/members(sort='joined_desc')}" th:classappend="${sort == 'joined_desc' ? ' active' : ''}">Newest</a>
+        <a th:href="@{/members(sort='joined_asc')}"  th:classappend="${sort == 'joined_asc'  ? ' active' : ''}">Oldest</a>
       </div>
     </div>
 
-    <!-- Members Grid -->
-    <div class="container pb-5">
-      <!-- Empty state -->
-      <div th:if="${members.isEmpty()}" class="empty-state">
-        <i class="bi bi-person-x"></i>
-        <p>No members found.</p>
-      </div>
+    <!-- Empty -->
+    <div th:if="${members == null or members.isEmpty()}" class="empty">
+      <i class="bi bi-person-x"></i>
+      <p>No members found.</p>
+    </div>
 
-      <!-- Grid -->
-      <div th:if="${!members.isEmpty()}"
-           class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
-        <div class="col" th:each="member : ${members}">
-          <a th:href="@{/profile/{u}(u=${member.username})}" class="member-card">
-            <!-- Avatar -->
-            <img th:if="${member.avatarUrl != null}"
-                 th:src="${member.avatarUrl}"
-                 th:alt="${member.username}"
-                 class="member-avatar"
-                 loading="lazy"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-            <div class="member-avatar-placeholder"
-                 th:style="${member.avatarUrl != null} ? 'display:none' : 'display:flex'"
-                 th:text="${member.username != null ? member.username.substring(0,1).toUpperCase() : '?'}">
-            </div>
-            <!-- Info -->
-            <div class="member-info">
-              <div class="member-username" th:text="${member.username}">username</div>
-              <div class="member-display"
-                   th:text="${member.displayName != null ? member.displayName : '@' + member.username}">
-                Display Name
-              </div>
-            </div>
-            <!-- Arrow -->
-            <i class="bi bi-chevron-right member-arrow"></i>
-          </a>
+    <!-- Rows -->
+    <div th:if="${members != null and !members.isEmpty()}">
+      <div class="member-row" th:each="member,iter : ${members}">
+        <div class="row-num" th:text="${iter.index + 1}">1</div>
+
+        <!-- Avatar -->
+        <img th:if="${member.avatarUrl != null}"
+             th:src="${member.avatarUrl}" th:alt="${member.username}"
+             class="row-avatar p-thumb-img" loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+        <div class="row-avatar-init"
+             th:style="${member.avatarUrl != null} ? 'display:none' : 'display:flex'"
+             th:text="${member.username != null ? member.username.substring(0,1).toUpperCase() : '?'}"></div>
+
+        <!-- Body -->
+        <div class="row-body">
+          <div class="row-top">
+            <a th:href="@{/profile/{u}(u=${member.username})}" class="row-username" th:text="${member.username}">username</a>
+            <span class="row-displayname"
+                  th:if="${member.displayName != null}"
+                  th:text="${member.displayName}"></span>
+          </div>
+
+          <div class="row-bio" th:if="${member.bioExcerpt != null}" th:text="${member.bioExcerpt}"></div>
+
+          <!-- Film poster strip (placeholders – swap for real poster imgs when available) -->
+          <div class="poster-strip">
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+            <div class="p-thumb"></div>
+          </div>
+
+          <div class="row-stats">
+            <!-- show only films watched count from summary DTO -->
+            <span class="stat" th:if="${member.filmsWatchedCount != null}">
+              <strong th:text="${member.filmsWatchedCount}">0</strong> Films
+            </span>
+          </div>
+        </div>
+
+        <!-- Follow -->
+        <div class="row-action" th:if="${session.loggedInUser != null}">
+          <button class="btn-follow">Follow</button>
         </div>
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+  </div><!-- /main -->
+
+  <!-- SIDEBAR -->
+  <div class="side-col">
+
+    <!-- Popular -->
+    <div class="sidebar-box">
+      <div class="sb-head">Popular This Week</div>
+      <div th:if="${popularMembers != null and !popularMembers.isEmpty()}">
+        <a class="sb-member" th:each="m : ${popularMembers}" th:href="@{/profile/{u}(u=${m.username})}">
+          <img th:if="${m.avatarUrl != null}" th:src="${m.avatarUrl}" class="sb-avatar" loading="lazy"/>
+          <div class="sb-avatar-init" th:if="${m.avatarUrl == null}"
+               th:text="${m.username != null ? m.username.substring(0,1).toUpperCase() : '?'}"></div>
+          <div class="sb-info">
+            <div class="sb-uname" th:text="${m.username}">username</div>
+            <div class="sb-sub" th:text="${m.filmsWatchedCount != null ? m.filmsWatchedCount + ' films' : 'Member'}"></div>
+          </div>
+        </a>
+      </div>
+      <p th:if="${popularMembers == null or popularMembers.isEmpty()}" style="font-size:11px;color:#567;padding:4px 0">No data.</p>
+    </div>
+
+    <!-- Recent -->
+    <div class="sidebar-box">
+      <div class="sb-head">Recently Joined</div>
+      <div th:if="${recentMembers != null and !recentMembers.isEmpty()}">
+        <a class="sb-member" th:each="m : ${recentMembers}" th:href="@{/profile/{u}(u=${m.username})}">
+          <img th:if="${m.avatarUrl != null}" th:src="${m.avatarUrl}" class="sb-avatar" loading="lazy"/>
+          <div class="sb-avatar-init" th:if="${m.avatarUrl == null}"
+               th:text="${m.username != null ? m.username.substring(0,1).toUpperCase() : '?'}"></div>
+          <div class="sb-info">
+            <div class="sb-uname" th:text="${m.username}">username</div>
+            <div class="sb-sub" th:text="${m.joinedDate != null ? 'Joined ' + m.joinedDate : 'New member'}"></div>
+          </div>
+        </a>
+      </div>
+      <p th:if="${recentMembers == null or recentMembers.isEmpty()}" style="font-size:11px;color:#567;padding:4px 0">No data.</p>
+    </div>
+
+    <!-- About -->
+    <div class="sidebar-box">
+      <div class="sb-head">About</div>
+      <p class="about-blurb">
+        Find film lovers, critics and friends.
+        Follow members to see their ratings, reviews and lists in your activity feed.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+</body>
 </html>
