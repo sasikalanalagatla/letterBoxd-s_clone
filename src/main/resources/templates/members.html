@@ -86,7 +86,12 @@
     }
     .member-portrait img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
     .featured-card:hover .member-portrait img { transform: scale(1.04); }
-    .member-portrait-init { font-size: 3.5rem; font-weight: 700; color: var(--green); text-transform: uppercase; font-family: "Merriweather", serif; }
+    .member-portrait-init {
+      font-size: 3.5rem; font-weight: 700; color: #fff; text-transform: uppercase;
+      font-family: "Merriweather", serif; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1d232a 0%, #00c030 100%);
+    }
     .member-portrait::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%); pointer-events: none; }
     .portrait-stats { position: absolute; bottom: 7px; left: 10px; z-index: 2; font-size: 0.7rem; color: rgba(255,255,255,0.75); font-weight: 600; display: flex; gap: 8px; }
 
@@ -98,14 +103,6 @@
     /* ── ALL MEMBERS GRID (matches popular-grid in lists) ── */
     .popular-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
     .popular-card { display: block; cursor: pointer; }
-
-    .member-strip { display: flex; height: 105px; border-radius: 4px; overflow: hidden; margin-bottom: 0.6rem; gap: 2px; background: var(--bg-card); }
-    .strip-avatar-block { width: 70px; flex-shrink: 0; background: var(--bg-card); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .strip-avatar-block img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-    .popular-card:hover .strip-avatar-block img { transform: scale(1.05); }
-    .strip-avatar-init { font-size: 1.8rem; font-weight: 700; color: var(--green); text-transform: uppercase; font-family: "Merriweather", serif; }
-    .strip-film { flex: 1; background: #1e2730; transition: background .2s; }
-    .popular-card:hover .strip-film { background: #28333e; }
 
     .popular-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem; transition: color 0.2s; }
     .popular-card:hover .popular-title { color: var(--green); }
@@ -170,8 +167,10 @@
         <div class="featured-grid">
           <a class="featured-card" th:each="m : ${featuredMembers}" th:href="@{/profile/{u}(u=${m.username})}">
             <div class="member-portrait">
-              <img th:if="${m.avatarUrl != null}" th:src="${m.avatarUrl}" th:alt="${m.username}" loading="lazy"/>
-              <div class="member-portrait-init" th:if="${m.avatarUrl == null}"
+              <img th:if="${m.avatarUrl != null}" th:src="${m.avatarUrl}" th:alt="${m.username}" loading="lazy"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+              <div class="member-portrait-init"
+                   th:style="${m.avatarUrl != null} ? 'display:none' : 'display:flex'"
                    th:text="${m.username != null ? m.username.substring(0,1).toUpperCase() : '?'}"></div>
               <div class="portrait-stats">
                 <span th:if="${m.filmsWatchedCount != null}" th:text="${m.filmsWatchedCount + ' films'}"></span>
@@ -209,19 +208,15 @@
       <!-- Cards -->
       <div class="popular-grid" th:if="${members != null and !members.isEmpty()}">
         <a class="popular-card" th:each="member : ${members}" th:href="@{/profile/{u}(u=${member.username})}">
-          <div class="member-strip">
-            <div class="strip-avatar-block">
-              <img th:if="${member.avatarUrl != null}" th:src="${member.avatarUrl}" th:alt="${member.username}" loading="lazy"
-                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-              <div class="strip-avatar-init"
-                   th:style="${member.avatarUrl != null} ? 'display:none' : 'display:flex'"
-                   th:text="${member.username != null ? member.username.substring(0,1).toUpperCase() : '?'}"></div>
+          <div class="member-portrait">
+            <img th:if="${member.avatarUrl != null}" th:src="${member.avatarUrl}" th:alt="${member.username}" loading="lazy"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="member-portrait-init"
+                 th:style="${member.avatarUrl != null} ? 'display:none' : 'display:flex'"
+                 th:text="${member.username != null ? member.username.substring(0,1).toUpperCase() : '?'}"></div>
+            <div class="portrait-stats">
+              <span th:if="${member.filmsWatchedCount != null}" th:text="${member.filmsWatchedCount + ' films'}"></span>
             </div>
-            <div class="strip-film"></div>
-            <div class="strip-film"></div>
-            <div class="strip-film"></div>
-            <div class="strip-film"></div>
-            <div class="strip-film"></div>
           </div>
           <div class="popular-title" th:text="${member.username}">username</div>
           <div class="popular-meta">

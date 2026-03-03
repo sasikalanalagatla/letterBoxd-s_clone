@@ -11,6 +11,11 @@ public class UserSummaryDto {
     private String avatarUrl;
     private String bioExcerpt;
     private Integer filmsWatchedCount;
+    
+    private Long followersCount = 0L;
+    private Long followingCount = 0L;
+    private Long listCount = 0L;
+    private Long likeCount = 0L;
 
     public String getAvatarUrlOrDefault() {
         return avatarUrl != null ? avatarUrl : "/images/default-avatar.png";

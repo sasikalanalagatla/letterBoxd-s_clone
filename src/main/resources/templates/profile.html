@@ -1,394 +1,633 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title th:text="${profile.displayName} + ' - Letterboxd Clone'"></title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <style>
-      .profile-header {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        padding: 3rem 0;
-        border-bottom: 1px solid #333;
-      }
-      .avatar {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #556b2f;
-        background-color: #333;
-      }
-      .profile-info {
-        margin-left: 2rem;
-      }
-      .username {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.5rem;
-      }
-      .display-name {
-        font-size: 1.2rem;
-        color: #999;
-        margin-bottom: 1rem;
-      }
-      .bio {
-        color: #ccc;
-        font-size: 1rem;
-        margin-top: 1rem;
-        line-height: 1.6;
-        max-width: 600px;
-      }
-      .joined-date {
-        color: #666;
-        font-size: 0.9rem;
-        margin-top: 1rem;
-      }
-      .btn-edit {
-        background-color: #556b2f;
-        border: none;
-        color: white;
-        margin-top: 1rem;
-      }
-      .btn-edit:hover {
-        background-color: #6b8e23;
-        color: white;
-      }
-      .btn-follow {
-        background-color: #556b2f;
-        border: none;
-        color: white;
-        margin-top: 1rem;
-        margin-left: 0.5rem;
-      }
-      .btn-follow:hover {
-        background-color: #6b8e23;
-        color: white;
-      }
-      .btn-unfollow {
-        background-color: #4a5a1f;
-        border: 1px solid #556b2f;
-        color: #556b2f;
-        margin-top: 1rem;
-        margin-left: 0.5rem;
-      }
-      .btn-unfollow:hover {
-        background-color: #556b2f;
-        color: white;
-      }
-      .stats-section {
-        display: flex;
-        gap: 2rem;
-        margin-top: 2rem;
-        flex-wrap: wrap;
-      }
-      .stat-card {
-        background: #1a1a1a;
-        padding: 1.5rem;
-        border-radius: 8px;
-        border: 1px solid #333;
-        text-align: center;
-        flex: 1;
-        min-width: 120px;
-      }
-      .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #556b2f;
-      }
-      .stat-label {
-        color: #999;
-        font-size: 0.9rem;
-        margin-top: 0.5rem;
-      }
-      .content-section {
-        margin-top: 3rem;
-      }
-      .section-title {
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 2px solid #333;
-        padding-bottom: 1rem;
-      }
-      .empty-message {
-        color: #666;
-        text-align: center;
-        padding: 2rem;
-        background: #1a1a1a;
-        border-radius: 8px;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title th:text="${profile.displayName} + ' - Letterboxd\'s'"></title>
 
-      /* replicate card grid styles from lists.html */
-      .popular-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-      }
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
 
-      .popular-card {
-        display: block;
-        cursor: pointer;
-      }
+  <style>
+    :root {
+      --green: #00c030;
+      --bg-dark: #14181c;
+      --bg-card: #2c3440;
+      --border: rgba(255,255,255,0.08);
+      --text: #ccc;
+      --text-dim: #9ab;
+      --text-muted: #678;
+    }
 
-      .popular-strip {
-        display: flex;
-        height: 105px;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 0.6rem;
-        gap: 2px;
-        background: #1e1e1e;
-      }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-      .popular-strip .strip-img {
-        flex: 1;
-        overflow: hidden;
-      }
+    body {
+      font-family: "Titillium Web", sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      padding-top: 56px;
+    }
 
-      .popular-strip .strip-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        transition: transform 0.3s;
-      }
+    a { text-decoration: none; color: inherit; }
 
-      .popular-card:hover .popular-strip .strip-img img {
-        transform: scale(1.05);
-      }
-    </style>
-  </head>
-  <body class="bg-dark text-light">
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-darker mb-5">
-      <div class="container-fluid">
-        <a
-          class="navbar-brand"
-          th:href="@{/}"
-          style="font-weight: 700; font-size: 1.5rem"
-        >
-          Letterboxd
-        </a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
+    /* ── HEADER ── */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      background: #14181c;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-right: 2rem;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .logo-dots span {
+      width: 13px; height: 13px; border-radius: 50%; display: inline-block;
+    }
+    .dot-o { background: #f97316; }
+    .dot-g { background: #22c55e; }
+    .dot-b { background: #3b82f6; }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: .5rem;
+      flex: 1;
+    }
+
+    .nav-links a {
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: .4rem .8rem;
+    }
+
+    .nav-links a.active,
+    .nav-links a:hover { color: #fff; }
+
+    .search-wrap input {
+      height: 30px;
+      padding: 0 .8rem;
+      border-radius: 15px;
+      border: 1px solid var(--border);
+      background: #222;
+      color: #fff;
+      font-size: .8rem;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── USER MINI HEADER (profile bar) ── */
+    .user-mini-header {
+      display: flex;
+      align-items: center;
+      background-color: var(--bg-card);
+      border-radius: 4px;
+      padding: .5rem 1rem;
+      margin: 2rem 0 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .user-mini-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+    }
+
+    .user-mini-name {
+      color: #fff;
+      font-weight: 700;
+      font-size: .95rem;
+      margin-right: auto;
+    }
+
+    .user-mini-nav {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .user-mini-nav a {
+      color: var(--text-dim);
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 600;
+      transition: color .2s;
+    }
+
+    .user-mini-nav a:hover { color: #fff; }
+    .user-mini-nav a.active {
+      color: var(--green);
+      border-bottom: 2px solid var(--green);
+      padding-bottom: 2px;
+    }
+
+    /* ── FOLLOW / EDIT BUTTONS ── */
+    .profile-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-bottom: 2rem;
+    }
+
+    .btn-edit {
+      padding: .4rem 1.2rem;
+      background: #456;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: .8rem;
+      font-weight: 600;
+      font-family: "Titillium Web", sans-serif;
+      cursor: pointer;
+    }
+
+    .btn-follow {
+      padding: .4rem 1.2rem;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: .8rem;
+      font-weight: 700;
+      font-family: "Titillium Web", sans-serif;
+      cursor: pointer;
+    }
+
+    .btn-unfollow {
+      padding: .4rem 1.2rem;
+      background: transparent;
+      color: var(--green);
+      border: 1px solid var(--green);
+      border-radius: 4px;
+      font-size: .8rem;
+      font-weight: 700;
+      font-family: "Titillium Web", sans-serif;
+      cursor: pointer;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 0 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-label {
+      font-size: .7rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+
+    .see-all-link {
+      font-size: .8rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .see-all-link:hover { color: var(--green); }
+
+    /* ── LISTS GRID ── */
+    .popular-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .popular-strip {
+      display: flex;
+      height: 105px;
+      border-radius: 4px;
+      overflow: hidden;
+      gap: 2px;
+      background: var(--bg-card);
+      margin-bottom: .5rem;
+    }
+
+    .popular-strip .strip-img { flex: 1; overflow: hidden; }
+
+    .popular-strip .strip-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .3s;
+    }
+
+    .popular-card:hover .popular-strip .strip-img img { transform: scale(1.05); }
+
+    .popular-title {
+      font-weight: 700;
+      color: #fff;
+      font-size: .85rem;
+      margin-bottom: .3rem;
+    }
+
+    .popular-meta {
+      font-size: .7rem;
+      color: var(--text-muted);
+    }
+
+    .list-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+
+    .list-card:hover { border-color: rgba(255,255,255,0.2); }
+
+    /* ── REVIEWS GRID ── */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .review-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .review-card img {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      display: block;
+      transition: transform .3s;
+    }
+
+    .review-card:hover img { transform: scale(1.05); }
+
+    .review-card-body {
+      padding: .5rem;
+      text-align: center;
+    }
+
+    .review-date {
+      font-size: .7rem;
+      color: var(--text-muted);
+    }
+
+    .review-actions {
+      display: flex;
+      gap: .4rem;
+      justify-content: center;
+      margin-top: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-sm-outline {
+      padding: .25rem .6rem;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 3px;
+      font-size: .7rem;
+      color: var(--text-dim);
+      font-family: "Titillium Web", sans-serif;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .btn-sm-outline:hover { color: #fff; border-color: #fff; }
+
+    .btn-sm-danger {
+      padding: .25rem .6rem;
+      border: none;
+      border-radius: 3px;
+      font-size: .7rem;
+      background: #c0392b;
+      color: #fff;
+      font-family: "Titillium Web", sans-serif;
+      cursor: pointer;
+    }
+
+    /* ── LIKES ── */
+    .movie-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .movie-card img {
+      width: 70px;
+      height: 105px;
+      object-fit: cover;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      transition: transform .2s;
+      display: block;
+    }
+
+    .movie-card img:hover { transform: scale(1.05); }
+
+    .sub-section-title {
+      font-size: .7rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    /* Liked reviews */
+    .review-card-mini {
+      display: flex;
+      gap: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: .8rem 1rem;
+      margin-bottom: .8rem;
+    }
+
+    .review-poster-mini img {
+      width: 50px;
+      height: 75px;
+      object-fit: cover;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .review-content { flex: 1; }
+
+    .review-content .review-meta-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .review-movie-title {
+      color: #fff;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+
+    .review-author-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-left: .3rem;
+    }
+
+    .review-date-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+    }
+
+    .review-body-text {
+      color: #bcd;
+      font-size: .85rem;
+      line-height: 1.5;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border-radius: 4px;
+      margin-bottom: 2rem;
+    }
+
+    /* ── BADGE ── */
+    .badge-ranked {
+      display: inline-block;
+      font-size: .65rem;
+      text-transform: uppercase;
+      background: #456;
+      color: #abc;
+      border-radius: 3px;
+      padding: 1px 6px;
+      margin-left: .5rem;
+    }
+
+    .likes-section { margin-bottom: 3rem; }
+
+    @media (max-width: 768px) {
+      .popular-grid { grid-template-columns: 1fr; }
+      .reviews-grid { grid-template-columns: repeat(3, 1fr); }
+      .nav-links { display: none; }
+      .user-mini-nav { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <a class="logo" th:href="@{/}">
+    <div class="logo-dots">
+      <span class="dot-o"></span><span class="dot-g"></span><span class="dot-b"></span>
+    </div>
+    <span class="logo-name">Letterboxd's</span>
+  </a>
+  <ul class="nav-links">
+    <li><a th:href="@{/auth/login}"    class="bright" th:if="${session.loggedInUser == null}">Sign In</a></li>
+    <li><a th:href="@{/auth/register}" class="bright" th:if="${session.loggedInUser == null}">Create Account</a></li>
+    <li><a th:href="@{/profile}" class="bright" th:if="${session.loggedInUser != null}" th:text="${session.loggedInUser.username}">Profile</a></li>
+    <li><a th:href="@{/}">Films</a></li>
+    <li><a th:href="@{/lists}">Lists</a></li>
+    <li><a th:href="@{/members}">Members</a></li>
+    <li th:if="${session.loggedInUser != null}"><a th:href="@{/auth/logout}">Logout</a></li>
+  </ul>
+  <form class="search-wrap" th:action="@{/search}" method="get">
+    <input type="text" name="q" placeholder="Films, people, lists..."/>
+    <button class="search-icon-btn" type="submit">&#128269;</button>
+  </form>
+</header>
+
+<!-- ── MAIN ── -->
+<main>
+  <div class="container">
+
+    <!-- Profile bar -->
+    <div th:replace="~{fragments/profile-header :: profile-header(${profile}, ${activeTab})}"></div>
+
+    <!-- Follow / Edit -->
+    <div class="profile-actions">
+      <a th:if="${isOwnProfile}" th:href="@{/profile/edit}" class="btn-edit">Edit Profile</a>
+
+      <form th:if="${!isOwnProfile && session.loggedInUserId != null}"
+            th:action="@{/profile/{username}/(username=${profile.username})}" method="post">
+        <button type="submit" class="btn-follow"
+                th:if="${!isFollowing}"
+                th:formaction="@{/profile/{username}/follow(username=${profile.username})}">
+          Follow
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <form class="d-flex ms-3 me-auto" th:action="@{/search}" method="get">
-            <div class="input-group input-group-sm">
-              <input type="text" name="q" class="form-control nav-search-input"
-                     placeholder="Search films, people, lists…" />
-              <button class="btn nav-search-btn" type="submit"><i class="bi bi-search"></i></button>
-            </div>
-          </form>
-          <ul class="navbar-nav">
-            <li class="nav-item me-1">
-              <a class="nav-link" th:href="@{/members}">Members</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser == null}">
-              <a class="nav-link" th:href="@{/auth/login}">Sign In</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/profile}">My Profile</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/auth/logout}">Logout</a>
-            </li>
-          </ul>
+        <button type="submit" class="btn-unfollow"
+                th:if="${isFollowing}"
+                th:formaction="@{/profile/{username}/unfollow(username=${profile.username})}">
+          Unfollow
+        </button>
+      </form>
+    </div>
+
+    <!-- ── LISTS ── -->
+    <div class="section-header">
+      <span class="section-label">Lists</span>
+      <a class="see-all-link"
+         th:href="@{/profile/{u}/lists(u=${profile.username})}"
+         th:if="${profile.listCount > 5}">See all</a>
+    </div>
+
+    <div class="popular-grid"
+         th:if="${profileLists != null and !profileLists.isEmpty()}">
+      <div class="list-card"
+           th:each="list : ${profileLists}"
+           th:onclick="|window.location.href='/lists/' + ${list.id}|">
+
+        <div class="popular-strip"
+             th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
+          <div class="strip-img" th:each="path : ${list.previewPosterPaths}">
+            <img th:src="${'https://image.tmdb.org/t/p/w200' + path}" />
+          </div>
+        </div>
+
+        <div class="popular-title" th:text="${list.name}">List Name</div>
+        <div class="popular-meta">
+          <span th:text="${list.entryCount + ' films'}"></span>
+          <span class="badge-ranked" th:if="${list.ranked}">Ranked</span>
         </div>
       </div>
-    </nav>
+    </div>
 
-    <style>
-      .bg-darker { background-color: #1a1a1a !important; border-bottom: 1px solid #333; }
-      .navbar-brand:hover { color: #556b2f !important; }
-      .nav-search-input { background-color: #2c3440 !important; color: #c8d0d8 !important; border-color: #456 !important; min-width: 200px; }
-      .nav-search-input::placeholder { color: #667 !important; }
-      .nav-search-input:focus { box-shadow: 0 0 0 2px rgba(0,192,48,.25) !important; border-color: #00c030 !important; }
-      .nav-search-btn { border-color: #456 !important; color: #c8d0d8 !important; }
-      .nav-search-btn:hover { background-color: #00c030 !important; border-color: #00c030 !important; color: #fff !important; }
-    </style>
+    <div class="empty-state"
+         th:if="${profileLists == null or profileLists.isEmpty()}">
+      No lists created yet.
+    </div>
 
-    <!-- Profile Header -->
-    <div class="profile-header">
-      <div class="container">
-        <div class="d-flex align-items-flex-start">
-          <img
-            th:src="${profile.avatarUrl} ?: 'https://via.placeholder.com/150?text=' + ${profile.username}"
-            alt="Avatar"
-            class="avatar"
-          />
-          <div class="profile-info">
-            <div class="username" th:text="${profile.username}"></div>
-            <div class="display-name">
-              <span th:text="${profile.displayName}"></span>
-              <small class="text-warning" th:if="${profile.isAdmin}">(admin)</small>
-            </div>
-            <div class="bio" th:text="${profile.bio}"></div>
-            <div class="joined-date">
-              Joined
-              <span
-                th:text="${#temporals.format(profile.joinedAt, 'MMM d, yyyy')}"
-              ></span>
-            </div>
-            <div>
-              <a
-                th:if="${isOwnProfile}"
-                th:href="@{/profile/edit}"
-                class="btn btn-edit"
-              >
-                Edit Profile
-              </a>
-              <form 
-                th:if="${!isOwnProfile && session.loggedInUserId != null}"
-                th:action="@{/profile/{username}/(username=${profile.username})}"
-                method="post"
-                style="display: inline;">
-                <button 
-                  type="submit"
-                  th:if="${!isFollowing}"
-                  th:formaction="@{/profile/{username}/follow(username=${profile.username})}"
-                  class="btn btn-follow">
-                  Follow
-                </button>
-                <button 
-                  type="submit"
-                  th:if="${isFollowing}"
-                  th:formaction="@{/profile/{username}/unfollow(username=${profile.username})}"
-                  class="btn btn-unfollow">
-                  Unfollow
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
+    <!-- ── REVIEWS ── -->
+    <div class="section-header">
+      <span class="section-label">Reviews</span>
+      <a class="see-all-link"
+         th:href="@{/profile/{u}/reviews(u=${profile.username})}"
+         th:if="${profile.reviewCount > 5}">See all</a>
+    </div>
 
-        <!-- Stats -->
-        <div class="stats-section">
-          <div class="stat-card">
-            <div
-              class="stat-number"
-              th:text="${profile.filmsWatchedCount}"
-            ></div>
-            <div class="stat-label">Films Watched</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" th:text="${profile.reviewCount}"></div>
-            <div class="stat-label">Reviews</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" th:text="${profile.listCount}"></div>
-            <div class="stat-label">Lists</div>
-          </div>
-          <div class="stat-card">
-            <a th:href="@{/profile/{username}/following(username=${profile.username})}" style="color:inherit; text-decoration:none">
-              <div class="stat-number" th:text="${profile.followingCount}"></div>
-              <div class="stat-label">Following</div>
-            </a>
-          </div>
-          <div class="stat-card">
-            <a th:href="@{/profile/{username}/followers(username=${profile.username})}" style="color:inherit; text-decoration:none">
-              <div class="stat-number" th:text="${profile.followersCount}"></div>
-              <div class="stat-label">Followers</div>
-            </a>
+    <div class="reviews-grid"
+         th:if="${profileReviews != null and !profileReviews.isEmpty()}">
+      <div class="review-card" th:each="review : ${profileReviews}">
+        <a th:href="@{/movies/{id}(id=${review.movieId})}">
+          <img th:src="${review.moviePosterPath != null ? 'https://image.tmdb.org/t/p/w200' + review.moviePosterPath : '/img/no-poster.png'}"
+               th:alt="${review.movieTitle}" />
+        </a>
+        <div class="review-card-body">
+          <div class="review-date" th:text="${#temporals.format(review.publishedAt, 'MMM d, yyyy')}"></div>
+          <div class="review-actions">
+            <button class="btn-sm-outline"
+                    th:if="${session.loggedInUser != null and session.loggedInUser.id == profile.id}"
+                    onclick="window.location.href=this.dataset.href"
+                    th:data-href="@{/reviews/{id}/edit(id=${review.id})}">
+              Edit
+            </button>
+            <form th:if="${session.loggedInUser != null and (session.loggedInUser.id == profile.id or session.loggedInUser.isAdmin)}"
+                  th:action="@{/reviews/{id}/delete(id=${review.id})}" method="post"
+                  style="display:inline;">
+              <button type="submit" class="btn-sm-danger">Delete</button>
+            </form>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="container content-section">
-      <h2 class="section-title">Recent Activity</h2>
-      <div class="empty-message">
-        No activity yet. Watch some films and share your thoughts!
-      </div>
+    <div class="empty-state"
+         th:if="${profileReviews == null or profileReviews.isEmpty()}">
+      No reviews written yet.
     </div>
 
-    <!-- Lists Section -->
-    <div class="container content-section">
-      <h2 class="section-title">Lists</h2>
+    <!-- ── LIKES ── -->
+    <div class="section-header">
+      <span class="section-label">Likes</span>
+      <a class="see-all-link"
+         th:href="@{/profile/{u}/likes(u=${profile.username})}"
+         th:if="${likedMovies.size() >= 5 or likedReviews.size() >= 5}">See all</a>
+    </div>
 
-      <!-- show a few recent or featured lists on the profile -->
-      <div th:if="${profileLists != null and !profileLists.isEmpty()}">
-        <div class="popular-grid">
-          <a
-            class="popular-card"
-            th:each="list : ${profileLists}"
-            th:href="@{/lists/{id}(id=${list.id})}"
-          >
-            <!-- Poster strip: up to 4 images side by side -->
-            <div
-              class="popular-strip"
-              th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}"
-            >
-              <div
-                class="strip-img"
-                th:each="path : ${list.previewPosterPaths}"
-              >
-                <img
-                  th:src="${path}"
-                  loading="lazy"
-                />
-              </div>
-            </div>
+    <div class="likes-section">
+      <div class="sub-section-title">Liked Films</div>
 
-            <div class="popular-card-title" th:text="${list.name}">List Name</div>
+      <div class="movie-grid"
+           th:if="${likedMovies != null and !likedMovies.isEmpty()}">
+        <div class="movie-card" th:each="movie : ${likedMovies}">
+          <a th:href="@{/movies/{id}(id=${movie.id})}">
+            <img th:src="${'https://image.tmdb.org/t/p/w200' + movie.poster_path}"
+                 th:alt="${movie.title}" />
           </a>
         </div>
       </div>
-      <!-- no 'view all' link; clicking a card navigates inside -->
-      <div th:if="${profileLists == null or profileLists.isEmpty()}">
-        <div class="empty-message">No lists created yet.</div>
-      </div>
-    </div>
 
-    <!-- Reviews Section -->
-    <div class="container content-section">
-      <h2 class="section-title">Reviews</h2>
-      <div th:if="${profileReviews != null and !profileReviews.isEmpty()}">
-        <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
-          <div class="col" th:each="review : ${profileReviews}">
-            <div class="card bg-secondary h-100 border-0">
-              <a th:href="@{/movies/{id}(id=${review.movieId})}">
-                <img th:src="${'https://image.tmdb.org/t/p/w780' + review.moviePosterPath}"
-                     class="card-img-top"
-                     th:alt="${review.movieTitle}"
-                     style="height: 250px; object-fit: cover;" />
-              </a>
-              <div class="card-body text-center">
-                <small class="text-muted" th:text="${#temporals.format(review.publishedAt, 'MMM d, yyyy')}"></small>
-                <div class="mt-2">
-                  <a class="btn btn-sm btn-outline-light"
-                     th:if="${session.loggedInUser != null and session.loggedInUser.id == profile.id}"
-                     th:href="@{/reviews/{id}/edit(id=${review.id})}">Edit</a>
-                  <form th:if="${session.loggedInUser != null and (session.loggedInUser.id == profile.id or session.loggedInUser.isAdmin)}"
-                        th:action="@{/reviews/{id}/delete(id=${review.id})}"
-                        method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                  </form>
-                </div>
+      <div class="empty-state"
+           th:if="${likedMovies == null or likedMovies.isEmpty()}">
+        No liked films yet.
+      </div>
+
+      <div class="sub-section-title" style="margin-top: 2rem;">Liked Reviews</div>
+
+      <div th:if="${likedReviews != null and !likedReviews.isEmpty()}">
+        <div class="review-card-mini" th:each="review : ${likedReviews}">
+          <div class="review-poster-mini">
+            <img th:src="${review.moviePosterPath != null ? 'https://image.tmdb.org/t/p/w200' + review.moviePosterPath : '/img/no-poster.png'}"
+                 th:alt="${review.movieTitle}" />
+          </div>
+          <div class="review-content">
+            <div class="review-meta-row">
+              <div>
+                <a th:href="@{/movies/{id}(id=${review.movieId})}" class="review-movie-title"
+                   th:text="${review.movieTitle}"></a>
+                <span class="review-author-label"
+                      th:text="'reviewed by ' + ${review.author != null ? review.author.username : 'unknown'}"></span>
               </div>
+              <div class="review-date-label"
+                   th:text="${review.publishedAt != null ? #temporals.format(review.publishedAt, 'MMM d, yyyy') : ''}"></div>
             </div>
+            <div class="review-body-text" th:text="${review.body}"></div>
           </div>
         </div>
       </div>
-      <div th:if="${profileReviews == null or profileReviews.isEmpty()}">
-        <div class="empty-message">No reviews written yet.</div>
+
+      <div class="empty-state"
+           th:if="${likedReviews == null or likedReviews.isEmpty()}">
+        No liked reviews yet.
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+  </div><!-- /container -->
+</main>
+
+</body>
 </html>

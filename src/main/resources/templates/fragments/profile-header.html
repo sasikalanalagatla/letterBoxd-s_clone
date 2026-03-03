@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head></head>
+<body>
+  <!-- User Mini Header Fragment -->
+  <div th:fragment="profile-header(profile, activeTab)" class="user-mini-header" th:if="${profile != null}">
+    <img class="user-mini-avatar" th:if="${profile.avatarUrl}" th:src="${profile.avatarUrl}"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    <div class="user-mini-avatar"
+         th:style="${profile.avatarUrl != null} ? 'display:none; background: #334; align-items: center; justify-content: center; font-size: 0.8rem;' : 'display:flex; background: #334; align-items: center; justify-content: center; font-size: 0.8rem;'">
+      <span th:text="${profile.username.substring(0,1).toUpperCase()}"></span>
+    </div>
+    <a class="user-mini-name" th:href="@{/profile/{username}(username=${profile.username})}" th:text="${profile.displayName != null && profile.displayName != '' ? profile.displayName : profile.username}"></a>
+    <div class="user-mini-nav">
+
+      <!-- Films and Diary removed as per request -->
+      <a th:href="@{/profile/{username}#reviews(username=${profile.username})}" th:classappend="${activeTab == 'reviews'} ? 'active' : ''">Reviews</a>
+      <a th:href="@{/profile/{username}#lists(username=${profile.username})}" th:classappend="${activeTab == 'lists'} ? 'active' : ''">Lists</a>
+      <a th:href="@{/profile/{username}#likes(username=${profile.username})}" th:classappend="${activeTab == 'likes'} ? 'active' : ''">Likes</a>
+      <a th:href="@{/profile/{username}/network(username=${profile.username})}" th:classappend="${activeTab == 'network'} ? 'active' : ''">Network</a>
+    </div>
+  </div>
+</body>
+</html>

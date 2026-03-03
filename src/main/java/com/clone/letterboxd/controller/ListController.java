@@ -5,6 +5,8 @@ import com.clone.letterboxd.dto.FilmListFormDto;
 import com.clone.letterboxd.dto.FilmListDetailDto;
 import com.clone.letterboxd.dto.FilmListSummaryDto;
 import com.clone.letterboxd.mapper.FilmListMapper;
+import com.clone.letterboxd.mapper.UserMapper;
+import com.clone.letterboxd.dto.UserProfileDto;
 import com.clone.letterboxd.model.FilmList;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.FilmListRepository;
@@ -12,6 +14,7 @@ import com.clone.letterboxd.repository.UserRepository;
 import com.clone.letterboxd.repository.ReviewRepository;
 import com.clone.letterboxd.repository.LikeRepository;
 import com.clone.letterboxd.service.FeaturedListService;
+import com.clone.letterboxd.enums.Visibility;
 import com.clone.letterboxd.service.ReviewService;
 import com.clone.letterboxd.service.TmdbService;
 import jakarta.servlet.http.HttpSession;
@@ -40,10 +43,10 @@ public class ListController {
     private final TmdbService tmdbService;
     private final ReviewService reviewService;
     private final FeaturedListService featuredListService;
+    private final UserMapper userMapper;
     private static final String SESSION_MOVIE_IDS      = "pendingMovieIds";
     private static final String SESSION_SEARCH_RESULTS = "movieSearchResults";
     private static final String SESSION_DRAFT          = "listDraft";
-
     public ListController(FilmListRepository filmListRepository,
                           UserRepository userRepository,
                           ReviewRepository reviewRepository,
@@ -51,7 +54,8 @@ public class ListController {
                           FilmListMapper filmListMapper,
                           TmdbService tmdbService,
                           ReviewService reviewService,
-                          FeaturedListService featuredListService) {
+                          FeaturedListService featuredListService,
+                          UserMapper userMapper) {
         this.filmListRepository = filmListRepository;
         this.userRepository     = userRepository;
         this.reviewRepository   = reviewRepository;
@@ -60,20 +64,23 @@ public class ListController {
         this.tmdbService        = tmdbService;
         this.reviewService      = reviewService;
         this.featuredListService = featuredListService;
+        this.userMapper         = userMapper;
     }
 
     @GetMapping
     public String browseLists(
             @RequestParam(value = "allFeatured", required = false, defaultValue = "false") boolean allFeatured,
+            @RequestParam(value = "allCommunity", required = false, defaultValue = "false") boolean allCommunity,
             HttpSession session,
             Model model) {
         // featured lists. show a preview by default, or all if requested
         List<FeaturedListService.FeaturedListItem> allFeaturedItems =
             featuredListService.getAllFeaturedLists();
-        boolean showAllLink = !allFeatured && allFeaturedItems.size() > 6;
+        boolean showAllLinkVisible = !allFeatured && allFeaturedItems.size() > 6;
         List<FeaturedListService.FeaturedListItem> featuredSource = allFeatured
                 ? allFeaturedItems
                 : allFeaturedItems.stream().limit(6).toList();
+
         List<FilmListSummaryDto> featuredLists = featuredSource.stream()
             .map(item -> {
                 FilmListSummaryDto dto = featuredListService.toSummaryDto(item);
@@ -88,11 +95,19 @@ public class ListController {
         
         model.addAttribute("featuredLists", featuredLists);
         model.addAttribute("totalFeaturedCount", allFeaturedItems.size());
-        model.addAttribute("showAllLink", showAllLink);
+        model.addAttribute("showAllLink", showAllLinkVisible);
+        model.addAttribute("allFeatured", allFeatured);
         
-        // popular this week (reuse existing repository method)
-        List<FilmList> popular = filmListRepository
-                .findMostPopularLists(PageRequest.of(0, 6)).getContent();
+        // popular this week (respect visibility)
+        Long userId = (Long) session.getAttribute("loggedInUserId");
+        List<FilmList> popular;
+        if (userId == null) {
+            popular = filmListRepository.findMostPopularPublicLists(PageRequest.of(0, 6)).getContent();
+        } else {
+            // Logged in users see popular public lists + their own lists if they happen to be popular
+            // For simplicity in popular global browse, we mostly stick to PUBLIC.
+            popular = filmListRepository.findMostPopularPublicLists(PageRequest.of(0, 6)).getContent();
+        }
         model.addAttribute("popularThisWeek", buildSummaryList(popular));
         
         // TODO: recently liked section - for now mirror popular lists
@@ -101,16 +116,24 @@ public class ListController {
         // fetch raw entities from repository
         List<FilmList> curated = filmListRepository
                 .findByNameContainingIgnoreCase("Top 500");
-        // reuse same 'popular' list for the normal popularLists section
+        
+        // Community Lists: All public lists from all users
+        List<FilmList> allPublic = filmListRepository.findByVisibilityOrderByCreatedAtDesc(Visibility.PUBLIC);
+        boolean showAllCommunityLink = !allCommunity && allPublic.size() > 6;
+        List<FilmList> communitySource = allCommunity ? allPublic : allPublic.stream().limit(6).toList();
+        
+        model.addAttribute("communityLists", buildSummaryList(communitySource));
+        model.addAttribute("showAllCommunityLink", showAllCommunityLink);
+        model.addAttribute("allCommunity", allCommunity);
 
-        // convert to view-friendly DTOs and enrich with TMDB metadata
-        model.addAttribute("curatedLists", buildSummaryList(curated));
+        // Filter curated by Public visibility ONLY for browse
+        model.addAttribute("curatedLists", buildSummaryList(curated.stream().filter(l -> l.getVisibility() == Visibility.PUBLIC).toList()));
         model.addAttribute("popularLists", buildSummaryList(popular));
 
         // if the user is logged in, include their own lists as summaries
-        Long userId = (Long) session.getAttribute("loggedInUserId");
-        if (userId != null) {
-            Optional<User> userOpt = userRepository.findById(userId);
+        Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
+        if (loggedInUserId != null) {
+            Optional<User> userOpt = userRepository.findById(loggedInUserId);
             userOpt.ifPresent(user -> {
                 List<FilmList> myLists = filmListRepository.findByUser(user);
                 model.addAttribute("myLists", buildSummaryList(myLists));
@@ -121,13 +144,27 @@ public class ListController {
     }
 
     @GetMapping("/{listId}")
-    public String viewList(@PathVariable Long listId, Model model) {
+    public String viewList(@PathVariable Long listId, HttpSession session, Model model) {
         Optional<FilmList> listOptional = filmListRepository.findById(listId);
         if (listOptional.isEmpty()) return "redirect:/lists";
 
         FilmList filmList = listOptional.get();
-        FilmListDetailDto listDetail = filmListMapper.toDetailDto(filmList);
+        Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
 
+        // Visibility Enforcement
+        if (filmList.getVisibility() == Visibility.PRIVATE) {
+            if (loggedInUserId == null || !filmList.getUser().getId().equals(loggedInUserId)) {
+                return "redirect:/lists";
+            }
+        } else if (filmList.getVisibility() == Visibility.FRIENDS) {
+            if (loggedInUserId == null) {
+                return "redirect:/auth/login";
+            }
+            // For now, allow any logged in user as 'friends' logic is basic, 
+            // but we could add a follow check here.
+        }
+
+        FilmListDetailDto listDetail = filmListMapper.toDetailDto(filmList);
         if (listDetail.getEntries() != null) {
             for (FilmListEntryDto entry : listDetail.getEntries()) {
                 try {
@@ -464,13 +501,31 @@ public class ListController {
     }
 
     @GetMapping("/user/{username}")
-    public String userLists(@PathVariable String username, Model model) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isEmpty()) return "redirect:/lists";
+    public String userLists(@PathVariable String username, Model model, HttpSession session) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) return "redirect:/lists";
 
-        List<FilmList> found = filmListRepository.findByUser(userOptional.get());
+        Long loggedInUserId = (Long) session.getAttribute("loggedInUserId");
+        boolean isOwnProfile = user.getId().equals(loggedInUserId);
+
+        UserProfileDto profile = userMapper.toProfileDto(user);
+        profile.setIsOwnProfile(isOwnProfile);
+
+        List<FilmList> found;
+        if (isOwnProfile) {
+            found = filmListRepository.findByUser(user);
+        } else if (loggedInUserId != null) {
+            // For now, logged in users see PUBLIC + FRIENDS if we assume they might be friends
+            // In a real app we'd check follow status.
+            found = filmListRepository.findByUserAndVisibilityIn(user, List.of(Visibility.PUBLIC, Visibility.FRIENDS));
+        } else {
+            found = filmListRepository.findByUserAndVisibility(user, Visibility.PUBLIC);
+        }
+
         model.addAttribute("username", username);
+        model.addAttribute("profile", profile);
         model.addAttribute("lists", buildSummaryList(found));
+        model.addAttribute("activeTab", "lists");
         return "user-lists";
     }
 
@@ -574,7 +629,7 @@ public class ListController {
         return pending;
     }
 
-    private List<com.clone.letterboxd.dto.FilmListSummaryDto> buildSummaryList(List<FilmList> lists) {
+    private List<FilmListSummaryDto> buildSummaryList(List<FilmList> lists) {
         if (lists == null) return List.of();
         return lists.stream().map(this::toSummaryDto).toList();
     }
@@ -604,8 +659,8 @@ public class ListController {
         dto.setPreviewMovieIds(ids);
     }
 
-    private com.clone.letterboxd.dto.FilmListSummaryDto toSummaryDto(FilmList list) {
-        com.clone.letterboxd.dto.FilmListSummaryDto dto = filmListMapper.toSummaryDto(list);
+    private FilmListSummaryDto toSummaryDto(FilmList list) {
+        FilmListSummaryDto dto = filmListMapper.toSummaryDto(list);
 
         if (list.getUser() != null) {
             com.clone.letterboxd.dto.UserSummaryDto owner = new com.clone.letterboxd.dto.UserSummaryDto();

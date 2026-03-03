@@ -48,4 +48,5 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     void deleteByFeaturedListSlugAndUserId(String featuredListSlug, Long userId);
     // insertion can be handled via save(new Like(...)) so no custom query is required
 
+    java.util.List<Like> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

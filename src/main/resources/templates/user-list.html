@@ -9,144 +9,316 @@
       rel="stylesheet"
     />
     <style>
-      .page-header {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-        padding: 2rem 0;
-        border-bottom: 2px solid #333;
-        margin-bottom: 2rem;
-      }
-      /* filter bar for lists of users */
-      .filter-bar { background: #1c2128; border: 1px solid #2c3440; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
-      .filter-bar label { font-size: .75rem; color: #667; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 0; white-space: nowrap; }
-      .section-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-        border-bottom: 2px solid #333;
-        padding-bottom: 1rem;
-      }
-      .user-card {
-        background: #1a1a1a;
-        border: 1px solid #333;
-        border-radius: 8px;
-        padding: 1.5rem;
-        transition:
-          transform 0.3s,
-          border-color 0.3s;
-        cursor: pointer;
-        height: 100%;
+      .page-wrap { max-width: 960px; margin: 0 auto; padding-top: 2rem; }
+
+      /* User mini header */
+      .user-mini-header {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        background-color: #1e252c;
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
+        margin-bottom: 2rem;
       }
-      .user-card:hover {
-        transform: translateY(-5px);
-        border-color: #556b2f;
-        background: #222;
+      .user-mini-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
+      .user-mini-name { color: #fff; font-weight: 700; font-size: 0.95rem; margin-right: auto; }
+      .user-mini-nav { display: flex; gap: 1rem; align-items: center; }
+      .user-mini-nav a { color: #89a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+      .user-mini-nav a:hover, .user-mini-nav a.active { color: #fff; }
+      .user-mini-nav a.active { color: #00c030; border-bottom: 2px solid #00c030; padding-bottom: 2px; }
+
+      /* Section header tabs */
+      .list-section-header {
+        display: flex;
+        align-items: flex-end;
+        border-bottom: 1px solid #334;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
       }
-      .avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-      .username {
-        font-size: 1.2rem;
+      .list-tabs { display: flex; gap: 1rem; margin-right: auto; }
+      .list-tab {
+        color: #89a;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
         font-weight: 700;
-        color: #fff;
-      }
-      .back-link {
-        color: #556b2f;
         text-decoration: none;
-        margin-bottom: 1rem;
-        display: inline-block;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -0.6rem;
+        transition: color 0.2s;
       }
-      .back-link:hover {
-        text-decoration: underline;
+      .list-tab:hover { color: #fff; }
+      .list-tab.active { color: #00c030; border-bottom-color: #00c030; }
+
+      /* Inline Sort */
+      .inline-sort { display: flex; align-items: center; gap: 0.5rem; }
+      .inline-sort label { color: #678; font-size: 0.7rem; text-transform: uppercase; margin: 0; }
+      .inline-sort select {
+        background: transparent;
+        color: #89a;
+        border: none;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        cursor: pointer;
+        outline: none;
       }
+      .inline-sort select:focus { color: #fff; }
+
+      /* Table Header */
+      .table-header {
+        display: grid;
+        grid-template-columns: minmax(200px, 1fr) 80px 80px 80px;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #334;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #567;
+        font-weight: 600;
+      }
+      .table-header > div:not(:first-child) { text-align: right; }
+
+      /* User Row */
+      .user-row {
+        display: grid;
+        grid-template-columns: minmax(200px, 1fr) 80px 80px 80px;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #2c3440;
+        text-decoration: none;
+      }
+      .user-row:hover { background-color: rgba(255,255,255,0.02); }
+      .user-info { display: flex; align-items: center; gap: 1rem; }
+      .user-info-avatar {
+        width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+        background: linear-gradient(135deg, #1d232a 0%, #00c030 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; color: #fff; text-transform: uppercase; font-family: "Merriweather", serif;
+      }
+      .user-info-text { display: flex; flex-direction: column; }
+      .user-info-name { color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.1rem; }
+      .user-row:hover .user-info-name { color: #00c030; }
+      .user-info-meta { color: #678; font-size: 0.75rem; }
+
+      .user-stat { text-align: right; font-size: 0.75rem; color: #89a; display: flex; align-items: center; justify-content: flex-end; gap: 0.3rem; }
+      .stat-icon { color: #00c030; font-size: 0.8rem; }
+      .stat-icon.watched { color: #00c030; }
+      .stat-icon.lists { color: #40bcf4; }
+      .stat-icon.likes { color: #f28b25; }
+
+      .empty-state { text-align: center; padding: 3rem 1rem; color: #678; font-size: 0.9rem; }
     </style>
   </head>
-  <body class="bg-dark text-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-darker mb-5">
-      <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/}" style="font-weight: 700; font-size: 1.5rem">
-          Letterboxd
-        </a>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <form class="d-flex ms-3 me-auto" th:action="@{/search}" method="get">
-            <div class="input-group input-group-sm">
-              <input type="text" name="q" class="form-control nav-search-input"
-                     placeholder="Search films, people, lists…" />
-              <button class="btn nav-search-btn" type="submit"><i class="bi bi-search"></i></button>
-            </div>
-          </form>
-          <ul class="navbar-nav">
-            <li class="nav-item me-1">
-              <a class="nav-link" th:href="@{/members}">Members</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/profile}">My Profile</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/lists}">All Lists</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/auth/logout}">Logout</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
+  <body class="bg-dark text-light" style="padding-top: 56px;">
+    <!-- ── HEADER ── -->
     <style>
-      .bg-darker { background-color: #1a1a1a !important; border-bottom: 1px solid #333; }
-      .navbar-brand:hover { color: #556b2f !important; }
-      .nav-search-input { background-color: #2c3440 !important; color: #c8d0d8 !important; border-color: #456 !important; min-width: 200px; }
-      .nav-search-input::placeholder { color: #667 !important; }
-      .nav-search-input:focus { box-shadow: 0 0 0 2px rgba(0,192,48,.25) !important; border-color: #00c030 !important; }
-      .nav-search-btn { border-color: #456 !important; color: #c8d0d8 !important; }
-      .nav-search-btn:hover { background-color: #00c030 !important; border-color: #00c030 !important; color: #fff !important; }
+      /* ── HEADER CSS ── */
+      .header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+        background: rgba(20, 24, 28, 0.97);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        height: 56px; display: flex; align-items: center; padding: 0 2rem;
+      }
+      .logo { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; margin-right: 2.5rem; text-decoration: none; }
+      .logo-dots { display: flex; gap: 4px; }
+      .logo-dots span { width: 13px; height: 13px; border-radius: 50%; display: block; }
+      .dot-o { background: #f97316; } .dot-g { background: #22c55e; } .dot-b { background: #3b82f6; }
+      .logo-name { font-size: 1.15rem; font-weight: 700; color: #fff; text-decoration: none; }
+      .nav-links { display: flex; align-items: center; list-style: none; gap: 0.1rem; flex: 1; margin: 0; padding: 0; }
+      .nav-links li a {
+        color: #9ab; font-size: 0.75rem; font-weight: 600;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        padding: 0.45rem 0.8rem; border-radius: 3px;
+        transition: color 0.2s, background 0.2s; display: block; text-decoration: none;
+      }
+      .nav-links li a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+      .nav-links li a.bright { color: #ddd; }
+      .nav-links li a.active { color: #fff; }
+      .search-wrap { margin-left: auto; position: relative; display: flex; align-items: center; margin-bottom: 0; }
+      .search-wrap input {
+        height: 32px; width: 175px; padding: 0 2.2rem 0 0.85rem;
+        background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 16px; font-size: 0.82rem; font-family: inherit; color: #fff; transition: all 0.25s;
+      }
+      .search-wrap input:focus { outline: none; background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); width: 220px; }
+      .search-icon-btn { position: absolute; right: 0.65rem; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 0.85rem; cursor: pointer; }
+      @media (max-width: 768px) { .nav-links { display: none; } }
     </style>
-
-    <div class="container">
-      <a th:href="@{/profile/{username}(username=${profile.username})}" class="back-link">← Back to Profile</a>
-
-      <div class="page-header">
-        <h1>
-          <span th:text="${listTitle}"></span>
-          <span th:if="${profile != null}"> of <span th:text="${profile.displayName != null && profile.displayName != '' ? profile.displayName : profile.username}"></span></span>
-        </h1>
-        <p style="color: #999; margin-bottom: 0">
-          <span th:text="${#lists.size(users)}"></span>
-          <span th:text="${#lists.size(users) == 1 ? 'user' : 'users'}"></span>
-        </p>
-      </div>
-      <!-- sort/filter bar -->
-      <form th:action="@{${basePath}}" method="get" class="filter-bar" th:if="${!users.isEmpty()}">
-        <label for="sort">Sort</label>
-        <select class="filter-select" id="sort" name="sort" onchange="this.form.submit()">
-          <option value="username_az" th:selected="${sort == 'username_az'}">Username A → Z</option>
-          <option value="username_za" th:selected="${sort == 'username_za'}">Username Z → A</option>
-          <option value="joined_desc" th:selected="${sort == 'joined_desc'}">Newest users</option>
-          <option value="joined_asc" th:selected="${sort == 'joined_asc'}">Oldest users</option>
-        </select>
-      </form>
-
-      <div class="row g-4" th:if="${!users.isEmpty()}">
-        <div class="col-md-6 col-lg-4" th:each="usr : ${users}">
-          <a th:href="@{/profile/{username}(username=${usr.username})}" style="text-decoration: none">
-            <div class="user-card">
-              <img class="avatar" th:if="${usr.avatarUrl}" th:src="${usr.avatarUrl}" />
-              <div class="username" th:text="${usr.displayName != null && usr.displayName != '' ? usr.displayName : usr.username}"></div>
-            </div>
-          </a>
+    <header class="header">
+      <a class="logo" th:href="@{/}">
+        <div class="logo-dots">
+          <span class="dot-o"></span><span class="dot-g"></span><span class="dot-b"></span>
         </div>
+        <span class="logo-name">Letterboxd's</span>
+      </a>
+      <ul class="nav-links">
+        <li><a th:href="@{/auth/login}"    class="bright" th:if="${session.loggedInUser == null}">Sign In</a></li>
+        <li><a th:href="@{/auth/register}" class="bright" th:if="${session.loggedInUser == null}">Create Account</a></li>
+        <li><a th:href="@{/profile}" class="bright" th:if="${session.loggedInUser != null}" th:text="${session.loggedInUser.username}">Profile</a></li>
+        <li><a th:href="@{/}">Films</a></li>
+        <li><a th:href="@{/lists}">Lists</a></li>
+        <li><a th:href="@{/members}">Members</a></li>
+        <li th:if="${session.loggedInUser != null}"><a th:href="@{/auth/logout}">Logout</a></li>
+      </ul>
+      <form class="search-wrap" th:action="@{/search}" method="get">
+        <input type="text" name="q" placeholder="Films, people, lists..."/>
+        <button class="search-icon-btn" type="submit">&#128269;</button>
+      </form>
+    </header>
+
+    <div class="page-wrap container">
+      <!-- Reusable Profile Header Fragment -->
+      <div th:replace="~{fragments/profile-header :: profile-header(${profile}, 'network')}"></div>
+
+      <!-- Combined Tabs Header -->
+      <div class="list-section-header" style="justify-content: flex-start; align-items: flex-end; border-bottom: 1px solid #2c3440; padding-bottom: 0;">
+        <ul class="nav nav-tabs" id="networkTabs" role="tablist" style="border-bottom: none;">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" th:classappend="${activeTab == 'following'} ? 'active' : ''" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab" style="background:transparent; border:none; color:#89a; border-bottom: 2px solid transparent; padding: 0.8rem 1.2rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.1em; font-weight: 700;">
+              Following <span th:text="${#lists.size(following)}" style="color:#678; font-weight:400; margin-left:0.3rem;"></span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" th:classappend="${activeTab == 'followers'} ? 'active' : ''" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab" style="background:transparent; border:none; color:#89a; border-bottom: 2px solid transparent; padding: 0.8rem 1.2rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.1em; font-weight: 700;">
+              Followers <span th:text="${#lists.size(followers)}" style="color:#678; font-weight:400; margin-left:0.3rem;"></span>
+            </button>
+          </li>
+        </ul>
       </div>
 
-      <div class="empty-state" th:if="${users.isEmpty()}">
-        <div class="empty-state-icon">👤</div>
-        <p th:text="${listTitle} + ' list is empty.'"></p>
+      <style>
+        .nav-tabs .nav-link.active {
+          color: #fff !important;
+          border-bottom: 2px solid #00c030 !important;
+        }
+        .nav-tabs .nav-link:hover {
+          color: #fff !important;
+        }
+        .tab-pane-header {
+          display: flex;
+          justify-content: flex-end;
+          padding: 1rem 0 0.5rem;
+        }
+      </style>
+
+      <div class="tab-content" id="networkTabContent">
+        <!-- FOLLOWING TAB -->
+        <div class="tab-pane fade" th:classappend="${activeTab == 'following'} ? 'show active' : ''" id="following" role="tabpanel" aria-labelledby="following-tab">
+          <div class="tab-pane-header">
+            <form th:action="@{${basePath}}" method="get" class="inline-sort" th:if="${!following.isEmpty()}">
+              <input type="hidden" name="sortFollowers" th:value="${sortFollowers}" />
+              <input type="hidden" name="tab" value="following" />
+              <label for="sortFollowing" style="color:#567; font-size: 0.75rem; text-transform: uppercase;">Sort by</label>
+              <select id="sortFollowing" name="sortFollowing" onchange="this.form.submit()" style="background:none; border:none; color:#9ab; font-size:0.85rem; cursor:pointer;">
+                <option value="joined_desc" th:selected="${sortFollowing == 'joined_desc'}">When Followed</option>
+                <option value="joined_asc" th:selected="${sortFollowing == 'joined_asc'}">Oldest First</option>
+                <option value="username_az" th:selected="${sortFollowing == 'username_az'}">Username A-Z</option>
+                <option value="username_za" th:selected="${sortFollowing == 'username_za'}">Username Z-A</option>
+              </select>
+            </form>
+          </div>
+          
+          <div class="table-header" th:if="${!following.isEmpty()}">
+            <div>Name</div>
+            <div>Watched</div>
+            <div>Lists</div>
+            <div>Likes</div>
+          </div>
+          <div th:if="${!following.isEmpty()}">
+            <a th:href="@{/profile/{username}(username=${usr.username})}" class="user-row" th:each="usr : ${following}">
+              <div class="user-info">
+                <img class="user-info-avatar" th:if="${usr.avatarUrl}" th:src="${usr.avatarUrl}"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="user-info-avatar"
+                     th:style="${usr.avatarUrl != null} ? 'display:none' : 'display:flex'">
+                  <span th:text="${usr.username.substring(0,1).toUpperCase()}"></span>
+                </div>
+                <div class="user-info-text">
+                  <span class="user-info-name" th:text="${usr.username}"></span>
+                  <span class="user-info-meta">
+                    <span th:text="${usr.followersCount != null ? usr.followersCount : 0}"></span> follower<span th:text="${usr.followersCount != 1 ? 's' : ''}"></span>, 
+                    following <span th:text="${usr.followingCount != null ? usr.followingCount : 0}"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="user-stat">
+                <i class="bi bi-eye-fill stat-icon watched"></i>
+                <span th:text="${usr.filmsWatchedCount != null ? usr.filmsWatchedCount : 0}"></span>
+              </div>
+              <div class="user-stat">
+                <i class="bi bi-grid-fill stat-icon lists"></i>
+                <span th:text="${usr.listCount != null ? usr.listCount : 0}"></span>
+              </div>
+              <div class="user-stat">
+                <i class="bi bi-heart-fill stat-icon likes"></i>
+                <span th:text="${usr.likeCount != null ? usr.likeCount : 0}"></span>
+              </div>
+            </a>
+          </div>
+          <div class="empty-state" th:if="${following.isEmpty()}" style="padding: 4rem 1rem;">
+            <p th:text="${profile.username} + ' is not following anyone yet.'"></p>
+          </div>
+        </div>
+
+        <!-- FOLLOWERS TAB -->
+        <div class="tab-pane fade" th:classappend="${activeTab == 'followers'} ? 'show active' : ''" id="followers" role="tabpanel" aria-labelledby="followers-tab">
+          <div class="tab-pane-header">
+            <form th:action="@{${basePath}}" method="get" class="inline-sort" th:if="${!followers.isEmpty()}">
+              <input type="hidden" name="sortFollowing" th:value="${sortFollowing}" />
+              <input type="hidden" name="tab" value="followers" />
+              <label for="sortFollowers" style="color:#567; font-size: 0.75rem; text-transform: uppercase;">Sort by</label>
+              <select id="sortFollowers" name="sortFollowers" onchange="this.form.submit()" style="background:none; border:none; color:#9ab; font-size:0.85rem; cursor:pointer;">
+                <option value="joined_desc" th:selected="${sortFollowers == 'joined_desc'}">When Followed</option>
+                <option value="joined_asc" th:selected="${sortFollowers == 'joined_asc'}">Oldest First</option>
+                <option value="username_az" th:selected="${sortFollowers == 'username_az'}">Username A-Z</option>
+                <option value="username_za" th:selected="${sortFollowers == 'username_za'}">Username Z-A</option>
+              </select>
+            </form>
+          </div>
+
+          <div class="table-header" th:if="${!followers.isEmpty()}">
+            <div>Name</div>
+            <div>Watched</div>
+            <div>Lists</div>
+            <div>Likes</div>
+          </div>
+          <div th:if="${!followers.isEmpty()}">
+            <a th:href="@{/profile/{username}(username=${usr.username})}" class="user-row" th:each="usr : ${followers}">
+              <div class="user-info">
+                <img class="user-info-avatar" th:if="${usr.avatarUrl}" th:src="${usr.avatarUrl}"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="user-info-avatar"
+                     th:style="${usr.avatarUrl != null} ? 'display:none' : 'display:flex'">
+                  <span th:text="${usr.username.substring(0,1).toUpperCase()}"></span>
+                </div>
+                <div class="user-info-text">
+                  <span class="user-info-name" th:text="${usr.username}"></span>
+                  <span class="user-info-meta">
+                    <span th:text="${usr.followersCount != null ? usr.followersCount : 0}"></span> follower<span th:text="${usr.followersCount != 1 ? 's' : ''}"></span>, 
+                    following <span th:text="${usr.followingCount != null ? usr.followingCount : 0}"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="user-stat">
+                <i class="bi bi-eye-fill stat-icon watched"></i>
+                <span th:text="${usr.filmsWatchedCount != null ? usr.filmsWatchedCount : 0}"></span>
+              </div>
+              <div class="user-stat">
+                <i class="bi bi-grid-fill stat-icon lists"></i>
+                <span th:text="${usr.listCount != null ? usr.listCount : 0}"></span>
+              </div>
+              <div class="user-stat">
+                <i class="bi bi-heart-fill stat-icon likes"></i>
+                <span th:text="${usr.likeCount != null ? usr.likeCount : 0}"></span>
+              </div>
+            </a>
+          </div>
+          <div class="empty-state" th:if="${followers.isEmpty()}" style="padding: 4rem 1rem;">
+            <p th:text="${profile.username} + ' has no followers yet.'"></p>
+          </div>
+        </div>
       </div>
     </div>
 

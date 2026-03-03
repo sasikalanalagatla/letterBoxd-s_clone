@@ -1,5 +1,6 @@
 package com.clone.letterboxd.dto;
 
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -10,6 +11,6 @@ public class UserUpdateDto {
     private String displayName;
     @Size(max = 500, message = "Bio is too long")
     private String bio;
-    private String avatarUrl;
+    private MultipartFile avatarFile;
     private String location;
 }

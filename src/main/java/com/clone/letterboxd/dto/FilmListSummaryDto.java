@@ -10,6 +10,7 @@ public class FilmListSummaryDto {
 
     private Long id;
     private String name;
+    private String description;
     private String descriptionExcerpt;
     private Boolean ranked;
     private Boolean isWatchlist;

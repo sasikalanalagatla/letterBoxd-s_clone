@@ -244,7 +244,7 @@
 
 <main class="main">
 
-  <div class="hero-tagline">
+  <div class="hero-tagline" th:if="${!allFeatured && !allCommunity}">
     <p>Collect, curate, and share. Lists are the perfect way to group films.</p>
     <a th:href="@{/lists/create}" class="btn-start-list">Start your own list</a>
   </div>
@@ -252,13 +252,14 @@
   <div class="container">
 
     <!-- FEATURED LISTS -->
-    <div class="section-header">
-      <span class="section-label">Featured Lists</span>
+    <div class="section-header" th:if="${allFeatured || (!allFeatured && !allCommunity)}">
+      <span class="section-label" th:text="${allFeatured ? 'All Featured Lists' : 'Featured Lists'}">Featured Lists</span>
       <a th:if="${showAllLink}" th:href="@{/lists(allFeatured=true)}" style="font-size:.8rem; color:var(--text-dim); text-decoration:underline;">All Featured Lists</a>
+      <a th:if="${allFeatured}" th:href="@{/lists}" style="font-size:.8rem; color:var(--text-dim); text-decoration:underline;">Back to all lists</a>
     </div>
 
     <div class="featured-grid"
-         th:if="${featuredLists != null and !featuredLists.isEmpty()}">
+         th:if="${(allFeatured || (!allFeatured && !allCommunity)) && featuredLists != null and !featuredLists.isEmpty()}">
 
       <div class="featured-card"
          th:each="list : ${featuredLists}">
@@ -285,13 +286,49 @@
       </div>
     </div>
 
+    <!-- COMMUNITY LISTS (All public lists) -->
+    <div class="section-header" th:if="${allCommunity || (!allFeatured && !allCommunity)}">
+      <span class="section-label" th:text="${allCommunity ? 'All Community Lists' : 'Community Lists'}">Community Lists</span>
+      <a th:if="${showAllCommunityLink}" th:href="@{/lists(allCommunity=true)}" style="font-size:.8rem; color:var(--text-dim); text-decoration:underline;">All Community Lists</a>
+      <a th:if="${allCommunity}" th:href="@{/lists}" style="font-size:.8rem; color:var(--text-dim); text-decoration:underline;">Back to all lists</a>
+    </div>
+
+    <div class="popular-grid"
+         th:if="${(allCommunity || (!allFeatured && !allCommunity)) && communityLists != null and !communityLists.isEmpty()}">
+
+      <div class="popular-card"
+         th:each="list : ${communityLists}">
+
+        <a th:href="@{/lists/{id}(id=${list.id})}" style="display:block;">
+          <div class="popular-strip"
+               th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
+            <div th:each="path : ${list.previewPosterPaths}">
+              <img th:src="${path}" />
+            </div>
+          </div>
+
+          <div class="popular-title" th:text="${list.name}">List Name</div>
+        </a>
+
+        <div class="popular-meta">
+          <a th:if="${list.owner != null and list.owner.username != 'Official Lists'}" 
+             th:href="@{/profile/{username}(username=${list.owner.username})}" 
+             th:text="${list.owner.username}" style="color:var(--text-muted); font-weight:600;"></a>
+          <span th:if="${list.owner == null or list.owner.username == 'Official Lists'}">Official Lists</span>
+          •
+          <span th:text="${list.entryCount + ' films'}"></span>
+        </div>
+
+      </div>
+    </div>
+
     <!-- POPULAR THIS WEEK -->
-    <div class="section-header">
+    <div class="section-header" th:if="${!allFeatured && !allCommunity}">
       <span class="section-label">Popular This Week</span>
     </div>
 
     <div class="popular-grid"
-         th:if="${popularLists != null and !popularLists.isEmpty()}">
+         th:if="${!allFeatured && !allCommunity && popularLists != null and !popularLists.isEmpty()}">
 
       <div class="popular-card"
          th:each="list : ${popularLists}">

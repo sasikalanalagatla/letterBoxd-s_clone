@@ -27,6 +27,10 @@ public class ReviewMapper {
             dto.setBodyExcerpt(body.length() > 200 ? body.substring(0, 197) + "..." : body);
         }
 
+        if (review.getUser() != null) {
+            dto.setAuthor(UserMapper.toSummaryDto(review.getUser()));
+        }
+
         return dto;
     }
 

@@ -12,120 +12,42 @@
       rel="stylesheet"
     />
   </head>
-  <body class="bg-dark text-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-darker mb-5">
-      <div class="container-fluid">
-        <a
-          class="navbar-brand"
-          th:href="@{/}"
-          style="font-weight: 700; font-size: 1.5rem"
-        >
-          Letterboxd
-        </a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <form class="d-flex ms-3 me-auto" th:action="@{/search}" method="get">
-            <div class="input-group input-group-sm">
-              <input type="text" name="q" class="form-control nav-search-input"
-                     placeholder="Search films, people, lists…" />
-              <button class="btn nav-search-btn" type="submit">
-                <i class="bi bi-search"></i>
-              </button>
-            </div>
-          </form>
-          <ul class="navbar-nav">
-            <li class="nav-item me-1">
-              <a class="nav-link" th:href="@{/members}">Members</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser == null}">
-              <a class="nav-link" th:href="@{/auth/login}">Sign In</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser == null}">
-              <a
-                class="nav-link btn btn-primary btn-sm"
-                th:href="@{/auth/register}"
-                style="margin-left: 0.5rem"
-              >
-                Create Account
-              </a>
-            </li>
-
-            <li
-              class="nav-item dropdown"
-              th:if="${session.loggedInUser != null}"
-            >
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                id="userDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <span th:text="${session.loggedInUser.username}"></span>
-              </a>
-              <ul
-                class="dropdown-menu dropdown-menu-end"
-                aria-labelledby="userDropdown"
-              >
-                <li>
-                  <a class="dropdown-item" th:href="@{/profile}">My Profile</a>
-                </li>
-                <li>
-                  <a class="dropdown-item" th:href="@{/lists}">All Lists</a>
-                </li>
-                <li>
-                  <a class="dropdown-item" th:href="@{/lists/create}"
-                    >Create List</a
-                  >
-                </li>
-                <li>
-                  <a class="dropdown-item" th:href="@{/watchlist}"
-                    >My Watchlist</a
-                  >
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <a class="dropdown-item text-danger" th:href="@{/auth/logout}"
-                    >Logout</a
-                  >
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
+  <body class="bg-dark text-light" style="padding-top: 56px;">
+    <!-- ── HEADER ── -->
     <style>
-      .bg-darker {
-        background-color: #1a1a1a !important;
-        border-bottom: 1px solid #333;
+      /* ── HEADER CSS ── */
+      .header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+        background: rgba(20, 24, 28, 0.97);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        height: 56px; display: flex; align-items: center; padding: 0 2rem;
       }
-      .navbar-brand:hover {
-        color: #556b2f !important;
+      .logo { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; margin-right: 2.5rem; text-decoration: none; }
+      .logo-dots { display: flex; gap: 4px; }
+      .logo-dots span { width: 13px; height: 13px; border-radius: 50%; display: block; }
+      .dot-o { background: #f97316; } .dot-g { background: #22c55e; } .dot-b { background: #3b82f6; }
+      .logo-name { font-size: 1.15rem; font-weight: 700; color: #fff; text-decoration: none; }
+      .nav-links { display: flex; align-items: center; list-style: none; gap: 0.1rem; flex: 1; margin: 0; padding: 0; }
+      .nav-links li a {
+        color: #9ab; font-size: 0.75rem; font-weight: 600;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        padding: 0.45rem 0.8rem; border-radius: 3px;
+        transition: color 0.2s, background 0.2s; display: block; text-decoration: none;
       }
-      .nav-search-input {
-        background-color: #2c3440 !important;
-        color: #c8d0d8 !important;
-        border-color: #456 !important;
-        min-width: 200px;
+      .nav-links li a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+      .nav-links li a.bright { color: #ddd; }
+      .nav-links li a.active { color: #fff; }
+      .search-wrap { margin-left: auto; position: relative; display: flex; align-items: center; margin-bottom: 0; }
+      .search-wrap input {
+        height: 32px; width: 175px; padding: 0 2.2rem 0 0.85rem;
+        background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 16px; font-size: 0.82rem; font-family: inherit; color: #fff; transition: all 0.25s;
       }
-      .nav-search-input::placeholder { color: #667 !important; }
-      .nav-search-input:focus { box-shadow: 0 0 0 2px rgba(0,192,48,.25) !important; border-color: #00c030 !important; }
-      .nav-search-btn { border-color: #456 !important; color: #c8d0d8 !important; }
-      .nav-search-btn:hover { background-color: #00c030 !important; border-color: #00c030 !important; color: #fff !important; }
-
+      .search-wrap input:focus { outline: none; background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); width: 220px; }
+      .search-icon-btn { position: absolute; right: 0.65rem; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 0.85rem; cursor: pointer; }
+      @media (max-width: 768px) { .nav-links { display: none; } }
+      
       /* Filter bar */
       .filter-bar { background: #1c2128; border: 1px solid #2c3440; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
       .filter-bar label { font-size: .75rem; color: #667; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 0; white-space: nowrap; }
@@ -138,6 +60,28 @@
       .filter-btn:hover { background: #00a028; }
       .filter-count { font-size: .78rem; color: #667; margin-left: auto; }
     </style>
+    <header class="header">
+      <a class="logo" th:href="@{/}">
+        <div class="logo-dots">
+          <span class="dot-o"></span><span class="dot-g"></span><span class="dot-b"></span>
+        </div>
+        <span class="logo-name">Letterboxd's</span>
+      </a>
+      <ul class="nav-links">
+        <li><a th:href="@{/auth/login}"    class="bright" th:if="${session.loggedInUser == null}">Sign In</a></li>
+        <li><a th:href="@{/auth/register}" class="bright" th:if="${session.loggedInUser == null}">Create Account</a></li>
+        <li><a th:href="@{/profile}" class="bright" th:if="${session.loggedInUser != null}" th:text="${session.loggedInUser.username}">Profile</a></li>
+        <li><a th:href="@{/}" class="active">Films</a></li>
+        <li><a th:href="@{/lists}">Lists</a></li>
+        <li><a th:href="@{/members}">Members</a></li>
+        <li th:if="${session.loggedInUser != null}"><a th:href="@{/auth/logout}">Logout</a></li>
+      </ul>
+      <form class="search-wrap" th:action="@{/search}" method="get">
+        <input type="text" name="q" placeholder="Films, people, lists..."/>
+        <button class="search-icon-btn" type="submit">&#128269;</button>
+      </form>
+    </header>
+
     <div class="container mt-4">
       <h1 class="mb-3">Popular Films This Week</h1>
 
@@ -207,7 +151,7 @@
       </div>
 
       <div th:if="${!movies.isEmpty()}" class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4">
-        <div class="col" th:each="movie : ${movies}">
+        <div class="col" th:each="movie, stat : ${movies}" th:id="${stat.index == (currentPage - 1) * 60 or (stat.last and stat.index < (currentPage - 1) * 60) ? 'new-batch' : null}">
           <div class="card bg-secondary h-100 border-0">
             <a th:href="@{/movies/{id}(id=${movie.id})}">
               <img
@@ -235,13 +179,10 @@
         </div>
       </div>
 
-      <!-- Instead of numbered pagination we provide a simple "More" button that loads
-           another batch of 60 films.  The backend still understands the `page` parameter but
-           the UI hides all pages from the user. -->
       <div class="text-center mt-5">
         <a class="btn btn-outline-light"
            th:if="${movies.size()} &lt; ${totalCount}"
-           th:href="@{/(page=${currentPage + 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}">
+           th:href="@{/(page=${currentPage + 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})} + '#new-batch'">
           More
         </a>
       </div>

@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title th:text="${username} + ' • Lists • Letterboxd\'s'"></title>
+  <title th:text="${profile.username} + ' • Likes • Letterboxd\'s'"></title>
 
   <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
 
   <style>
     :root {
@@ -95,6 +94,33 @@
       padding: 0 2rem;
     }
 
+    /* ── PAGE TITLE ── */
+    .page-title {
+      font-family: "Merriweather", serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      padding: 2.5rem 0 0;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 0 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-label {
+      font-size: .7rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+
     /* ── USER MINI HEADER (profile bar) ── */
     .user-mini-header {
       display: flex;
@@ -142,98 +168,103 @@
       padding-bottom: 2px;
     }
 
-    /* ── LISTS GRID ── */
-    .lists-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+    /* ── LIKED FILMS GRID ── */
+    .movie-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .movie-card img {
+      width: 80px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      display: block;
+      transition: transform .2s;
+    }
+
+    .movie-card img:hover { transform: scale(1.05); }
+
+    /* ── LIKED REVIEWS LIST ── */
+    .review-list {
+      display: flex;
+      flex-direction: column;
+      gap: .8rem;
       margin-bottom: 3rem;
     }
 
-    .list-card {
+    .review-card-mini {
+      display: flex;
+      gap: 1rem;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 1rem;
       border-radius: 4px;
-      cursor: pointer;
+      padding: .8rem 1rem;
       transition: border-color .2s;
     }
 
-    .list-card:hover { border-color: rgba(255,255,255,0.2); }
+    .review-card-mini:hover { border-color: rgba(255,255,255,0.2); }
 
-    .popular-strip {
-      display: flex;
-      height: 105px;
-      border-radius: 4px;
-      overflow: hidden;
-      gap: 2px;
-      background: #1e1e1e;
-      margin-bottom: 0.8rem;
-    }
-
-    .popular-strip .strip-img { flex: 1; overflow: hidden; }
-
-    .popular-strip .strip-img img {
-      width: 100%;
-      height: 100%;
+    .review-poster-mini img {
+      width: 52px;
+      height: 78px;
       object-fit: cover;
-      display: block;
-      transition: transform 0.3s;
-    }
-
-    .list-card:hover .strip-img img { transform: scale(1.05); }
-
-    .list-title {
-      font-weight: 700;
-      color: #fff;
-      font-size: 1rem;
-      margin-bottom: 0.3rem;
-    }
-
-    .list-meta {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-    }
-
-    .badge-ranked {
-      display: inline-block;
-      font-size: .65rem;
-      text-transform: uppercase;
-      background: #456;
-      color: #abc;
       border-radius: 3px;
-      padding: 1px 6px;
-      margin-left: .5rem;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    .review-content { flex: 1; }
+
+    .review-meta-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .review-movie-title {
+      color: #fff;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+
+    .review-movie-title:hover { color: var(--green); }
+
+    .review-author-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-left: .4rem;
+    }
+
+    .review-date-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .review-body-text {
+      color: #bcd;
+      font-size: .85rem;
+      line-height: 1.6;
     }
 
     /* ── EMPTY STATE ── */
     .empty-state {
       text-align: center;
-      padding: 4rem 2rem;
+      padding: 2rem;
       color: var(--text-muted);
-    }
-
-    .empty-state p {
-      font-family: "Merriweather", serif;
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
-    .back-link {
-        display: inline-block;
-        margin: 1rem 0;
-        font-size: 0.8rem;
-        color: var(--text-dim);
-    }
-    .back-link:hover { color: #fff; }
-
-    @media (max-width: 1024px) {
-      .lists-grid { grid-template-columns: repeat(2, 1fr); }
+      background: var(--bg-card);
+      border-radius: 4px;
+      margin-bottom: 2rem;
+      font-size: .85rem;
     }
 
     @media (max-width: 768px) {
-      .lists-grid { grid-template-columns: 1fr; }
       .nav-links { display: none; }
+      .review-meta-row { flex-direction: column; gap: .3rem; }
     }
   </style>
 </head>
@@ -268,38 +299,60 @@
   <div class="container">
 
     <!-- Profile bar -->
-    <div th:replace="~{fragments/profile-header :: profile-header(${profile}, 'lists')}"></div>
+    <div th:replace="~{fragments/profile-header :: profile-header(${profile}, 'likes')}"></div>
 
-    <a th:href="@{/lists}" class="back-link">← Back to All Lists</a>
-
+    <!-- ── LIKED FILMS ── -->
     <div class="section-header">
-      <span class="section-label" th:text="${username} + '’s Lists'"></span>
+      <span class="section-label">Liked Films</span>
     </div>
 
-    <!-- Lists Grid -->
-    <div class="lists-grid" th:if="${!lists.isEmpty()}">
-      <div class="list-card"
-           th:each="list : ${lists}"
-           th:onclick="|window.location.href='/lists/' + ${list.id}|">
+    <div class="movie-grid"
+         th:if="${likedMovies != null and !likedMovies.isEmpty()}">
+      <div class="movie-card" th:each="movie : ${likedMovies}">
+        <a th:href="@{/movies/{id}(id=${movie.id})}">
+          <img th:src="${movie.poster_path != null ? 'https://image.tmdb.org/t/p/w200' + movie.poster_path : '/img/no-poster.png'}"
+               th:alt="${movie.title}" />
+        </a>
+      </div>
+    </div>
 
-        <div class="popular-strip"
-             th:if="${list.previewPosterPaths != null and !list.previewPosterPaths.isEmpty()}">
-          <div class="strip-img" th:each="path : ${list.previewPosterPaths}">
-            <img th:src="${'https://image.tmdb.org/t/p/w200' + path}" />
-          </div>
+    <div class="empty-state"
+         th:if="${likedMovies == null or likedMovies.isEmpty()}">
+      No liked films yet.
+    </div>
+
+    <!-- ── LIKED REVIEWS ── -->
+    <div class="section-header">
+      <span class="section-label">Liked Reviews</span>
+    </div>
+
+    <div class="review-list"
+         th:if="${likedReviews != null and !likedReviews.isEmpty()}">
+      <div class="review-card-mini" th:each="review : ${likedReviews}">
+        <div class="review-poster-mini">
+          <img th:src="${review.moviePosterPath != null ? 'https://image.tmdb.org/t/p/w200' + review.moviePosterPath : '/img/no-poster.png'}"
+               th:alt="${review.movieTitle}" />
         </div>
-
-        <div class="list-title" th:text="${list.name}">List Name</div>
-        <div class="list-meta">
-          <span th:text="${list.entryCount + ' films'}"></span>
-          <span class="badge-ranked" th:if="${list.ranked}">Ranked</span>
+        <div class="review-content">
+          <div class="review-meta-row">
+            <div>
+              <a class="review-movie-title"
+                 th:href="@{/movies/{id}(id=${review.movieId})}"
+                 th:text="${review.movieTitle}"></a>
+              <span class="review-author-label"
+                    th:text="'reviewed by ' + ${review.author != null ? review.author.username : 'unknown'}"></span>
+            </div>
+            <div class="review-date-label"
+                 th:text="${review.publishedAt != null ? #temporals.format(review.publishedAt, 'MMM d, yyyy') : ''}"></div>
+          </div>
+          <div class="review-body-text" th:text="${review.body}"></div>
         </div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div class="empty-state" th:if="${lists.isEmpty()}">
-      <p th:text="${username} + ' has not created any lists yet.'"></p>
+    <div class="empty-state"
+         th:if="${likedReviews == null or likedReviews.isEmpty()}">
+      No liked reviews yet.
     </div>
 
   </div>

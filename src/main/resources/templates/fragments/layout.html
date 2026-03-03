@@ -7,10 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title th:text="${title}">Letterboxd Clone</title>
 
-    <!-- Bootstrap icons used across the site -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-      rel="stylesheet"/>
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
 
     <!-- global colours and component styles copied from members.html -->
     <style>
@@ -20,52 +20,113 @@
         --bg:       #14181c;
         --nav-bg:   #1a1a1a;
         --card:     #2c3440;
-        --border:   #2c3440;
+        --border:   rgba(255, 255, 255, 0.08);
         --green:    #00c030;
         --blue:     #40bcf4;
-        --text:     #9ab;
+        --text:     #ccc;
+        --text-dim: #9ab;
         --white:    #fff;
         --muted:    #678;
         --divider:  #222a32;
       }
 
-      body { background: var(--bg); color: var(--text); font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.5; }
-      a { color: inherit; text-decoration: none; }
+      body { 
+        background: var(--bg); 
+        color: var(--text); 
+        font-family: 'Titillium Web', sans-serif; 
+        font-size: 14px; 
+        line-height: 1.5; 
+      }
+      a { color: inherit; text-decoration: none; transition: color 0.15s; }
+      a:hover { color: #fff; }
 
       /* navigation and search bar */
-      .nav-wrap { background: var(--nav-bg); border-bottom: 1px solid #111; position: sticky; top: 0; z-index: 100; }
-      .nav-inner { max-width: 1160px; margin: auto; padding: 0 16px; display: flex; align-items: center; height: 44px; gap: 8px; }
-      .brand { font-size: 20px; font-weight: 900; color: #fff !important; letter-spacing: -.5px; margin-right: 8px; }
-      .nav-links { display: flex; height: 100%; }
+      .nav-wrap { 
+        background: rgba(20, 24, 28, 0.97); 
+        border-bottom: 1px solid var(--border); 
+        position: fixed; top: 0; left: 0; right: 0; 
+        z-index: 100;
+        backdrop-filter: blur(10px);
+      }
+      .nav-inner { max-width: 1160px; margin: auto; padding: 0 16px; display: flex; align-items: center; height: 56px; gap: 8px; }
+      .brand { font-size: 22px; font-weight: 900; color: #fff !important; letter-spacing: -.5px; margin-right: 1.5rem; display: flex; align-items: center; gap: 8px; }
+      
+      .brand .logo-dots { display: flex; gap: 4px; }
+      .brand .logo-dots span { width: 11px; height: 11px; border-radius: 50%; }
+      .dot-o { background: #f97316; } .dot-g { background: #22c55e; } .dot-b { background: #3b82f6; }
+
+      .nav-links { display: flex; height: 100%; list-style: none; margin: 0; padding: 0; align-items: center; }
+      .nav-links li { height: 100%; display: flex; align-items: center; }
       .nav-links a {
         display: flex; align-items: center;
         padding: 0 12px;
-        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-        color: var(--muted);
-        border-bottom: 2px solid transparent;
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+        color: var(--text-dim);
         transition: color .15s;
       }
-      .nav-links a:hover { color: #ccc; }
-      .nav-links a.active { color: #fff; border-bottom-color: var(--green); }
+      .nav-links a:hover { color: #fff; }
+      .nav-links a.active { color: #fff; }
 
       .nav-search {
         display: flex; align-items: center; gap: 6px;
-        background: #2c3440; border: 1px solid #456; border-radius: 3px;
-        padding: 3px 8px; margin-left: 8px;
+        background: #222; border: 1px solid var(--border); border-radius: 15px;
+        padding: 0 12px; margin-left: 1.5rem; height: 32px;
       }
-      .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 12px; width: 180px; }
+      .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 12px; width: 160px; }
       .nav-search input::placeholder { color: #567; }
-      .nav-search i { color: #678; font-size: 11px; }
+      .nav-search i { color: #678; font-size: 12px; }
 
-      .nav-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+      .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
       .btn-sm-nav {
         font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-        padding: 4px 10px; border-radius: 3px; cursor: pointer; white-space: nowrap;
+        padding: 6px 14px; border-radius: 4px; cursor: pointer; white-space: nowrap;
       }
-      .btn-outline { border: 1px solid #456; color: var(--text); background: none; }
-      .btn-outline:hover { border-color: #789; color: #ccc; }
+      .btn-outline { border: 1px solid rgba(255,255,255,0.3); color: var(--text); background: none; }
+      .btn-outline:hover { border-color: #fff; color: #fff; }
       .btn-green { background: var(--green); color: #000 !important; border: none; font-weight: 800; }
       .btn-green:hover { background: #00e040; }
+
+      /* Page Header Gradient */
+      .premium-header {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        padding: 3rem 0;
+        border-bottom: 2px solid #333;
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .premium-header h1 { 
+        margin: 0; 
+        color: #fff; 
+        font-weight: 900; 
+        font-size: 2.2rem; 
+        font-family: 'Merriweather', serif;
+      }
+
+      /* Profile Header Fragment Styles in Fragment itself or here */
+      .user-mini-header {
+        display: flex;
+        align-items: center;
+        background-color: #1e252c;
+        border-radius: 4px;
+        padding: 0.8rem 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border);
+      }
+      .user-mini-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
+      .user-mini-name { color: #fff; font-weight: 700; font-size: 1.2rem; margin-right: auto; }
+      .user-mini-nav { display: flex; gap: 1.5rem; align-items: center; }
+      .user-mini-nav a { 
+        color: var(--text-dim); 
+        font-size: 0.85rem; 
+        text-transform: uppercase; 
+        letter-spacing: 0.1em; 
+        font-weight: 700; 
+        text-decoration: none; 
+        transition: color 0.2s; 
+      }
+      .user-mini-nav a:hover, .user-mini-nav a.active { color: #fff; }
+      .user-mini-nav a.active { color: var(--green); border-bottom: 2px solid var(--green); padding-bottom: 4px; }
 
       /* shared layout structure */
       .page-outer {
@@ -78,12 +139,17 @@
   <!-- navigation bar fragment (can be inserted into body of any page) -->
   <nav th:fragment="navbar" class="nav-wrap">
     <div class="nav-inner">
-      <a class="brand" th:href="@{/}">Letterboxd</a>
-      <div class="nav-links">
-        <a th:href="@{/films}">Films</a>
-        <a th:href="@{/lists}">Lists</a>
-        <a th:href="@{/members}" class="active">Members</a>
-      </div>
+      <a class="brand" th:href="@{/}">
+        <div class="logo-dots">
+          <span class="dot-o"></span><span class="dot-g"></span><span class="dot-b"></span>
+        </div>
+        Letterboxd
+      </a>
+      <ul class="nav-links">
+        <li><a th:href="@{/films}">Films</a></li>
+        <li><a th:href="@{/lists}">Lists</a></li>
+        <li><a th:href="@{/members}">Members</a></li>
+      </ul>
       <form th:action="@{/search}" method="get" style="display:contents">
         <div class="nav-search">
           <i class="bi bi-search"></i>

@@ -17,7 +17,7 @@ public class UserMapper {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setDisplayName(user.getDisplayName());
-        dto.setAvatarUrl(user.getAvatarUrl());
+        dto.setAvatarUrl(normalizeAvatarUrl(user.getAvatarUrl()));
 
         if (user.getBio() != null) {
             String bio = user.getBio();
@@ -35,7 +35,7 @@ public class UserMapper {
         dto.setUsername(user.getUsername());
         dto.setDisplayName(user.getDisplayName());
         dto.setBio(user.getBio());
-        dto.setAvatarUrl(user.getAvatarUrl());
+        dto.setAvatarUrl(normalizeAvatarUrl(user.getAvatarUrl()));
         dto.setJoinedAt(user.getCreatedAt());
         dto.setIsAdmin(user.getIsAdmin());
 
@@ -60,6 +60,11 @@ public class UserMapper {
 
         if (dto.getDisplayName() != null) user.setDisplayName(dto.getDisplayName());
         if (dto.getBio() != null) user.setBio(dto.getBio());
-        if (dto.getAvatarUrl() != null) user.setAvatarUrl(dto.getAvatarUrl());
+    }
+
+    private static String normalizeAvatarUrl(String url) {
+        if (url == null || url.isEmpty()) return null;
+        if (url.startsWith("http") || url.startsWith("/")) return url;
+        return "/" + url;
     }
 }

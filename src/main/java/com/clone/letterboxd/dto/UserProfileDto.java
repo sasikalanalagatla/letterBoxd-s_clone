@@ -18,6 +18,7 @@ public class UserProfileDto {
     private Long filmsWatchedCount;
     private Integer reviewCount;
     private Integer listCount;
+    private Integer likeCount;
     private Integer followingCount;
     private Integer followersCount;
     private Boolean isOwnProfile;

@@ -26,11 +26,13 @@ public class AuthController {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final com.clone.letterboxd.service.FileStorageService fileStorageService;
 
-    public AuthController(UserRepository userRepository, EmailService emailService) {
+    public AuthController(UserRepository userRepository, EmailService emailService, com.clone.letterboxd.service.FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.emailService = emailService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/login")
@@ -211,6 +213,11 @@ public class AuthController {
             newUser.setEmail(userRegistration.getEmail());
             newUser.setDisplayName(userRegistration.getDisplayName());
             newUser.setBio(userRegistration.getBio());
+            
+            if (userRegistration.getAvatarFile() != null && !userRegistration.getAvatarFile().isEmpty()) {
+                String avatarUrl = fileStorageService.saveAvatar(userRegistration.getAvatarFile());
+                newUser.setAvatarUrl(avatarUrl);
+            }
             
             newUser.setPassword(passwordEncoder.encode(userRegistration.getPassword()));
             newUser.setCreatedAt(LocalDateTime.now());

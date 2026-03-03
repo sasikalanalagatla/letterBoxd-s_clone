@@ -69,6 +69,7 @@ public class FilmListMapper {
         dto.setRanked(list.getRanked());
         dto.setIsWatchlist(list.getIsWatchlist());
         dto.setVisibility(list.getVisibility());
+        dto.setDescription(list.getDescription());
 
         if (list.getDescription() != null) {
             String desc = list.getDescription();

@@ -1,5 +1,6 @@
 package com.clone.letterboxd.dto;
 
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -22,4 +23,5 @@ public class UserRegistrationDto {
     @Size(min = 1, max = 50, message = "Display name must be 1–50 characters")
     private String displayName;
     private String bio;
+    private MultipartFile avatarFile;
 }

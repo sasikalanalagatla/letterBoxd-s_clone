@@ -190,6 +190,7 @@
             method="post"
             th:action="@{/profile/edit}"
             th:object="${userUpdate}"
+            enctype="multipart/form-data"
           >
             <!-- Display Name -->
             <div class="mb-3">
@@ -219,17 +220,17 @@
               <small class="form-text">Maximum 500 characters</small>
             </div>
 
-            <!-- Avatar URL -->
+            <!-- Avatar File -->
             <div class="mb-3">
-              <label for="avatarUrl" class="form-label">Avatar URL</label>
+              <label for="avatarFile" class="form-label">Profile Picture</label>
               <input
-                type="url"
+                type="file"
                 class="form-control"
-                id="avatarUrl"
-                th:field="*{avatarUrl}"
-                placeholder="https://example.com/avatar.jpg"
+                id="avatarFile"
+                th:field="*{avatarFile}"
+                accept="image/*"
               />
-              <small class="form-text">Direct link to your profile image</small>
+              <small class="form-text">Upload a new profile image</small>
             </div>
 
             <!-- Buttons -->
@@ -241,26 +242,6 @@
         </div>
       </div>
 
-      <!-- Info Section -->
-      <div style="margin-top: 2rem; padding: 0 1rem">
-        <div
-          style="
-            background: #2d2d2d;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #333;
-          "
-        >
-          <h5 style="color: #fff; margin-bottom: 1rem">Account Information</h5>
-          <p style="color: #ccc; margin-bottom: 0.5rem">
-            <strong>Email:</strong> Can only be changed by contacting support
-          </p>
-          <p style="color: #ccc; margin-bottom: 0.5rem">
-            <strong>Password:</strong> Change your password in account settings
-          </p>
-        </div>
-      </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
