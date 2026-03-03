@@ -236,5 +236,52 @@
     </div>
 </div>
 
+<script>
+(function () {
+    function loadReviews() {
+        const movieId = window.location.pathname.split('/').filter(Boolean).pop();
+        return fetch('/movies/' + movieId + '/reviews').then(r => r.text());
+    }
+
+    function refreshReviews() {
+        loadReviews().then(html => {
+            const container = document.getElementById('popular-reviews');
+            if (container) container.innerHTML = html;
+        }).catch(err => console.error('Error refreshing reviews:', err));
+    }
+
+    // Review form — submit without full page reload
+    const reviewForm = document.getElementById('review-form');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fetch(this.action, { method: 'POST', body: new FormData(this) })
+                .then(response => {
+                    if (response.redirected) { window.location = response.url; return; }
+                    reviewForm.reset();
+                    refreshReviews();
+                })
+                .catch(err => console.error('Error submitting review:', err));
+        });
+    }
+
+    // Review like / delete — update reviews section only
+    const reviewsContainer = document.getElementById('popular-reviews');
+    if (reviewsContainer) {
+        reviewsContainer.addEventListener('submit', function (e) {
+            const action = e.target.getAttribute('action') || '';
+            if (action.includes('/like') || action.includes('/delete')) {
+                e.preventDefault();
+                fetch(action, { method: 'POST' })
+                    .then(response => {
+                        if (response.redirected) { window.location = response.url; return; }
+                        refreshReviews();
+                    })
+                    .catch(err => console.error('Error:', err));
+            }
+        });
+    }
+})();
+</script>
 </body>
 </html>
