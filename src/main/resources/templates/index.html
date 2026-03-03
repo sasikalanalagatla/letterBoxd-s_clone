@@ -13,7 +13,6 @@
     />
   </head>
   <body class="bg-dark text-light">
-    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-darker mb-5">
       <div class="container-fluid">
         <a
@@ -35,7 +34,6 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <!-- Search -->
           <form class="d-flex ms-3 me-auto" th:action="@{/search}" method="get">
             <div class="input-group input-group-sm">
               <input type="text" name="q" class="form-control nav-search-input"
@@ -49,7 +47,6 @@
             <li class="nav-item me-1">
               <a class="nav-link" th:href="@{/members}">Members</a>
             </li>
-            <!-- Show if user is NOT logged in -->
             <li class="nav-item" th:if="${session.loggedInUser == null}">
               <a class="nav-link" th:href="@{/auth/login}">Sign In</a>
             </li>
@@ -63,7 +60,6 @@
               </a>
             </li>
 
-            <!-- Show if user IS logged in -->
             <li
               class="nav-item dropdown"
               th:if="${session.loggedInUser != null}"
@@ -129,11 +125,83 @@
       .nav-search-input:focus { box-shadow: 0 0 0 2px rgba(0,192,48,.25) !important; border-color: #00c030 !important; }
       .nav-search-btn { border-color: #456 !important; color: #c8d0d8 !important; }
       .nav-search-btn:hover { background-color: #00c030 !important; border-color: #00c030 !important; color: #fff !important; }
+
+      /* Filter bar */
+      .filter-bar { background: #1c2128; border: 1px solid #2c3440; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+      .filter-bar label { font-size: .75rem; color: #667; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 0; white-space: nowrap; }
+      .filter-select { background: #2c3440; color: #c8d0d8; border: 1px solid #3a4556; border-radius: 5px; padding: .3rem .6rem; font-size: .82rem; cursor: pointer; }
+      .filter-select:focus { outline: none; border-color: #00c030; box-shadow: 0 0 0 2px rgba(0,192,48,.2); }
+      .filter-divider { width: 1px; height: 24px; background: #2c3440; margin: 0 .2rem; }
+      .filter-reset { background: transparent; border: 1px solid #3a4556; color: #89a; border-radius: 5px; padding: .3rem .7rem; font-size: .8rem; cursor: pointer; transition: border-color .15s; text-decoration: none; }
+      .filter-reset:hover { border-color: #00c030; color: #00c030; }
+      .filter-btn { background: #00c030; border: none; color: #fff; border-radius: 5px; padding: .3rem .8rem; font-size: .82rem; cursor: pointer; }
+      .filter-btn:hover { background: #00a028; }
+      .filter-count { font-size: .78rem; color: #667; margin-left: auto; }
     </style>
     <div class="container mt-4">
-      <h1 class="mb-4">Popular Films</h1>
+      <h1 class="mb-3">Popular Films</h1>
 
-      <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
+      <!-- Filter Form -->
+      <form th:action="@{/}" method="get" class="filter-bar">
+        <input type="hidden" name="page" value="1" />
+
+        <label for="fYear">Year</label>
+        <select class="filter-select" id="fYear" name="year">
+          <option value="" th:selected="${filterYear == ''}">All</option>
+          <option th:each="y : ${allYears}" th:value="${y}" th:text="${y}"
+                  th:selected="${filterYear == y}"></option>
+        </select>
+
+        <div class="filter-divider"></div>
+        <label for="fGenre">Genre</label>
+        <select class="filter-select" id="fGenre" name="genre">
+          <option value="" th:selected="${filterGenre == ''}">All</option>
+          <option th:each="g : ${allGenres}" th:value="${g}" th:text="${g}"
+                  th:selected="${filterGenre == g}"></option>
+        </select>
+
+        <div class="filter-divider"></div>
+        <label for="fLang">Language</label>
+        <select class="filter-select" id="fLang" name="lang">
+          <option value="" th:selected="${filterLang == ''}">All</option>
+          <option th:each="l : ${allLangs}" th:value="${l}" th:text="${l.toUpperCase()}"
+                  th:selected="${filterLang == l}"></option>
+        </select>
+
+        <div class="filter-divider"></div>
+        <label for="fRating">Min Rating</label>
+        <select class="filter-select" id="fRating" name="minRating">
+          <option value=""  th:selected="${filterMinRating == ''}">Any</option>
+          <option value="3" th:selected="${filterMinRating == '3'}">&ge; 3</option>
+          <option value="5" th:selected="${filterMinRating == '5'}">&ge; 5</option>
+          <option value="7" th:selected="${filterMinRating == '7'}">&ge; 7</option>
+          <option value="8" th:selected="${filterMinRating == '8'}">&ge; 8</option>
+        </select>
+
+        <div class="filter-divider"></div>
+        <label for="fSort">Sort</label>
+        <select class="filter-select" id="fSort" name="sort">
+          <option value="default"     th:selected="${sort == 'default'}">Default</option>
+          <option value="az"          th:selected="${sort == 'az'}">A &rarr; Z</option>
+          <option value="za"          th:selected="${sort == 'za'}">Z &rarr; A</option>
+          <option value="year_desc"   th:selected="${sort == 'year_desc'}">Year &darr;</option>
+          <option value="year_asc"    th:selected="${sort == 'year_asc'}">Year &uarr;</option>
+          <option value="rating_desc" th:selected="${sort == 'rating_desc'}">Rating &darr;</option>
+          <option value="rating_asc"  th:selected="${sort == 'rating_asc'}">Rating &uarr;</option>
+        </select>
+
+        <button type="submit" class="filter-btn">Apply</button>
+        <a th:href="@{/}" class="filter-reset">Reset</a>
+        <span class="filter-count" th:text="${movies.size()} + ' film' + (${movies.size()} != 1 ? 's' : '')"></span>
+      </form>
+
+      <!-- Empty state -->
+      <div th:if="${movies.isEmpty()}" class="text-center py-5" style="color:#445;">
+        <i class="bi bi-camera-reels" style="font-size:2.5rem;display:block;margin-bottom:.8rem;"></i>
+        No films match your filters.
+      </div>
+
+      <div th:if="${!movies.isEmpty()}" class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
         <div class="col" th:each="movie : ${movies}">
           <div class="card bg-secondary h-100 border-0">
             <a th:href="@{/movies/{id}(id=${movie.id})}">
@@ -162,7 +230,6 @@
         </div>
       </div>
 
-      <!-- Simple pagination -->
       <nav aria-label="Page navigation" class="mt-5">
         <ul class="pagination justify-content-center">
           <li
@@ -171,7 +238,7 @@
           >
             <a
               class="page-link"
-              th:href="${currentPage == 1} ? '#' : @{/(page=${currentPage - 1})}"
+              th:href="${currentPage == 1} ? '#' : @{/(page=${currentPage - 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}"
               th:style="${currentPage == 1} ? 'pointer-events: none; opacity: 0.5;' : ''"
               >Previous</a
             >
@@ -181,7 +248,9 @@
             th:each="i : ${#numbers.sequence(T(java.lang.Math).max(1, currentPage - 5), T(java.lang.Math).min(totalPages, currentPage + 5))}"
             th:classappend="${i == currentPage} ? 'active' : ''"
           >
-            <a class="page-link" th:href="@{/(page=${i})}" th:text="${i}"></a>
+            <a class="page-link"
+               th:href="@{/(page=${i}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}"
+               th:text="${i}"></a>
           </li>
           <li
             class="page-item"
@@ -189,7 +258,7 @@
           >
             <a
               class="page-link"
-              th:href="${currentPage == totalPages} ? '#' : @{/(page=${currentPage + 1})}"
+              th:href="${currentPage == totalPages} ? '#' : @{/(page=${currentPage + 1}, year=${filterYear}, genre=${filterGenre}, lang=${filterLang}, minRating=${filterMinRating}, sort=${sort})}"
               th:style="${currentPage == totalPages} ? 'pointer-events: none; opacity: 0.5;' : ''"
               >Next</a
             >

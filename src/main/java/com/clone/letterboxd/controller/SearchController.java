@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,28 +51,45 @@ public class SearchController {
     }
 
     @GetMapping("/search")
-    public String search(@RequestParam(value = "q", required = false, defaultValue = "") String query,
-                         Model model,
-                         HttpSession session) {
+    public String search(
+            @RequestParam(value = "q",         required = false, defaultValue = "") String query,
+            @RequestParam(value = "year",      required = false, defaultValue = "") String filterYear,
+            @RequestParam(value = "genre",     required = false, defaultValue = "") String filterGenre,
+            @RequestParam(value = "lang",      required = false, defaultValue = "") String filterLang,
+            @RequestParam(value = "minRating", required = false, defaultValue = "") String filterMinRating,
+            @RequestParam(value = "sort",      required = false, defaultValue = "default") String sort,
+            Model model,
+            HttpSession session) {
 
         String q = query.trim();
         model.addAttribute("query", q);
 
+        // Pass active filter values back to the view for pre-selecting dropdowns
+        model.addAttribute("filterYear",      filterYear);
+        model.addAttribute("filterGenre",     filterGenre);
+        model.addAttribute("filterLang",      filterLang);
+        model.addAttribute("filterMinRating", filterMinRating);
+        model.addAttribute("sort",            sort);
+
         if (q.isEmpty()) {
-            model.addAttribute("films", Collections.emptyList());
-            model.addAttribute("profiles", Collections.emptyList());
-            model.addAttribute("lists", Collections.emptyList());
+            model.addAttribute("films",        Collections.emptyList());
+            model.addAttribute("profiles",     Collections.emptyList());
+            model.addAttribute("lists",        Collections.emptyList());
+            model.addAttribute("allYears",     Collections.emptyList());
+            model.addAttribute("allGenres",    Collections.emptyList());
+            model.addAttribute("allLangs",     Collections.emptyList());
             return "search-results";
         }
 
-        List<MovieCardDto> films = Collections.emptyList();
+        // ── FILMS ──────────────────────────────────────────────────────────────
+        List<MovieCardDto> allFilms = Collections.emptyList();
         try {
             Map<String, Object> response = tmdbService.searchMovies(q, 1);
             if (response != null && response.containsKey("results")) {
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-                films = results.stream()
-                        .limit(18)
+                allFilms = results.stream()
+                        .limit(40)                         // fetch more so filters have data to work with
                         .map(movieMapper::toMovieCardDto)
                         .filter(dto -> dto != null)
                         .collect(Collectors.toList());
@@ -79,8 +97,56 @@ public class SearchController {
         } catch (Exception e) {
             log.warn("Film search failed for query={}", q, e);
         }
+
+        // Build distinct dropdown option sets from the FULL result set
+        List<String> allYears = allFilms.stream()
+                .map(MovieCardDto::getYear)
+                .filter(y -> y != null && !y.isBlank())
+                .distinct().sorted(Comparator.reverseOrder())
+                .collect(Collectors.toList());
+
+        List<String> allGenres = allFilms.stream()
+                .filter(f -> f.getGenreNames() != null)
+                .flatMap(f -> f.getGenreNames().stream())
+                .filter(g -> g != null && !g.isBlank())
+                .distinct().sorted()
+                .collect(Collectors.toList());
+
+        List<String> allLangs = allFilms.stream()
+                .map(MovieCardDto::getOriginalLanguage)
+                .filter(l -> l != null && !l.isBlank())
+                .distinct().sorted()
+                .collect(Collectors.toList());
+
+        model.addAttribute("allYears",  allYears);
+        model.addAttribute("allGenres", allGenres);
+        model.addAttribute("allLangs",  allLangs);
+
+        // Apply filters in Java
+        double minRating = filterMinRating.isBlank() ? 0.0 : Double.parseDouble(filterMinRating);
+
+        List<MovieCardDto> films = allFilms.stream()
+                .filter(f -> filterYear.isBlank()  || filterYear.equals(f.getYear()))
+                .filter(f -> filterGenre.isBlank() || (f.getGenreNames() != null && f.getGenreNames().contains(filterGenre)))
+                .filter(f -> filterLang.isBlank()  || filterLang.equals(f.getOriginalLanguage()))
+                .filter(f -> minRating <= 0        || (f.getVoteAverage() != null && f.getVoteAverage() >= minRating))
+                .collect(Collectors.toList());
+
+        // Apply sort in Java
+        Comparator<MovieCardDto> comparator = null;
+        switch (sort) {
+            case "az":          comparator = Comparator.comparing(f -> f.getTitle() != null ? f.getTitle() : ""); break;
+            case "za":          comparator = Comparator.comparing((MovieCardDto f) -> f.getTitle() != null ? f.getTitle() : "").reversed(); break;
+            case "year_asc":    comparator = Comparator.comparing(f -> f.getYear() != null ? f.getYear() : ""); break;
+            case "year_desc":   comparator = Comparator.comparing((MovieCardDto f) -> f.getYear() != null ? f.getYear() : "").reversed(); break;
+            case "rating_asc":  comparator = Comparator.comparing(f -> f.getVoteAverage() != null ? f.getVoteAverage() : 0.0); break;
+            case "rating_desc": comparator = Comparator.comparing((MovieCardDto f) -> f.getVoteAverage() != null ? f.getVoteAverage() : 0.0).reversed(); break;
+        }
+        if (comparator != null) films.sort(comparator);
+
         model.addAttribute("films", films);
 
+        // ── PROFILES ───────────────────────────────────────────────────────────
         List<UserSummaryDto> profiles = Collections.emptyList();
         try {
             List<User> users = userRepository
@@ -93,34 +159,23 @@ public class SearchController {
         }
         model.addAttribute("profiles", profiles);
 
+        // ── LISTS ──────────────────────────────────────────────────────────────
         List<FilmListSummaryDto> lists = Collections.emptyList();
         try {
             List<FilmList> byName = filmListRepository.findByNameContainingIgnoreCase(q);
 
-            List<Long> matchedMovieIds = new ArrayList<>();
-            try {
-                Map<String, Object> response = tmdbService.searchMovies(q, 1);
-                if (response != null && response.containsKey("results")) {
-                    @SuppressWarnings("unchecked")
-                    List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-                    for (Map<String, Object> res : results) {
-                        Object idObj = res.get("id");
-                        if (idObj instanceof Number) {
-                            matchedMovieIds.add(((Number) idObj).longValue());
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Could not fetch TMDB IDs for list-by-film search, query={}", q, e);
-            }
+            List<Long> matchedMovieIds = allFilms.stream()
+                    .filter(f -> f.getId() != null)
+                    .map(MovieCardDto::getId)
+                    .collect(Collectors.toList());
 
             List<FilmList> byFilm = matchedMovieIds.isEmpty()
                     ? Collections.emptyList()
                     : filmListRepository.findByMovieIds(matchedMovieIds);
 
             Map<Long, FilmList> merged = new java.util.LinkedHashMap<>();
-            for (FilmList fl : byName)  merged.put(fl.getId(), fl);
-            for (FilmList fl : byFilm)  merged.putIfAbsent(fl.getId(), fl);
+            for (FilmList fl : byName) merged.put(fl.getId(), fl);
+            for (FilmList fl : byFilm) merged.putIfAbsent(fl.getId(), fl);
 
             lists = merged.values().stream()
                     .map(this::toSummaryDto)
@@ -132,6 +187,7 @@ public class SearchController {
 
         return "search-results";
     }
+
 
     private FilmListSummaryDto toSummaryDto(FilmList list) {
         FilmListSummaryDto dto = filmListMapper.toSummaryDto(list);

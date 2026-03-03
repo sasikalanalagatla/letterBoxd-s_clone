@@ -5,6 +5,10 @@ import com.clone.letterboxd.dto.MovieDetailDto;
 import com.clone.letterboxd.model.DiaryEntry;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 @Component
 public class MovieMapper {
 
@@ -117,6 +121,30 @@ public class MovieMapper {
         return dto;
     }
 
+    private static final Map<Integer, String> GENRE_MAP;
+    static {
+        GENRE_MAP = new HashMap<>();
+        GENRE_MAP.put(28,    "Action");
+        GENRE_MAP.put(12,    "Adventure");
+        GENRE_MAP.put(16,    "Animation");
+        GENRE_MAP.put(35,    "Comedy");
+        GENRE_MAP.put(80,    "Crime");
+        GENRE_MAP.put(99,    "Documentary");
+        GENRE_MAP.put(18,    "Drama");
+        GENRE_MAP.put(10751, "Family");
+        GENRE_MAP.put(14,    "Fantasy");
+        GENRE_MAP.put(36,    "History");
+        GENRE_MAP.put(27,    "Horror");
+        GENRE_MAP.put(10402, "Music");
+        GENRE_MAP.put(9648,  "Mystery");
+        GENRE_MAP.put(10749, "Romance");
+        GENRE_MAP.put(878,   "Science Fiction");
+        GENRE_MAP.put(10770, "TV Movie");
+        GENRE_MAP.put(53,    "Thriller");
+        GENRE_MAP.put(10752, "War");
+        GENRE_MAP.put(37,    "Western");
+    }
+
     public MovieCardDto toMovieCardDto(Object tmdbMovie) {
         MovieCardDto dto = new MovieCardDto();
 
@@ -135,8 +163,28 @@ public class MovieMapper {
         dto.setInDiary(false);
         dto.setInWatchlist(false);
 
+        if (tmdbMovie instanceof java.util.Map) {
+            java.util.Map<?, ?> raw = (java.util.Map<?, ?>) tmdbMovie;
+
+            Object genreIdsObj = raw.get("genre_ids");
+            if (genreIdsObj instanceof java.util.List) {
+                java.util.List<String> names = new java.util.ArrayList<>();
+                for (Object idObj : (java.util.List<?>) genreIdsObj) {
+                    if (idObj instanceof Number) {
+                        String name = GENRE_MAP.get(((Number) idObj).intValue());
+                        if (name != null) names.add(name);
+                    }
+                }
+                dto.setGenreNames(names);
+            }
+
+            Object langObj = raw.get("original_language");
+            if (langObj != null) dto.setOriginalLanguage(langObj.toString());
+        }
+
         return dto;
     }
+
 
     private static Long getLong(Object obj, String field) {
         if (obj instanceof java.util.Map) {

@@ -61,6 +61,18 @@
       /* Result heading */
       .search-heading { font-size: 1.6rem; font-weight: 700; margin: 2rem 0 1.5rem; color: #c8d0d8; }
       .search-heading span { color: #00c030; }
+
+      /* Filter bar */
+      .filter-bar { background: #1c2128; border: 1px solid #2c3440; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+      .filter-bar label { font-size: .75rem; color: #667; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 0; white-space: nowrap; }
+      .filter-select { background: #2c3440; color: #c8d0d8; border: 1px solid #3a4556; border-radius: 5px; padding: .3rem .6rem; font-size: .82rem; cursor: pointer; }
+      .filter-select:focus { outline: none; border-color: #00c030; box-shadow: 0 0 0 2px rgba(0,192,48,.2); }
+      .filter-divider { width: 1px; height: 24px; background: #2c3440; margin: 0 .2rem; }
+      .filter-reset { background: transparent; border: 1px solid #3a4556; color: #89a; border-radius: 5px; padding: .3rem .7rem; font-size: .8rem; cursor: pointer; transition: border-color .15s; text-decoration: none; }
+      .filter-reset:hover { border-color: #00c030; color: #00c030; }
+      .filter-btn { background: #00c030; border: none; color: #fff; border-radius: 5px; padding: .3rem .8rem; font-size: .82rem; cursor: pointer; }
+      .filter-btn:hover { background: #00a028; }
+      .filter-count { font-size: .78rem; color: #667; margin-left: auto; }
     </style>
   </head>
   <body>
@@ -145,12 +157,66 @@
       </ul>
 
       <div class="tab-content" id="searchTabContent">
-        <!-- ===== FILMS TAB ===== -->
         <div class="tab-pane fade show active" id="films" role="tabpanel">
+
+          <form th:action="@{/search}" method="get" class="filter-bar" th:if="${!allYears.isEmpty() or !films.isEmpty()}">
+            <input type="hidden" name="q" th:value="${query}" />
+
+            <label for="fYear">Year</label>
+            <select class="filter-select" id="fYear" name="year">
+              <option value="" th:selected="${filterYear == ''}">All</option>
+              <option th:each="y : ${allYears}" th:value="${y}" th:text="${y}"
+                      th:selected="${filterYear == y}"></option>
+            </select>
+
+            <div class="filter-divider"></div>
+            <label for="fGenre">Genre</label>
+            <select class="filter-select" id="fGenre" name="genre">
+              <option value="" th:selected="${filterGenre == ''}">All</option>
+              <option th:each="g : ${allGenres}" th:value="${g}" th:text="${g}"
+                      th:selected="${filterGenre == g}"></option>
+            </select>
+
+            <div class="filter-divider"></div>
+            <label for="fLang">Language</label>
+            <select class="filter-select" id="fLang" name="lang">
+              <option value="" th:selected="${filterLang == ''}">All</option>
+              <option th:each="l : ${allLangs}" th:value="${l}" th:text="${l.toUpperCase()}"
+                      th:selected="${filterLang == l}"></option>
+            </select>
+
+            <div class="filter-divider"></div>
+            <label for="fRating">Min Rating</label>
+            <select class="filter-select" id="fRating" name="minRating">
+              <option value=""  th:selected="${filterMinRating == ''}">Any</option>
+              <option value="3" th:selected="${filterMinRating == '3'}">&ge; 3</option>
+              <option value="5" th:selected="${filterMinRating == '5'}">&ge; 5</option>
+              <option value="7" th:selected="${filterMinRating == '7'}">&ge; 7</option>
+              <option value="8" th:selected="${filterMinRating == '8'}">&ge; 8</option>
+            </select>
+
+            <div class="filter-divider"></div>
+            <label for="fSort">Sort</label>
+            <select class="filter-select" id="fSort" name="sort">
+              <option value="default"     th:selected="${sort == 'default'}">Default</option>
+              <option value="az"          th:selected="${sort == 'az'}">A &rarr; Z</option>
+              <option value="za"          th:selected="${sort == 'za'}">Z &rarr; A</option>
+              <option value="year_desc"   th:selected="${sort == 'year_desc'}">Year &darr;</option>
+              <option value="year_asc"    th:selected="${sort == 'year_asc'}">Year &uarr;</option>
+              <option value="rating_desc" th:selected="${sort == 'rating_desc'}">Rating &darr;</option>
+              <option value="rating_asc"  th:selected="${sort == 'rating_asc'}">Rating &uarr;</option>
+            </select>
+
+            <button type="submit" class="filter-btn">Apply</button>
+            <a th:href="@{/search(q=${query})}" class="filter-reset">Reset</a>
+            <span class="filter-count" th:text="${films.size()} + ' film' + (${films.size()} != 1 ? 's' : '')"></span>
+          </form>
+
           <div th:if="${films.isEmpty()}" class="empty-state">
             <i class="bi bi-camera-reels"></i>
-            No films found for <strong th:text="${query}"></strong>
+            No films match your filters for <strong th:text="${query}"></strong>
           </div>
+
           <div th:if="${!films.isEmpty()}" class="row row-cols-3 row-cols-sm-4 row-cols-md-6 row-cols-lg-8 g-3">
             <div class="col" th:each="film : ${films}">
               <a th:href="@{/movies/{id}(id=${film.id})}" class="text-decoration-none">
@@ -167,7 +233,6 @@
           </div>
         </div>
 
-        <!-- ===== PROFILES TAB ===== -->
         <div class="tab-pane fade" id="profiles" role="tabpanel">
           <div th:if="${profiles.isEmpty()}" class="empty-state">
             <i class="bi bi-person-x"></i>
@@ -188,7 +253,6 @@
           </div>
         </div>
 
-        <!-- ===== LISTS TAB ===== -->
         <div class="tab-pane fade" id="lists" role="tabpanel">
           <div th:if="${lists.isEmpty()}" class="empty-state">
             <i class="bi bi-collection"></i>

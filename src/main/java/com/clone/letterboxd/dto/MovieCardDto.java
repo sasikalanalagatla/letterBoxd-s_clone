@@ -2,6 +2,8 @@ package com.clone.letterboxd.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class MovieCardDto {
 
@@ -18,8 +20,8 @@ public class MovieCardDto {
     private Double userRating;
     private Boolean inDiary;
     private Boolean inWatchlist;
-
-    // aggregated counts from our own data
+    private List<String> genreNames;   
+    private String originalLanguage;   
     private Long reviewCount;
     private Long likeCount;
 
