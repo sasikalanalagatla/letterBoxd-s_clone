@@ -165,8 +165,28 @@ public class ProfileController {
                     return rd;
                 }).toList();
 
+        // Check if logged-in user is following this profile user
+        boolean isFollowing = false;
+        if (loggedInUserId != null && !isOwnProfile) {
+            isFollowing = userRepository.isFollowing(loggedInUserId, user.getId());
+        }
+
+        // Filter lists based on visibility and follow status
+        List<FilmList> visibleLists;
+        if (isOwnProfile) {
+            visibleLists = lists;
+        } else if (isFollowing) {
+            visibleLists = lists.stream()
+                    .filter(l -> l.getVisibility() != com.clone.letterboxd.enums.Visibility.PRIVATE)
+                    .toList();
+        } else {
+            visibleLists = lists.stream()
+                    .filter(l -> l.getVisibility() == com.clone.letterboxd.enums.Visibility.PUBLIC)
+                    .toList();
+        }
+
         // Show only Top 5 for profile summary
-        model.addAttribute("profileLists", buildSummaryList(lists).stream().limit(5).toList());
+        model.addAttribute("profileLists", buildSummaryList(visibleLists).stream().limit(5).toList());
         model.addAttribute("profileReviews", reviewDtos.stream().limit(5).toList());
         
         // Populate Liked items and truncate
@@ -176,12 +196,6 @@ public class ProfileController {
         model.addAttribute("likedMovies", likedMovies != null ? likedMovies.stream().limit(5).toList() : List.of());
         model.addAttribute("likedReviews", likedReviews != null ? likedReviews : List.of());
 
-        // Check if logged-in user is following this profile user
-        boolean isFollowing = false;
-        if (loggedInUserId != null && !isOwnProfile) {
-            isFollowing = userRepository.isFollowing(loggedInUserId, user.getId());
-        }
-        
         model.addAttribute("profile", profile);
         model.addAttribute("isOwnProfile", isOwnProfile);
         model.addAttribute("isFollowing", isFollowing);

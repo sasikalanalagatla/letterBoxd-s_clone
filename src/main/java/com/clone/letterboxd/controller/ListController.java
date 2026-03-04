@@ -160,8 +160,12 @@ public class ListController {
             if (loggedInUserId == null) {
                 return "redirect:/auth/login";
             }
-            // For now, allow any logged in user as 'friends' logic is basic, 
-            // but we could add a follow check here.
+            // Only the owner or actual followers can see FRIENDS lists
+            boolean isOwner = filmList.getUser().getId().equals(loggedInUserId);
+            boolean isFollowing = userRepository.isFollowing(loggedInUserId, filmList.getUser().getId());
+            if (!isOwner && !isFollowing) {
+                return "redirect:/lists";
+            }
         }
 
         FilmListDetailDto listDetail = filmListMapper.toDetailDto(filmList);
@@ -515,9 +519,13 @@ public class ListController {
         if (isOwnProfile) {
             found = filmListRepository.findByUser(user);
         } else if (loggedInUserId != null) {
-            // For now, logged in users see PUBLIC + FRIENDS if we assume they might be friends
-            // In a real app we'd check follow status.
-            found = filmListRepository.findByUserAndVisibilityIn(user, List.of(Visibility.PUBLIC, Visibility.FRIENDS));
+            // Show FRIENDS lists only to actual followers, PUBLIC to everyone else
+            boolean isFollowing = userRepository.isFollowing(loggedInUserId, user.getId());
+            if (isFollowing) {
+                found = filmListRepository.findByUserAndVisibilityIn(user, List.of(Visibility.PUBLIC, Visibility.FRIENDS));
+            } else {
+                found = filmListRepository.findByUserAndVisibility(user, Visibility.PUBLIC);
+            }
         } else {
             found = filmListRepository.findByUserAndVisibility(user, Visibility.PUBLIC);
         }

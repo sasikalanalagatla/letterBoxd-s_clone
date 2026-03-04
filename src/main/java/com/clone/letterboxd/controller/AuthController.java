@@ -6,6 +6,7 @@ import com.clone.letterboxd.repository.UserRepository;
 import com.clone.letterboxd.service.EmailService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +27,9 @@ public class AuthController {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
+
+    @Value("${app.base-url:http://localhost:8080}")
+    private String appBaseUrl;
 
     public AuthController(UserRepository userRepository, EmailService emailService) {
         this.userRepository = userRepository;
@@ -112,7 +116,7 @@ public class AuthController {
                 user.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
                 userRepository.save(user);
 
-                String link = "http://localhost:8080/auth/reset?token=" + token;
+                String link = appBaseUrl + "/auth/reset?token=" + token;
                 emailService.sendPasswordResetEmail(email, link);
             }
         } catch (Exception e) {
