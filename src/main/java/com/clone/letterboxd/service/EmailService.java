@@ -18,12 +18,6 @@ public class EmailService {
     @Value("${sendgrid.api.key:}")
     private String sendGridApiKey;
 
-    @Value("${sendgrid.from.email:noreply@letterboxd.local}")
-    private String fromEmail;
-
-    @Value("${sendgrid.from.name:Letterboxd}")
-    private String fromName;
-
     public void sendPasswordResetEmail(String toEmail, String resetLink) {
         if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
             log.warn("SendGrid API key not configured. Reset link (console only): {}", resetLink);
@@ -31,7 +25,7 @@ public class EmailService {
         }
 
         try {
-            Email from = new Email(fromEmail, fromName);
+            Email from = new Email("sasinalagatla30@gmail.com", "Letterboxd Clone");
             Email to = new Email(toEmail);
             String subject = "Letterboxd - Password Reset Request";
             String body = "Hello,\n\n"
