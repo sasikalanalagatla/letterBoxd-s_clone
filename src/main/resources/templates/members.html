@@ -49,10 +49,9 @@
 
     .member-portrait {
       position: relative; height: 130px; border-radius: 4px; overflow: hidden;
-      margin-bottom: 0.7rem; background: var(--bg-card);
-      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 0.7rem; background: var(--bg-card); display: block;
     }
-    .member-portrait img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .member-portrait img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; display: block; }
     .featured-card:hover .member-portrait img { transform: scale(1.04); }
     .member-portrait-init {
       font-size: 3.5rem; font-weight: 700; color: #fff; text-transform: uppercase;
