@@ -147,44 +147,8 @@
     </style>
   </head>
   <body class="bg-dark text-light">
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-darker mb-5">
-      <div class="container-fluid">
-        <a
-          class="navbar-brand"
-          th:href="@{/}"
-          style="font-weight: 700; font-size: 1.5rem"
-        >
-          Letterboxd
-        </a>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item me-1">
-              <a class="nav-link" th:href="@{/members}">Members</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/profile}">My Profile</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/lists}">All Lists</a>
-            </li>
-            <li class="nav-item" th:if="${session.loggedInUser != null}">
-              <a class="nav-link" th:href="@{/auth/logout}">Logout</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <div th:replace="~{fragments/layout :: navbar(activeTab='lists')}"></div>
 
-    <style>
-      .bg-darker {
-        background-color: #1a1a1a !important;
-        border-bottom: 1px solid #333;
-      }
-      .navbar-brand:hover {
-        color: #556b2f !important;
-      }
-    </style>
 
     <div class="container">
       <a th:href="@{/lists}" class="back-link">← Back to All Lists</a>

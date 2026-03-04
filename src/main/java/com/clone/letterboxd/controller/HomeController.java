@@ -64,7 +64,7 @@ public class HomeController {
 
         // figure out how many API pages we need to fetch to satisfy the
         // requested batch of 60 items per click.  TMDB returns 20 items per page.
-        final int BATCH_SIZE = 60;
+        final int BATCH_SIZE = 30;
         final int ITEMS_PER_API_PAGE = 20;
         int neededItems = page * BATCH_SIZE;
         int neededApiPages = (neededItems + ITEMS_PER_API_PAGE - 1) / ITEMS_PER_API_PAGE;

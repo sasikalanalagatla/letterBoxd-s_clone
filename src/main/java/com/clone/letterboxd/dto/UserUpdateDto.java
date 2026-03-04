@@ -12,5 +12,6 @@ public class UserUpdateDto {
     @Size(max = 500, message = "Bio is too long")
     private String bio;
     private MultipartFile avatarFile;
+    private boolean removeAvatar;
     private String location;
 }

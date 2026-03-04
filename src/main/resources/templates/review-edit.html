@@ -9,7 +9,8 @@
       rel="stylesheet"
     />
 </head>
-<body class="bg-dark text-light">
+<body class="bg-dark text-light" style="padding-top: 56px;">
+    <div th:replace="~{fragments/layout :: navbar(activeTab='profile')}"></div>
 <div class="container py-5">
     <h2>Edit Review</h2>
     <form th:object="${reviewForm}" method="post" th:action="@{/reviews/{id}/edit(id=${reviewForm.id})}">

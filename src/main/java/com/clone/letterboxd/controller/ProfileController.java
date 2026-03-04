@@ -36,7 +36,6 @@ public class ProfileController {
     private final TmdbService tmdbService;
     private final FilmListMapper filmListMapper;
     private final LikeRepository likeRepository;
-    private final com.clone.letterboxd.service.FileStorageService fileStorageService;
 
     public ProfileController(UserRepository userRepository,
                              FilmListRepository filmListRepository,
@@ -44,8 +43,7 @@ public class ProfileController {
                              UserMapper userMapper,
                              TmdbService tmdbService, 
                              FilmListMapper filmListMapper,
-                             LikeRepository likeRepository,
-                             com.clone.letterboxd.service.FileStorageService fileStorageService) {
+                             LikeRepository likeRepository) {
         this.userRepository = userRepository;
         this.filmListRepository = filmListRepository;
         this.reviewRepository = reviewRepository;
@@ -53,7 +51,6 @@ public class ProfileController {
         this.tmdbService = tmdbService;
         this.filmListMapper = filmListMapper;
         this.likeRepository = likeRepository;
-        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping
@@ -433,6 +430,7 @@ public class ProfileController {
         
         model.addAttribute("userUpdate", updateDto);
         model.addAttribute("username", user.getUsername());
+        model.addAttribute("avatarUrl", UserMapper.getAvatarUrl(user));
         
         return "profile-edit";
     }
@@ -463,8 +461,11 @@ public class ProfileController {
             if (userUpdate.getBio() != null) user.setBio(userUpdate.getBio());
             
             if (userUpdate.getAvatarFile() != null && !userUpdate.getAvatarFile().isEmpty()) {
-                String avatarUrl = fileStorageService.saveAvatar(userUpdate.getAvatarFile());
-                user.setAvatarUrl(avatarUrl);
+                user.setAvatarBytes(userUpdate.getAvatarFile().getBytes());
+                user.setAvatarContentType(userUpdate.getAvatarFile().getContentType());
+            } else if (userUpdate.isRemoveAvatar()) {
+                user.setAvatarBytes(null);
+                user.setAvatarContentType(null);
             }
             
             userRepository.save(user);

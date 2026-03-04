@@ -6,6 +6,7 @@ import com.clone.letterboxd.dto.UserSummaryDto;
 import com.clone.letterboxd.dto.UserUpdateDto;
 import com.clone.letterboxd.model.User;
 import org.springframework.stereotype.Component;
+import java.util.Base64;
 
 @Component
 public class UserMapper {
@@ -17,7 +18,7 @@ public class UserMapper {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setDisplayName(user.getDisplayName());
-        dto.setAvatarUrl(normalizeAvatarUrl(user.getAvatarUrl()));
+        dto.setAvatarUrl(getAvatarUrl(user));
 
         if (user.getBio() != null) {
             String bio = user.getBio();
@@ -35,7 +36,7 @@ public class UserMapper {
         dto.setUsername(user.getUsername());
         dto.setDisplayName(user.getDisplayName());
         dto.setBio(user.getBio());
-        dto.setAvatarUrl(normalizeAvatarUrl(user.getAvatarUrl()));
+        dto.setAvatarUrl(getAvatarUrl(user));
         dto.setJoinedAt(user.getCreatedAt());
         dto.setIsAdmin(user.getIsAdmin());
 
@@ -62,9 +63,18 @@ public class UserMapper {
         if (dto.getBio() != null) user.setBio(dto.getBio());
     }
 
+    public static String getAvatarUrl(User user) {
+        if (user.getAvatarBytes() != null && user.getAvatarBytes().length > 0) {
+            String mimeType = user.getAvatarContentType() != null ? user.getAvatarContentType() : "image/jpeg";
+            String base64 = Base64.getEncoder().encodeToString(user.getAvatarBytes());
+            return "data:" + mimeType + ";base64," + base64;
+        }
+        return normalizeAvatarUrl(user.getAvatarUrl());
+    }
+
     private static String normalizeAvatarUrl(String url) {
         if (url == null || url.isEmpty()) return null;
-        if (url.startsWith("http") || url.startsWith("/")) return url;
+        if (url.startsWith("http") || url.startsWith("/") || url.startsWith("data:")) return url;
         return "/" + url;
     }
 }

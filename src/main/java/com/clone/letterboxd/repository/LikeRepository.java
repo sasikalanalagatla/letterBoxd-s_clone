@@ -49,4 +49,7 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     // insertion can be handled via save(new Like(...)) so no custom query is required
 
     java.util.List<Like> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    @Query("SELECT DISTINCT l.movieId FROM Like l WHERE l.movieId IS NOT NULL")
+    java.util.List<Long> findAllMovieIds();
 }

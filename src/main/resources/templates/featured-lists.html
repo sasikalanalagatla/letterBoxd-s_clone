@@ -43,114 +43,6 @@
         color: inherit;
       }
 
-      /* ── HEADER ── */
-      .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        background: rgba(20, 24, 28, 0.97);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--border);
-        height: 56px;
-        display: flex;
-        align-items: center;
-        padding: 0 2rem;
-      }
-
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-shrink: 0;
-        margin-right: 2.5rem;
-      }
-
-      .logo-dots {
-        display: flex;
-        gap: 4px;
-      }
-
-      .logo-dots span {
-        width: 13px;
-        height: 13px;
-        border-radius: 50%;
-        display: block;
-      }
-
-      .dot-o {
-        background: #f97316;
-      }
-
-      .dot-g {
-        background: #22c55e;
-      }
-
-      .dot-b {
-        background: #3b82f6;
-      }
-
-      .logo-name {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #fff;
-      }
-
-      .nav-links {
-        display: flex;
-        align-items: center;
-        list-style: none;
-        gap: 0.1rem;
-        flex: 1;
-      }
-
-      .nav-links li a {
-        color: var(--text-dim);
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 0.45rem 0.8rem;
-        border-radius: 3px;
-        transition: color 0.2s, background 0.2s;
-        display: block;
-      }
-
-      .nav-links li a:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .nav-links li a.active {
-        color: #fff;
-      }
-
-      .search-wrap {
-        margin-left: auto;
-        position: relative;
-        display: flex;
-        align-items: center;
-      }
-
-      .search-wrap input {
-        height: 32px;
-        width: 175px;
-        padding: 0 2.2rem 0 0.85rem;
-        background: rgba(255, 255, 255, 0.09);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 16px;
-        font-size: 0.82rem;
-        font-family: inherit;
-        color: #fff;
-        transition: all 0.25s;
-      }
-
-      .search-wrap input:focus {
-        outline: none;
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.2);
-      }
 
       /* ── MAIN CONTENT ── */
       main {
@@ -350,27 +242,7 @@
     </style>
   </head>
   <body>
-    <!-- ── HEADER ── -->
-    <header class="header">
-      <div class="logo">
-        <div class="logo-dots">
-          <span class="dot-o"></span>
-          <span class="dot-g"></span>
-          <span class="dot-b"></span>
-        </div>
-        <span class="logo-name">LetterBoxd's</span>
-      </div>
-      <ul class="nav-links">
-        <li><a href="/">Home</a></li>
-        <li><a href="/movies" class="">Search</a></li>
-        <li><a href="/lists" class="active">Lists</a></li>
-        <li><a th:href="@{/members}">Members</a></li>
-        <li><a href="/profile">Profile</a></li>
-      </ul>
-      <div class="search-wrap">
-        <input type="text" placeholder="Search..." />
-      </div>
-    </header>
+    <div th:replace="~{fragments/layout :: navbar(activeTab='lists')}"></div>
 
     <!-- ── MAIN ── -->
     <main>

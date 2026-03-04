@@ -34,4 +34,7 @@ public interface FilmListRepository extends JpaRepository<FilmList, Long> {
     List<FilmList> findByMovieIds(@Param("movieIds") List<Long> movieIds);
 
     long countByUser(User user);
+
+    @Query("SELECT DISTINCT e.movieId FROM FilmList fl JOIN fl.entries e")
+    List<Long> findAllMovieIdsInLists();
 }

@@ -16,4 +16,7 @@ public interface DiaryEntryRepository extends JpaRepository<DiaryEntry, Long> {
 
     @Query("select avg(d.rating) from DiaryEntry d where d.movieId = :movieId")
     Double averageRatingByMovieId(@Param("movieId") Long movieId);
+
+    @Query("SELECT DISTINCT d.movieId FROM DiaryEntry d")
+    java.util.List<Long> findAllMovieIds();
 }

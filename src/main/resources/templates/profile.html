@@ -30,63 +30,6 @@
 
     a { text-decoration: none; color: inherit; }
 
-    /* ── HEADER ── */
-    .header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      padding: 0 2rem;
-      background: #14181c;
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      margin-right: 2rem;
-      color: #fff;
-      font-weight: 700;
-    }
-
-    .logo-dots span {
-      width: 13px; height: 13px; border-radius: 50%; display: inline-block;
-    }
-    .dot-o { background: #f97316; }
-    .dot-g { background: #22c55e; }
-    .dot-b { background: #3b82f6; }
-
-    .nav-links {
-      display: flex;
-      list-style: none;
-      gap: .5rem;
-      flex: 1;
-    }
-
-    .nav-links a {
-      font-size: .75rem;
-      font-weight: 600;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      padding: .4rem .8rem;
-    }
-
-    .nav-links a.active,
-    .nav-links a:hover { color: #fff; }
-
-    .search-wrap input {
-      height: 30px;
-      padding: 0 .8rem;
-      border-radius: 15px;
-      border: 1px solid var(--border);
-      background: #222;
-      color: #fff;
-      font-size: .8rem;
-    }
 
     /* ── LAYOUT ── */
     .container {
@@ -448,28 +391,7 @@
 
 <body>
 
-<!-- ── HEADER ── -->
-<header class="header">
-  <a class="logo" th:href="@{/}">
-    <div class="logo-dots">
-      <span class="dot-o"></span><span class="dot-g"></span><span class="dot-b"></span>
-    </div>
-    <span class="logo-name">Letterboxd's</span>
-  </a>
-  <ul class="nav-links">
-    <li><a th:href="@{/auth/login}"    class="bright" th:if="${session.loggedInUser == null}">Sign In</a></li>
-    <li><a th:href="@{/auth/register}" class="bright" th:if="${session.loggedInUser == null}">Create Account</a></li>
-    <li><a th:href="@{/profile}" class="bright" th:if="${session.loggedInUser != null}" th:text="${session.loggedInUser.username}">Profile</a></li>
-    <li><a th:href="@{/}">Films</a></li>
-    <li><a th:href="@{/lists}">Lists</a></li>
-    <li><a th:href="@{/members}">Members</a></li>
-    <li th:if="${session.loggedInUser != null}"><a th:href="@{/auth/logout}">Logout</a></li>
-  </ul>
-  <form class="search-wrap" th:action="@{/search}" method="get">
-    <input type="text" name="q" placeholder="Films, people, lists..."/>
-    <button class="search-icon-btn" type="submit">&#128269;</button>
-  </form>
-</header>
+  <div th:replace="~{fragments/layout :: navbar(activeTab='profile')}"></div>
 
 <!-- ── MAIN ── -->
 <main>

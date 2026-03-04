@@ -28,6 +28,12 @@ public class User {
     private String bio;
     private String avatarUrl;
 
+    @Column(name = "avatar_bytes", columnDefinition = "bytea")
+    private byte[] avatarBytes;
+
+    @Column(name = "avatar_content_type")
+    private String avatarContentType;
+
     @Column(name = "reset_token")
     private String resetToken;
 

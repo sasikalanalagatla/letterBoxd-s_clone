@@ -26,13 +26,11 @@ public class AuthController {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final com.clone.letterboxd.service.FileStorageService fileStorageService;
 
-    public AuthController(UserRepository userRepository, EmailService emailService, com.clone.letterboxd.service.FileStorageService fileStorageService) {
+    public AuthController(UserRepository userRepository, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.emailService = emailService;
-        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/login")
@@ -153,9 +151,9 @@ public class AuthController {
             model.addAttribute("error", "Reset token has expired.");
             return "reset-password";
         }
-        if (password == null || password.trim().isEmpty() ||
+        if (password == null || password.trim().isEmpty() || password.length() < 8 ||
                 !password.equals(confirmPassword)) {
-            model.addAttribute("error", "Passwords must match and cannot be empty.");
+            model.addAttribute("error", "Passwords must match and be at least 8 characters.");
             model.addAttribute("token", token);
             return "reset-password";
         }
@@ -190,6 +188,12 @@ public class AuthController {
                 return "register";
             }
 
+            if (userRegistration.getPassword().length() < 8) {
+                model.addAttribute("error", "Password must be at least 8 characters");
+                model.addAttribute("userRegistration", userRegistration);
+                return "register";
+            }
+
             if (!userRegistration.getPassword().equals(userRegistration.getConfirmPassword())) {
                 model.addAttribute("error", "Passwords do not match");
                 model.addAttribute("userRegistration", userRegistration);
@@ -215,8 +219,8 @@ public class AuthController {
             newUser.setBio(userRegistration.getBio());
             
             if (userRegistration.getAvatarFile() != null && !userRegistration.getAvatarFile().isEmpty()) {
-                String avatarUrl = fileStorageService.saveAvatar(userRegistration.getAvatarFile());
-                newUser.setAvatarUrl(avatarUrl);
+                newUser.setAvatarBytes(userRegistration.getAvatarFile().getBytes());
+                newUser.setAvatarContentType(userRegistration.getAvatarFile().getContentType());
             }
             
             newUser.setPassword(passwordEncoder.encode(userRegistration.getPassword()));
