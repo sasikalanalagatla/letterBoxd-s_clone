@@ -1,45 +1,64 @@
 package com.clone.letterboxd.service;
 
+import com.sendgrid.Method;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 public class EmailService {
 
-    @Autowired(required = false)
-    private JavaMailSender mailSender;
+    @Value("${sendgrid.api.key:}")
+    private String sendGridApiKey;
 
-    @Value("${spring.mail.username:noreply@letterboxd.local}")
+    @Value("${sendgrid.from.email:noreply@letterboxd.local}")
     private String fromEmail;
 
+    @Value("${sendgrid.from.name:Letterboxd}")
+    private String fromName;
+
     public void sendPasswordResetEmail(String toEmail, String resetLink) {
+        if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
+            log.warn("SendGrid API key not configured. Reset link (console only): {}", resetLink);
+            return;
+        }
+
         try {
-            if (mailSender == null) {
-                log.warn("JavaMailSender not configured; printing reset link to console instead: {}", resetLink);
-                return;
+            Email from = new Email(fromEmail, fromName);
+            Email to = new Email(toEmail);
+            String subject = "Letterboxd - Password Reset Request";
+            String body = "Hello,\n\n"
+                    + "We received a request to reset your password. Click the link below to set a new password:\n\n"
+                    + resetLink + "\n\n"
+                    + "This link expires in 1 hour.\n\n"
+                    + "If you didn't request this, please ignore this email.\n\n"
+                    + "Best regards,\n"
+                    + "Letterboxd Team";
+
+            Content content = new Content("text/plain", body);
+            Mail mail = new Mail(from, subject, to, content);
+
+            SendGrid sg = new SendGrid(sendGridApiKey);
+            Request request = new Request();
+            request.setMethod(Method.POST);
+            request.setEndpoint("mail/send");
+            request.setBody(mail.build());
+
+            Response response = sg.api(request);
+            if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+                log.info("Password reset email sent to {} via SendGrid (status: {})", toEmail, response.getStatusCode());
+            } else {
+                log.error("SendGrid returned error status {} for {}: {}", response.getStatusCode(), toEmail, response.getBody());
             }
-
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("Letterboxd - Password Reset Request");
-            message.setText("Hello,\n\n" +
-                    "We received a request to reset your password. Click the link below to set a new password:\n\n" +
-                    resetLink + "\n\n" +
-                    "This link expires in 1 hour.\n\n" +
-                    "If you didn't request this, please ignore this email.\n\n" +
-                    "Best regards,\n" +
-                    "Letterboxd Team");
-
-            mailSender.send(message);
-            log.info("Password reset email sent to {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send password reset email to {}", toEmail, e);
+            log.error("Failed to send password reset email to {} via SendGrid", toEmail, e);
         }
     }
 }
