@@ -14,7 +14,7 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-COPY --from=builder /app/target/blog-application-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /app/target/letterboxd-0.0.1-SNAPSHOT.jar app.jar
 
 # limit memory for Render free tier
 ENTRYPOINT ["java","-Xmx256m","-jar","app.jar"]
