@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Verify OTP - Letterboxd</title>
+</head>
+<body>
+    <section class="auth-container">
+        <div class="auth-box">
+            <h1>Verify OTP</h1>
+            <p class="auth-subtitle">Enter the 6-digit code sent to your email.</p>
+
+            <form th:action="@{/auth/verify-otp}" method="post" class="auth-form">
+                <input type="hidden" name="email" th:value="${email}" />
+                
+                <div class="form-group">
+                    <label for="otp">One-Time Password (OTP)</label>
+                    <input type="text" id="otp" name="otp" 
+                           placeholder="Enter 6-digit code" required 
+                           class="form-control" autocomplete="one-time-code"
+                           maxlength="6" pattern="\d{6}">
+                </div>
+
+                <div th:if="${error}" class="error-message">
+                    <p th:text="${error}"></p>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Verify Code</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Didn't receive the code? <a th:href="@{/auth/forgot}">Try again</a></p>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: #14181c;
+            padding: 30px;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #2c3440;
+        }
+
+        .auth-box h1 {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .auth-subtitle {
+            color: #9ab;
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form label {
+            display: block;
+            color: #9ab;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: #2c3440;
+            border: 1px solid #2c3440;
+            border-radius: 3px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-control:focus {
+            background: #fff;
+            color: #333;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: #00b020;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .btn-primary:hover {
+            background: #00c030;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .error-message {
+            background: #900;
+            color: #fff;
+            padding: 10px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .auth-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: #9ab;
+        }
+
+        .auth-footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .auth-footer a:hover {
+            color: #00b020;
+        }
+    </style>
+</body>
+</html>

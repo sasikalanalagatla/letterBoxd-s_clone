@@ -1,85 +1,62 @@
 package com.clone.letterboxd.service;
 
-import com.sendgrid.Method;
-import com.sendgrid.Request;
-import com.sendgrid.Response;
-import com.sendgrid.SendGrid;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
-import com.sendgrid.helpers.mail.objects.Personalization;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
-    @Value("${sendgrid.api.key:}")
-    private String sendGridApiKey;
+    private final JavaMailSender mailSender;
 
-    public void sendPasswordResetEmail(String toEmail, String resetLink) {
-        if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
-            log.warn("SendGrid API key not configured. Reset link (console only): {}", resetLink);
-            return;
-        }
+    @Async
+    public void sendOtpEmail(String toEmail, String otp) {
+        log.info("Preparing to send OTP email to {} in a background thread", toEmail);
 
         try {
-            Email from = new Email("sasinalagatla30@gmail.com", "Letterboxd Clone");
-            Email to = new Email(toEmail);
-            String subject = "Letterboxd - Password Reset Request";
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("sasinalagatla30@gmail.com", "Letterboxd Clone");
+            helper.setTo(toEmail);
+            helper.setSubject("Letterboxd - Password Reset OTP");
 
             // Plain text version
             String plainTextBody = "Hello,\n\n"
-                    + "We received a request to reset your password. Click the link below to set a new password:\n\n"
-                    + resetLink + "\n\n"
-                    + "This link expires in 1 hour.\n\n"
+                    + "Your OTP for password reset is: " + otp + "\n\n"
+                    + "This code expires in 1 hour.\n\n"
                     + "If you didn't request this, please ignore this email.\n\n"
                     + "Best regards,\n"
                     + "Letterboxd Team";
 
-            // HTML version (Better deliverability)
-            String htmlBody = "<html><body>"
-                    + "<h3>Password Reset Request</h3>"
+            // HTML version
+            String htmlBody = "<html><body style='font-family: Arial, sans-serif;'>"
+                    + "<div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>"
+                    + "<h2 style='color: #2c3e50; text-align: center;'>Password Reset OTP</h2>"
                     + "<p>Hello,</p>"
-                    + "<p>We received a request to reset your password for your Letterboxd account. Click the button below to set a new password:</p>"
-                    + "<p><a href=\"" + resetLink + "\" style=\"background-color: #008100; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;\">Reset Password</a></p>"
-                    + "<p>If the button doesn't work, copy and paste this link into your browser:</p>"
-                    + "<p><a href=\"" + resetLink + "\">" + resetLink + "</a></p>"
-                    + "<p>This link will expire in 1 hour.</p>"
+                    + "<p>We received a request to reset your password. Use the code below to verify your identity:</p>"
+                    + "<div style='text-align: center; margin: 30px 0;'>"
+                    + "<span style='font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #008100; padding: 10px 20px; background: #f9f9f9; border-radius: 5px;'>" 
+                    + otp + "</span>"
+                    + "</div>"
+                    + "<p>This code will expire in <strong>1 hour</strong>.</p>"
                     + "<p>If you didn't request this, please ignore this email.</p>"
-                    + "<p>Best regards,<br>Letterboxd Team</p>"
+                    + "<p>Best regards,<br><strong>Letterboxd Team</strong></p>"
+                    + "</div>"
                     + "</body></html>";
 
-            Mail mail = new Mail();
-            mail.setFrom(from);
-            mail.setSubject(subject);
-            
-            // Add both plain text and HTML
-            Content textContent = new Content("text/plain", plainTextBody);
-            Content htmlContent = new Content("text/html", htmlBody);
-            mail.addContent(textContent);
-            mail.addContent(htmlContent);
+            helper.setText(plainTextBody, htmlBody);
 
-            Personalization personalization = new Personalization();
-            personalization.addTo(to);
-            mail.addPersonalization(personalization);
-
-            SendGrid sg = new SendGrid(sendGridApiKey);
-            Request request = new Request();
-            request.setMethod(Method.POST);
-            request.setEndpoint("mail/send");
-            request.setBody(mail.build());
-
-            Response response = sg.api(request);
-            if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
-                log.info("Password reset email sent to {} via SendGrid (status: {})", toEmail, response.getStatusCode());
-            } else {
-                log.error("SendGrid returned error status {} for {}: {}", response.getStatusCode(), toEmail, response.getBody());
-            }
+            mailSender.send(message);
+            log.info("OTP email successfully sent to {} via JavaMailSender", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send password reset email to {} via SendGrid", toEmail, e);
+            log.error("Failed to send OTP email to {} via JavaMailSender", toEmail, e);
         }
     }
 }
