@@ -45,35 +45,34 @@
 
     /* ── FEATURED MEMBERS (3-col, matches featured-grid in lists) ── */
     .featured-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
-    .featured-card { display: block; cursor: pointer; }
+    .featured-card { display: block; cursor: pointer; text-align: center; }
 
     .member-portrait {
-      position: relative; height: 130px; border-radius: 4px; overflow: hidden;
-      margin-bottom: 0.7rem; background: var(--bg-card); display: block;
+      position: relative; width: 100px; height: 100px; border-radius: 50%; overflow: hidden;
+      margin: 0 auto 0.7rem auto; background: var(--bg-card); display: block; border: 2px solid var(--border);
     }
     .member-portrait img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; display: block; }
     .featured-card:hover .member-portrait img { transform: scale(1.04); }
     .member-portrait-init {
-      font-size: 3.5rem; font-weight: 700; color: #fff; text-transform: uppercase;
+      font-size: 2.8rem; font-weight: 700; color: #fff; text-transform: uppercase;
       font-family: "Merriweather", serif; width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #1d232a 0%, #00c030 100%);
     }
-    .member-portrait::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%); pointer-events: none; }
-    .portrait-stats { position: absolute; bottom: 7px; left: 10px; z-index: 2; font-size: 0.7rem; color: rgba(255,255,255,0.75); font-weight: 600; display: flex; gap: 8px; }
+    .portrait-stats { display: none; } /* removed from over avatar */
 
-    .featured-title { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem; transition: color 0.2s; }
+    .featured-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.15rem; transition: color 0.2s; }
     .featured-card:hover .featured-title { color: var(--green); }
-    .featured-creator { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: var(--text-muted); }
+    .featured-creator { display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
     .creator-name { color: var(--text-dim); font-weight: 600; }
 
     /* ── ALL MEMBERS GRID (matches popular-grid in lists) ── */
     .popular-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
-    .popular-card { display: block; cursor: pointer; }
+    .popular-card { display: block; cursor: pointer; text-align: center; }
 
-    .popular-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem; transition: color 0.2s; }
+    .popular-title { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.15rem; transition: color 0.2s; }
     .popular-card:hover .popular-title { color: var(--green); }
-    .popular-meta { font-size: 0.68rem; color: var(--text-muted); display: flex; gap: 0.5rem; }
+    .popular-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; justify-content: center; gap: 0.5rem; }
 
     /* ── DIVIDER ── */
     .section-divider { border: none; border-top: 1px solid var(--border); }
@@ -119,12 +118,12 @@
                    th:style="${m.avatarUrl != null} ? 'display:none' : 'display:flex'"
                    th:text="${m.username != null ? m.username.substring(0,1).toUpperCase() : '?'}"></div>
               <div class="portrait-stats">
-                <span th:if="${m.filmsWatchedCount != null}" th:text="${m.filmsWatchedCount + ' films'}"></span>
-              </div>
             </div>
             <div class="featured-title" th:text="${m.displayName != null ? m.displayName : m.username}">Name</div>
             <div class="featured-creator">
               <span class="creator-name" th:text="'@' + ${m.username}">@username</span>
+              <span th:if="${m.filmsWatchedCount != null}">&#183;</span>
+              <span th:if="${m.filmsWatchedCount != null}" th:text="${m.filmsWatchedCount + ' films'}"></span>
             </div>
           </a>
         </div>
