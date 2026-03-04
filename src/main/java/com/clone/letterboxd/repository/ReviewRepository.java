@@ -16,4 +16,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT r.movieId FROM Review r")
     java.util.List<Long> findAllMovieIds();
+
+    @org.springframework.data.jpa.repository.Query("SELECT r.movieId, COUNT(r.id) FROM Review r WHERE r.movieId IN :movieIds GROUP BY r.movieId")
+    java.util.List<Object[]> countByMovieIdIn(@org.springframework.data.repository.query.Param("movieIds") java.util.Collection<Long> movieIds);
 }

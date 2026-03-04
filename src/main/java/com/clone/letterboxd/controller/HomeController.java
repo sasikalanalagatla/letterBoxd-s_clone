@@ -110,13 +110,28 @@ public class HomeController {
                         .filter(dto -> dto != null)
                         .collect(Collectors.toList());
 
-                // enrich with counts
-                for (MovieCardDto m : pageMovies) {
-                    if (m.getId() != null) {
-                        long reviewCount = reviewRepository.countByMovieId(m.getId());
-                        long likeCount   = likeRepository.countDirectMovieLikes(m.getId());
-                        m.setReviewCount(reviewCount);
-                        m.setLikeCount(likeCount);
+                // enrich with counts using batch queries
+                java.util.List<Long> movieIds = pageMovies.stream()
+                        .map(MovieCardDto::getId)
+                        .filter(java.util.Objects::nonNull)
+                        .collect(Collectors.toList());
+
+                if (!movieIds.isEmpty()) {
+                    java.util.Map<Long, Long> directLikesMap = likeRepository.countDirectMovieLikesByMovieIdIn(movieIds).stream()
+                            .collect(Collectors.toMap(
+                                    row -> (Long) row[0],
+                                    row -> (Long) row[1]
+                            ));
+
+                    java.util.Map<Long, Long> reviewsCountMap = reviewRepository.countByMovieIdIn(movieIds).stream()
+                            .collect(Collectors.toMap(
+                                    row -> (Long) row[0],
+                                    row -> (Long) row[1]
+                            ));
+
+                    for (MovieCardDto m : pageMovies) {
+                        m.setLikeCount(directLikesMap.getOrDefault(m.getId(), 0L));
+                        m.setReviewCount(reviewsCountMap.getOrDefault(m.getId(), 0L));
                     }
                 }
 

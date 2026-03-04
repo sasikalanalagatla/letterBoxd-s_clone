@@ -52,4 +52,7 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     @Query("SELECT DISTINCT l.movieId FROM Like l WHERE l.movieId IS NOT NULL")
     java.util.List<Long> findAllMovieIds();
+
+    @Query("SELECT l.movieId, COUNT(l.id) FROM Like l WHERE l.movieId IN :movieIds AND l.review IS NULL AND l.diaryEntry IS NULL GROUP BY l.movieId")
+    java.util.List<Object[]> countDirectMovieLikesByMovieIdIn(@Param("movieIds") java.util.Collection<Long> movieIds);
 }

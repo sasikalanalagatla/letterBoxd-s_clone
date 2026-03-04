@@ -121,6 +121,10 @@ public class AuthController {
         } catch (Exception e) {
             log.warn("forgot password processing failed", e);
         }
+        if (email == null || email.isBlank()) {
+            redirectAttributes.addFlashAttribute("message", "Please enter your email to continue.");
+            return "redirect:/auth/forgot";
+        }
         redirectAttributes.addFlashAttribute("message", message);
         return "redirect:/auth/forgot";
     }
@@ -137,6 +141,9 @@ public class AuthController {
             @RequestParam("otp") String otp,
             RedirectAttributes redirectAttributes,
             Model model) {
+        if (email == null || email.isBlank()) {
+            return "redirect:/auth/forgot";
+        }
         Optional<User> opt = userRepository.findByEmail(email);
         if (opt.isEmpty() || !otp.equals(opt.get().getResetToken()) || 
             opt.get().getResetTokenExpiry().isBefore(LocalDateTime.now())) {

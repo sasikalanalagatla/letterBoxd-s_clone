@@ -3,6 +3,7 @@ package com.clone.letterboxd.service;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -15,15 +16,19 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     @Async
     public void sendOtpEmail(String toEmail, String otp) {
-        log.info("Preparing to send OTP email to {} in a background thread", toEmail);
+        log.info("Starting background task to send OTP email to: {}", toEmail);
 
         try {
+            log.debug("Creating MimeMessage for OTP email...");
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("sasinalagatla30@gmail.com", "Letterboxd Clone");
+            helper.setFrom(fromEmail, "Letterboxd Clone");
             helper.setTo(toEmail);
             helper.setSubject("Letterboxd - Password Reset OTP");
 
@@ -53,10 +58,11 @@ public class EmailService {
 
             helper.setText(plainTextBody, htmlBody);
 
+            log.info("Executing mailSender.send(message) now...");
             mailSender.send(message);
-            log.info("OTP email successfully sent to {} via JavaMailSender", toEmail);
+            log.info("OTP email successfully sent and accepted by SMTP server for: {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send OTP email to {} via JavaMailSender", toEmail, e);
+            log.error("CRITICAL ERROR: Failed to send OTP email to {} via SMTP. Check your MAIL_PASSWORD app code.", toEmail, e);
         }
     }
 }
