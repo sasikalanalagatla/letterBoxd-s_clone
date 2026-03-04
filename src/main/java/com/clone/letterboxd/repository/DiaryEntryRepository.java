@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,5 +19,5 @@ public interface DiaryEntryRepository extends JpaRepository<DiaryEntry, Long> {
     Double averageRatingByMovieId(@Param("movieId") Long movieId);
 
     @Query("SELECT DISTINCT d.movieId FROM DiaryEntry d")
-    java.util.List<Long> findAllMovieIds();
+    List<Long> findAllMovieIds();
 }
