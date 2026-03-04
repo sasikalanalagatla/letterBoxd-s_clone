@@ -1,145 +1,96 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
-<head>
-    <title>Verify OTP - Letterboxd</title>
-</head>
-<body>
-    <section class="auth-container">
-        <div class="auth-box">
-            <h1>Verify OTP</h1>
-            <p class="auth-subtitle">Enter the 6-digit code sent to your email.</p>
-
-            <form th:action="@{/auth/verify-otp}" method="post" class="auth-form">
-                <input type="hidden" name="email" th:value="${email}" />
-                
-                <div class="form-group">
-                    <label for="otp">One-Time Password (OTP)</label>
-                    <input type="text" id="otp" name="otp" 
-                           placeholder="Enter 6-digit code" required 
-                           class="form-control" autocomplete="one-time-code"
-                           maxlength="6" pattern="\d{6}">
-                </div>
-
-                <div th:if="${error}" class="error-message">
-                    <p th:text="${error}"></p>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block">Verify Code</button>
-            </form>
-
-            <div class="auth-footer">
-                <p>Didn't receive the code? <a th:href="@{/auth/forgot}">Try again</a></p>
-            </div>
-        </div>
-    </section>
-
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verify OTP - Letterboxd Clone</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <style>
-        .auth-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 80vh;
-            padding: 20px;
-        }
-
-        .auth-box {
-            background: #14181c;
-            padding: 30px;
-            border-radius: 4px;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid #2c3440;
-        }
-
-        .auth-box h1 {
-            font-size: 24px;
-            color: #fff;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-
-        .auth-subtitle {
-            color: #9ab;
-            text-align: center;
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-
-        .auth-form .form-group {
-            margin-bottom: 20px;
-        }
-
-        .auth-form label {
-            display: block;
-            color: #9ab;
-            margin-bottom: 8px;
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            background: #2c3440;
-            border: 1px solid #2c3440;
-            border-radius: 3px;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        .form-control:focus {
-            background: #fff;
-            color: #333;
-            outline: none;
-        }
-
-        .btn-primary {
-            background: #00b020;
-            color: #fff;
-            border: none;
-            padding: 12px;
-            border-radius: 3px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            text-transform: uppercase;
-            font-size: 14px;
-        }
-
-        .btn-primary:hover {
-            background: #00c030;
-        }
-
-        .btn-block {
-            width: 100%;
-        }
-
-        .error-message {
-            background: #900;
-            color: #fff;
-            padding: 10px;
-            border-radius: 3px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            text-align: center;
-        }
-
-        .auth-footer {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 13px;
-            color: #9ab;
-        }
-
-        .auth-footer a {
-            color: #fff;
-            text-decoration: none;
-        }
-
-        .auth-footer a:hover {
-            color: #00b020;
-        }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      }
+      .container {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+      }
+      .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      }
+      .btn-primary {
+        background-color: #556b2f;
+        border: none;
+        padding: 0.7rem;
+        font-weight: 600;
+      }
+      .btn-primary:hover {
+        background-color: #6b8e23;
+        color: white;
+      }
+      .form-control {
+        border-radius: 5px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+        text-align: center;
+        font-size: 1.5rem;
+        letter-spacing: 5px;
+      }
+      .form-control:focus {
+        border-color: #556b2f;
+        box-shadow: 0 0 5px rgba(85, 107, 47, 0.3);
+      }
+      .auth-subtitle {
+        color: #666;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
     </style>
-</body>
+  </head>
+  <body class="bg-dark">
+    <div class="container">
+      <div class="card bg-light">
+        <div class="card-body p-4">
+          <h4 class="card-title mb-2 text-center">Verify OTP</h4>
+          <p class="auth-subtitle">Enter the 6-digit code sent to your email.</p>
+
+          <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}"></div>
+
+          <form th:action="@{/auth/verify-otp}" method="post">
+            <input type="hidden" name="email" th:value="${email}" />
+            
+            <div class="mb-4">
+              <input type="text" id="otp" name="otp" 
+                     placeholder="000000" required 
+                     class="form-control" autocomplete="one-time-code"
+                     maxlength="6" pattern="\d{6}">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 text-white">Verify Code</button>
+          </form>
+
+          <div class="text-center mt-3">
+            <p class="small text-muted">Didn't receive the code? <a th:href="@{/auth/forgot}" class="text-decoration-none" style="color: #556b2f; font-weight: 600;">Try again</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2rem">
+        <a th:href="@{/auth/login}" style="color: #999; text-decoration: none">
+          Back to Login
+        </a>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>
