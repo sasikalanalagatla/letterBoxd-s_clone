@@ -71,6 +71,7 @@ public class SecurityConfig {
                 user.setAvatarUrl(picture);
                 user.setCreatedAt(LocalDateTime.now());
                 user.setUpdatedAt(LocalDateTime.now());
+                user.setPassword(java.util.UUID.randomUUID().toString());
                 userRepository.save(user);
             } else {
                 user = userOpt.get();
