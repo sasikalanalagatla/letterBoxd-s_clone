@@ -16,8 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
     Optional<User> findByEmail(String email);
-
-    Optional<User> findByResetToken(String resetToken);
     
     @Query("SELECT COUNT(f) FROM User u JOIN u.followers f WHERE u.id = :userId")
     long countFollowers(@Param("userId") Long userId);

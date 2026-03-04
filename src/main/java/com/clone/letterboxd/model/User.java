@@ -34,9 +34,6 @@ public class User {
     @Column(name = "avatar_content_type")
     private String avatarContentType;
 
-    @Column(name = "avatar_content_type")
-    private String avatarContentType;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
