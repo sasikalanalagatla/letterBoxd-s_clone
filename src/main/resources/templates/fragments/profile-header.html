@@ -14,9 +14,9 @@
     <div class="user-mini-nav">
 
       <!-- Films and Diary removed as per request -->
-      <a th:href="@{/profile/{username}#reviews(username=${profile.username})}" th:classappend="${activeTab == 'reviews'} ? 'active' : ''">Reviews</a>
-      <a th:href="@{/profile/{username}#lists(username=${profile.username})}" th:classappend="${activeTab == 'lists'} ? 'active' : ''">Lists</a>
-      <a th:href="@{/profile/{username}#likes(username=${profile.username})}" th:classappend="${activeTab == 'likes'} ? 'active' : ''">Likes</a>
+      <a th:href="@{/profile/{username}/reviews(username=${profile.username})}" th:classappend="${activeTab == 'reviews'} ? 'active' : ''">Reviews</a>
+      <a th:href="@{/profile/{username}/lists(username=${profile.username})}" th:classappend="${activeTab == 'lists'} ? 'active' : ''">Lists</a>
+      <a th:href="@{/profile/{username}/likes(username=${profile.username})}" th:classappend="${activeTab == 'likes'} ? 'active' : ''">Likes</a>
       <a th:href="@{/profile/{username}/network(username=${profile.username})}" th:classappend="${activeTab == 'network'} ? 'active' : ''">Network</a>
     </div>
   </div>
