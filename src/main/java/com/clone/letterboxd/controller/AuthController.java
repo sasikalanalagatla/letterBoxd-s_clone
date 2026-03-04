@@ -3,7 +3,6 @@ package com.clone.letterboxd.controller;
 import com.clone.letterboxd.dto.UserRegistrationDto;
 import com.clone.letterboxd.model.User;
 import com.clone.letterboxd.repository.UserRepository;
-import com.clone.letterboxd.service.EmailService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,13 +24,11 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final EmailService emailService;
 
 
-    public AuthController(UserRepository userRepository, EmailService emailService) {
+    public AuthController(UserRepository userRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
-        this.emailService = emailService;
     }
 
     @GetMapping("/login")
@@ -90,130 +87,7 @@ public class AuthController {
         return "register";
     }
 
-    // --- password recovery flows ---
-
-    @GetMapping("/forgot")
-    public String forgotPasswordPage() {
-        return "forgot-password";
-    }
-
-    @PostMapping("/forgot")
-    public String handleForgotPassword(
-            @RequestParam("email") String email,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        String message = "If that email address is registered, an OTP has been sent.";
-        try {
-            Optional<User> opt = userRepository.findByEmail(email);
-            if (opt.isPresent()) {
-                User user = opt.get();
-                // Generate 6-digit OTP
-                String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
-                user.setResetToken(otp);
-                user.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
-                userRepository.save(user);
-
-                emailService.sendOtpEmail(email, otp);
-                
-                redirectAttributes.addFlashAttribute("email", email);
-                return "redirect:/auth/verify-otp";
-            }
-        } catch (Exception e) {
-            log.warn("forgot password processing failed", e);
-        }
-        if (email == null || email.isBlank()) {
-            redirectAttributes.addFlashAttribute("message", "Please enter your email to continue.");
-            return "redirect:/auth/forgot";
-        }
-        redirectAttributes.addFlashAttribute("message", message);
-        return "redirect:/auth/forgot";
-    }
-
-    @GetMapping("/verify-otp")
-    public String verifyOtpPage(@RequestParam(value = "email", required = false) String email, Model model) {
-        model.addAttribute("email", email);
-        return "verify-otp";
-    }
-
-    @PostMapping("/verify-otp")
-    public String handleVerifyOtp(
-            @RequestParam("email") String email,
-            @RequestParam("otp") String otp,
-            RedirectAttributes redirectAttributes,
-            Model model) {
-        if (email == null || email.isBlank()) {
-            return "redirect:/auth/forgot";
-        }
-        Optional<User> opt = userRepository.findByEmail(email);
-        if (opt.isEmpty() || !otp.equals(opt.get().getResetToken()) || 
-            opt.get().getResetTokenExpiry().isBefore(LocalDateTime.now())) {
-            model.addAttribute("error", "Invalid or expired OTP.");
-            model.addAttribute("email", email);
-            return "verify-otp";
-        }
-        
-        // Success - redirect to password reset page with the OTP as a valid identifier
-        return "redirect:/auth/reset?token=" + otp + "&email=" + email;
-    }
-
-    @GetMapping("/reset")
-    public String resetPasswordPage(
-            @RequestParam("token") String token, 
-            @RequestParam(value = "email", required = false) String email,
-            Model model) {
-        Optional<User> opt = userRepository.findByEmail(email);
-        if (opt.isEmpty() || !token.equals(opt.get().getResetToken()) ||
-                opt.get().getResetTokenExpiry().isBefore(LocalDateTime.now())) {
-            model.addAttribute("error", "Invalid session or token. Please start over.");
-            return "forgot-password";
-        }
-        model.addAttribute("token", token);
-        model.addAttribute("email", email);
-        return "reset-password";
-    }
-
-    @PostMapping("/reset")
-    public String handleResetPassword(
-            @RequestParam("token") String token,
-            @RequestParam("email") String email,
-            @RequestParam("password") String password,
-            @RequestParam("confirmPassword") String confirmPassword,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-        Optional<User> opt = userRepository.findByEmail(email);
-        if (opt.isEmpty() || !token.equals(opt.get().getResetToken())) {
-            model.addAttribute("error", "Invalid session or token.");
-            model.addAttribute("token", token);
-            model.addAttribute("email", email);
-            return "reset-password";
-        }
-        
-        User user = opt.get();
-        if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
-            model.addAttribute("error", "Reset token has expired.");
-            return "reset-password";
-        }
-        
-        if (password == null || password.trim().isEmpty() || password.length() < 8 ||
-                !password.equals(confirmPassword)) {
-            model.addAttribute("error", "Passwords must match and be at least 8 characters.");
-            model.addAttribute("token", token);
-            model.addAttribute("email", email);
-            return "reset-password";
-        }
-        
-        String encodedPassword = passwordEncoder.encode(password);
-        log.info("Password reset for user: {}", user.getUsername());
-        
-        user.setPassword(encodedPassword);
-        user.setResetToken(null);
-        user.setResetTokenExpiry(null);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-        
-        redirectAttributes.addFlashAttribute("success", "Password updated. You can now login.");
-        return "redirect:/auth/login";
-    }
+    // --- password recovery flows removed (Google Sign-In now preferred) ---
 
     @PostMapping("/register")
     public String handleRegister(
