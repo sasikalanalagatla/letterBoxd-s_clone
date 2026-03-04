@@ -28,7 +28,7 @@ public class AuthController {
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
-    @Value("${app.base-url:http://localhost:8080}")
+    @Value("${APP_URL:http://localhost:8080}")
     private String appBaseUrl;
 
     public AuthController(UserRepository userRepository, EmailService emailService) {
