@@ -29,12 +29,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // Keeping it disabled as the original app didn't seem to have security
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/auth/**", "/movies/**", "/search/**", "/css/**", "/js/**", "/images/**", "/avatar/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/auth/login")
-                .permitAll()
+                .anyRequest().permitAll() // Use legacy session-based auth handled by controllers
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/auth/login")
@@ -75,12 +70,10 @@ public class SecurityConfig {
                 userRepository.save(user);
             } else {
                 user = userOpt.get();
-                // Optionally update profile info if it changed
                 user.setUpdatedAt(LocalDateTime.now());
                 userRepository.save(user);
             }
 
-            // Manually set the session attribute that the app expects
             HttpSession session = request.getSession();
             session.setAttribute("loggedInUser", user);
             session.setAttribute("loggedInUserId", user.getId());
