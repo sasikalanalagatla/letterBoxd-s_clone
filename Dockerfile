@@ -1,20 +1,20 @@
 # Build stage
-FROM maven:3.8.4-openjdk-17-slim AS build
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
+
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN ./mvnw dependency:go-offline
 
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
+
 
 # Run stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/target/letterboxd-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
 
-# Environment variables with sensible defaults
-ENV SPRING_PROFILES_ACTIVE=prod
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
+COPY --from=builder /app/target/blog-application-0.0.1-SNAPSHOT.jar app.jar
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# limit memory for Render free tier
+ENTRYPOINT ["java","-Xmx256m","-jar","app.jar"]
